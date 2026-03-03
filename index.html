@@ -7,52 +7,35 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #080c10;
-    --s1: #0d1117;
-    --s2: #111820;
-    --border: #1a2333;
-    --wb: #cb11ab;
-    --glow: rgba(203,17,171,0.15);
-    --green: #05d69e;
-    --yellow: #ffc442;
-    --red: #ff4f6e;
-    --blue: #3b9eff;
-    --text: #dde4ee;
-    --muted: #4a5568;
-    --muted2: #718096;
+    --bg: #080c10; --s1: #0d1117; --s2: #111820; --border: #1a2333;
+    --wb: #cb11ab; --glow: rgba(203,17,171,0.15);
+    --green: #05d69e; --yellow: #ffc442; --red: #ff4f6e; --blue: #3b9eff;
+    --text: #dde4ee; --muted: #4a5568; --muted2: #718096;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family: 'Geologica', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
+  body { font-family:'Geologica',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
   body::before {
-    content:'';
-    position:fixed; inset:0;
-    background-image:
-      linear-gradient(rgba(203,17,171,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(203,17,171,0.03) 1px, transparent 1px);
-    background-size: 48px 48px;
-    pointer-events:none; z-index:0;
+    content:''; position:fixed; inset:0;
+    background-image: linear-gradient(rgba(203,17,171,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(203,17,171,0.03) 1px,transparent 1px);
+    background-size:48px 48px; pointer-events:none; z-index:0;
   }
   .wrap { position:relative; z-index:1; max-width:1360px; margin:0 auto; padding:28px 24px; }
 
+  /* Loading */
+  .loading { display:flex; align-items:center; justify-content:center; height:100vh; flex-direction:column; gap:16px; }
+  .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--wb); border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .loading-text { font-size:13px; color:var(--muted2); }
+
   .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:32px; }
   .brand { display:flex; align-items:center; gap:14px; }
-  .brand-mark {
-    width:48px; height:48px; background:var(--wb);
-    border-radius:14px; display:flex; align-items:center; justify-content:center;
-    font-family:'Bebas Neue'; font-size:24px; color:#fff;
-    box-shadow: 0 0 32px var(--glow), 0 4px 16px rgba(0,0,0,0.5);
-  }
+  .brand-mark { width:48px; height:48px; background:var(--wb); border-radius:14px; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue'; font-size:24px; color:#fff; box-shadow:0 0 32px var(--glow),0 4px 16px rgba(0,0,0,0.5); }
   .brand-name { font-family:'Bebas Neue'; font-size:30px; letter-spacing:2px; }
   .brand-sub { font-size:11px; color:var(--muted2); letter-spacing:1.2px; text-transform:uppercase; margin-top:2px; }
   .header-meta { display:flex; align-items:center; gap:12px; }
   .pill { display:flex; align-items:center; gap:8px; background:var(--s1); border:1px solid var(--border); border-radius:10px; padding:8px 14px; font-size:12px; color:var(--muted2); font-weight:500; }
   .dot-live { width:7px; height:7px; background:var(--green); border-radius:50%; box-shadow:0 0 8px var(--green); animation:blink 2s infinite; }
-  .dot-n8n  { width:7px; height:7px; background:#ff6d3b; border-radius:50%; box-shadow:0 0 8px #ff6d3b; }
+  .dot-n8n { width:7px; height:7px; background:#ff6d3b; border-radius:50%; box-shadow:0 0 8px #ff6d3b; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
   .date-badge { font-size:11px; color:var(--muted2); background:var(--s1); border:1px solid var(--border); border-radius:8px; padding:6px 12px; }
 
@@ -62,7 +45,7 @@
   .tab:hover:not(.active) { color:var(--text); background:var(--s2); }
 
   .kpi-strip { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:22px; }
-  .kpi { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:20px 22px; position:relative; overflow:hidden; animation: up 0.5s ease both; }
+  .kpi { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:20px 22px; position:relative; overflow:hidden; animation:up 0.5s ease both; }
   .kpi:nth-child(1){animation-delay:.05s} .kpi:nth-child(2){animation-delay:.1s} .kpi:nth-child(3){animation-delay:.15s} .kpi:nth-child(4){animation-delay:.2s} .kpi:nth-child(5){animation-delay:.25s}
   @keyframes up { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
   .kpi::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; background:var(--kpi-color,var(--wb)); }
@@ -71,7 +54,7 @@
   .kpi-val { font-family:'Bebas Neue'; font-size:38px; line-height:1; }
   .kpi-lbl { font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted2); margin-top:6px; }
   .kpi-sub { font-size:11px; color:var(--muted2); margin-top:4px; }
-  .kpi-sub.up { color:var(--green); } .kpi-sub.dn { color:var(--red); }
+  .kpi-sub.up{color:var(--green)} .kpi-sub.dn{color:var(--red)}
 
   .grid2 { display:grid; grid-template-columns:3fr 2fr; gap:18px; margin-bottom:18px; }
   .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
@@ -116,7 +99,7 @@
   .badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:700; }
   .badge.ok{background:rgba(5,214,158,0.1);color:var(--green)} .badge.mid{background:rgba(255,196,66,0.1);color:var(--yellow)} .badge.bad{background:rgba(255,79,110,0.1);color:var(--red)}
 
-  .rev-card { background:linear-gradient(135deg, #0d1117 0%, #130a1a 100%); border:1px solid rgba(203,17,171,0.25); }
+  .rev-card { background:linear-gradient(135deg,#0d1117 0%,#130a1a 100%); border:1px solid rgba(203,17,171,0.25); }
   .rev-num { font-family:'Bebas Neue'; font-size:52px; color:var(--wb); line-height:1; }
   .rev-sub { font-size:12px; color:var(--muted2); margin-top:4px; }
   .rv-b { flex:1; background:rgba(203,17,171,0.15); border-radius:3px 3px 0 0; border-top:2px solid var(--wb); animation:spUp 0.8s ease both; }
@@ -131,9 +114,18 @@
   .cmp-track { flex:1; height:10px; background:var(--border); border-radius:5px; overflow:hidden; }
   .cmp-fill { height:100%; border-radius:5px; animation:grow 0.8s ease both; }
   .cmp-cnt { width:80px; text-align:right; font-size:12px; font-weight:700; }
+
+  .error-banner { background:rgba(255,79,110,0.08); border:1px solid rgba(255,79,110,0.25); border-radius:12px; padding:16px 20px; margin-bottom:20px; font-size:13px; color:var(--red); display:none; }
 </style>
 </head>
 <body>
+
+<div id="loading" class="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">Загружаем данные...</div>
+</div>
+
+<div id="app" style="display:none">
 <div class="wrap">
   <div class="header">
     <div class="brand">
@@ -144,11 +136,13 @@
       </div>
     </div>
     <div class="header-meta">
-      <div class="pill"><div class="dot-n8n"></div>n8n · активен</div>
-      <div class="pill"><div class="dot-live"></div>Данные за 2 марта</div>
+      <div class="pill"><div class="dot-n8n"></div>n8n · авто</div>
+      <div class="pill"><div class="dot-live"></div><span id="updated-at">Загрузка...</span></div>
       <div class="date-badge" id="cur-date"></div>
     </div>
   </div>
+
+  <div id="error-banner" class="error-banner"></div>
 
   <div class="tabs">
     <button class="tab active" onclick="setShop('oding',this)">🌱 Одинг</button>
@@ -160,44 +154,71 @@
   <div class="grid2" id="main-grid"></div>
   <div class="grid3" id="bottom-grid"></div>
 </div>
+</div>
 
 <script>
 const COLORS = ['#cb11ab','#7c5cfc','#ffc442','#05d69e','#3b9eff','#ff6d3b'];
+const DATA_URL = 'https://raw.githubusercontent.com/Igoroding/wb-dashboard/main/data.json';
+const REFRESH_INTERVAL = 60 * 60 * 1000; // 1 час
 
-const DATA = {
+// Fallback данные если data.json ещё не создан
+const FALLBACK = {
+  updated_at: "2026-03-02T08:00:00Z",
   oding: {
-    name: 'Одинг', orders: 628, cancelled: 35, revenue: 77882, articles: 135,
-    topArticles: [
-      ['myata-karamelka',56,4812],['grana-constitucia',43,3911],['ukrop-bezzonta',38,3787],
-      ['petrushka-mooskrauze-3',28,3946],['fasol-vigna-grafinya',25,2956],
-      ['tomat-bolshayamamochka',22,2466],['timian-purpurniikover-5',22,3235],
-      ['lavanda-voznesenskaya-5',20,4593],['perec-ramiro',20,2591],['nabor-tukv',17,2379],
-    ],
+    name:'Одинг', orders:628, cancelled:35, revenue:77882, articles:135,
+    topArticles:[['myata-karamelka',56,4812],['grana-constitucia',43,3911],['ukrop-bezzonta',38,3787],['petrushka-mooskrauze-3',28,3946],['fasol-vigna-grafinya',25,2956],['tomat-bolshayamamochka',22,2466],['timian-purpurniikover-5',22,3235],['lavanda-voznesenskaya-5',20,4593],['perec-ramiro',20,2591],['nabor-tukv',17,2379]],
     warehouses:[['Воронеж',552],['Краснодар',31],['Волгоград',9],['Котовск',6],['Екатеринбург',5],['Невинномысск',5]],
-    sparkOrders:[410,488,520,575,590,610,628],
-    sparkRevenue:[49200,58400,63000,69000,72000,75100,77882],
+    sparkOrders:[410,488,520,575,590,610,628], sparkRevenue:[49200,58400,63000,69000,72000,75100,77882],
   },
   stolnikov: {
-    name: 'Стольников', orders: 421, cancelled: 22, revenue: 52640, articles: 98,
-    topArticles: [
-      ['petrushka-bogatir',38,3240],['ukrop-kibrai',31,2780],['tomat-roze',27,3960],
-      ['ogurec-zozulya',24,2112],['perec-kakadu',21,3150],['bazil-genovezkiy',19,1900],
-      ['salat-duboviy',18,1440],['morkov-samson-3',16,1728],['myata-kubanka',15,2310],['cinniya-karusel',12,1140],
-    ],
+    name:'Стольников', orders:421, cancelled:22, revenue:52640, articles:98,
+    topArticles:[['petrushka-bogatir',38,3240],['ukrop-kibrai',31,2780],['tomat-roze',27,3960],['ogurec-zozulya',24,2112],['perec-kakadu',21,3150],['bazil-genovezkiy',19,1900],['salat-duboviy',18,1440],['morkov-samson-3',16,1728],['myata-kubanka',15,2310],['cinniya-karusel',12,1140]],
     warehouses:[['Воронеж',340],['Краснодар',38],['Волгоград',18],['Коледино',14],['Тула',7],['Котовск',4]],
-    sparkOrders:[280,310,345,365,390,408,421],
-    sparkRevenue:[33000,37000,41000,44500,47800,50200,52640],
+    sparkOrders:[280,310,345,365,390,408,421], sparkRevenue:[33000,37000,41000,44500,47800,50200,52640],
   }
 };
 
-const DAYS = ['24 фев','25 фев','26 фев','27 фев','28 фев','1 мар','2 мар'];
+let DATA = null;
+let currentShop = 'oding';
 
 function fmtRub(n){ return new Intl.NumberFormat('ru-RU').format(n)+' ₽'; }
 function fmtArt(s){ return s.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()).slice(0,22); }
+function fmtDate(iso){ return new Date(iso).toLocaleString('ru-RU',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
 
-document.getElementById('cur-date').textContent = new Date().toLocaleDateString('ru-RU',{day:'2-digit',month:'long',year:'numeric'});
+async function loadData() {
+  try {
+    const res = await fetch(DATA_URL + '?t=' + Date.now());
+    if (!res.ok) throw new Error('no data.json yet');
+    DATA = await res.json();
+    document.getElementById('updated-at').textContent = 'Обновлено: ' + fmtDate(DATA.updated_at);
+  } catch(e) {
+    DATA = FALLBACK;
+    document.getElementById('updated-at').textContent = 'Демо-данные';
+    const banner = document.getElementById('error-banner');
+    banner.style.display = 'block';
+    banner.textContent = '⚠ data.json ещё не создан n8n — показываем демо-данные за 2 марта 2026';
+  }
 
-function setShop(shop,el){
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('cur-date').textContent = new Date().toLocaleDateString('ru-RU',{day:'2-digit',month:'long',year:'numeric'});
+  renderShop('oding');
+}
+
+// Автообновление каждый час
+setInterval(async () => {
+  try {
+    const res = await fetch(DATA_URL + '?t=' + Date.now());
+    if(res.ok) {
+      DATA = await res.json();
+      document.getElementById('updated-at').textContent = 'Обновлено: ' + fmtDate(DATA.updated_at);
+      renderShop(currentShop === 'both' ? 'both' : currentShop);
+    }
+  } catch(e) {}
+}, REFRESH_INTERVAL);
+
+function setShop(shop, el){
+  currentShop = shop;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   if(shop==='both') renderBoth(); else renderShop(shop);
@@ -209,12 +230,11 @@ function renderShop(key){
   const avgCheck = Math.round(d.revenue/d.orders);
 
   document.getElementById('kpi-strip').innerHTML = `
-    <div class="kpi"><div class="kpi-icon">📦</div><div class="kpi-val">${d.orders}</div><div class="kpi-lbl">Заказов за день</div><div class="kpi-sub up">↑ Вчера, 2 марта</div></div>
+    <div class="kpi"><div class="kpi-icon">📦</div><div class="kpi-val">${d.orders}</div><div class="kpi-lbl">Заказов за день</div><div class="kpi-sub up">↑ Вчера</div></div>
     <div class="kpi g"><div class="kpi-icon">💰</div><div class="kpi-val">${fmtRub(d.revenue)}</div><div class="kpi-lbl">Выручка</div><div class="kpi-sub up">↑ реализация</div></div>
     <div class="kpi b"><div class="kpi-icon">🛒</div><div class="kpi-val">${fmtRub(avgCheck)}</div><div class="kpi-lbl">Средний чек</div><div class="kpi-sub">на заказ</div></div>
     <div class="kpi r"><div class="kpi-icon">❌</div><div class="kpi-val">${d.cancelled}</div><div class="kpi-lbl">Отменено</div><div class="kpi-sub dn">${cancelRate}% от всех</div></div>
-    <div class="kpi y"><div class="kpi-icon">📋</div><div class="kpi-val">${d.articles}</div><div class="kpi-lbl">Артикулов</div><div class="kpi-sub">в ассортименте</div></div>
-  `;
+    <div class="kpi y"><div class="kpi-icon">📋</div><div class="kpi-val">${d.articles}</div><div class="kpi-lbl">Артикулов</div><div class="kpi-sub">в ассортименте</div></div>`;
 
   const maxA = d.topArticles[0][1];
   const bars = d.topArticles.map(([a,c])=>`
@@ -236,7 +256,7 @@ function renderShop(key){
 
   document.getElementById('main-grid').innerHTML = `
     <div class="card">
-      <div class="card-hd"><div class="card-title">Топ-10 артикулов по заказам</div><div class="card-badge">${d.name} · 2 марта 2026</div></div>
+      <div class="card-hd"><div class="card-title">Топ-10 артикулов по заказам</div><div class="card-badge">${d.name}</div></div>
       <div class="bars">${bars}</div>
     </div>
     <div class="card">
@@ -253,10 +273,11 @@ function renderShop(key){
       </div>
     </div>`;
 
+  const DAYS = d.sparkDays || ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
   const maxSp = Math.max(...d.sparkOrders);
   const sparkBars = d.sparkOrders.map((v,i)=>`<div class="sp-b" style="height:${Math.round(v/maxSp*100)}%" title="${DAYS[i]}: ${v}"></div>`).join('');
   const maxRev = Math.max(...d.sparkRevenue);
-  const revBars = d.sparkRevenue.map((v,i)=>`<div class="rv-b" style="height:${Math.round(v/maxRev*100)}%"></div>`).join('');
+  const revBars = d.sparkRevenue.map(v=>`<div class="rv-b" style="height:${Math.round(v/maxRev*100)}%"></div>`).join('');
   const topRev = [...d.topArticles].sort((a,b)=>b[2]-a[2]).slice(0,5);
   const tableRows = topRev.map(([a,c,r])=>{
     const b=c>=30?'ok':c>=15?'mid':'bad', l=c>=30?'Хорошо':c>=15?'Средне':'Мало';
@@ -277,7 +298,7 @@ function renderShop(key){
       <div class="spark" style="height:40px">${revBars}</div>
       <div class="spark-days">${DAYS.map(d=>`<span>${d}</span>`).join('')}</div>
       <div class="rev-num">${fmtRub(d.revenue)}</div>
-      <div class="rev-sub">Итого за 2 марта 2026</div>
+      <div class="rev-sub">Итого за вчера</div>
       <div class="cancel-info">
         <div><div class="cancel-lbl">Отменено заказов</div><div class="cancel-rate">${cancelRate}% от всех</div></div>
         <div class="cancel-val">${d.cancelled}</div>
@@ -298,16 +319,15 @@ function renderBoth(){
 
   document.getElementById('kpi-strip').innerHTML = `
     <div class="kpi"><div class="kpi-icon">🏪</div><div class="kpi-val">2</div><div class="kpi-lbl">Магазина</div><div class="kpi-sub">Одинг + Стольников</div></div>
-    <div class="kpi g"><div class="kpi-icon">📦</div><div class="kpi-val">${tO}</div><div class="kpi-lbl">Заказов всего</div><div class="kpi-sub up">↑ за 2 марта</div></div>
+    <div class="kpi g"><div class="kpi-icon">📦</div><div class="kpi-val">${tO}</div><div class="kpi-lbl">Заказов всего</div><div class="kpi-sub up">↑ вчера</div></div>
     <div class="kpi g"><div class="kpi-icon">💰</div><div class="kpi-val">${fmtRub(tR)}</div><div class="kpi-lbl">Общая выручка</div><div class="kpi-sub up">↑ оба магазина</div></div>
     <div class="kpi r"><div class="kpi-icon">❌</div><div class="kpi-val">${tC}</div><div class="kpi-lbl">Отменено</div><div class="kpi-sub dn">${((tC/(tO+tC))*100).toFixed(1)}% от всех</div></div>
     <div class="kpi y"><div class="kpi-icon">📋</div><div class="kpi-val">${tA}</div><div class="kpi-lbl">Артикулов</div><div class="kpi-sub">суммарно</div></div>`;
 
   const oMax=Math.max(o.orders,s.orders), rMax=Math.max(o.revenue,s.revenue);
-
   document.getElementById('main-grid').innerHTML = `
     <div class="card">
-      <div class="card-hd"><div class="card-title">Сравнение магазинов</div><div class="card-badge">2 марта 2026</div></div>
+      <div class="card-hd"><div class="card-title">Сравнение магазинов</div><div class="card-badge">вчера</div></div>
       <div style="margin-bottom:20px">
         <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);margin-bottom:12px">По заказам</div>
         <div class="cmp-row"><div class="cmp-lbl">🌱 Одинг</div><div class="cmp-track"><div class="cmp-fill" style="background:var(--wb);width:${(o.orders/oMax*100).toFixed(0)}%"></div></div><div class="cmp-cnt">${o.orders} шт</div></div>
@@ -333,7 +353,7 @@ function renderBoth(){
     <div class="card rev-card">
       <div class="card-hd"><div class="card-title">Итого оба магазина</div></div>
       <div class="rev-num">${fmtRub(tR)}</div>
-      <div class="rev-sub">Общая выручка · 2 марта 2026</div>
+      <div class="rev-sub">Общая выручка · вчера</div>
       <div style="margin-top:20px;display:flex;flex-direction:column;gap:12px">
         <div style="background:rgba(203,17,171,0.08);border:1px solid rgba(203,17,171,0.2);border-radius:10px;padding:14px 16px">
           <div style="font-size:11px;color:var(--muted2);margin-bottom:4px">🌱 Одинг</div>
@@ -348,12 +368,12 @@ function renderBoth(){
       </div>
     </div>`;
 
-  const allArts = {};
-  o.topArticles.forEach(([a,c,r])=>{ allArts[a]=allArts[a]||{o:0,s:0,r:0}; allArts[a].o=c; allArts[a].r+=r; });
-  s.topArticles.forEach(([a,c,r])=>{ allArts[a]=allArts[a]||{o:0,s:0,r:0}; allArts[a].s=c; allArts[a].r+=r; });
-  const combined = Object.entries(allArts).map(([a,d])=>[a,d.o+d.s,d.r]).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const maxC = combined[0][1];
-  const combBars = combined.map(([a,c])=>`
+  const allArts={};
+  o.topArticles.forEach(([a,c,r])=>{allArts[a]=allArts[a]||{o:0,s:0,r:0};allArts[a].o=c;allArts[a].r+=r;});
+  s.topArticles.forEach(([a,c,r])=>{allArts[a]=allArts[a]||{o:0,s:0,r:0};allArts[a].s=c;allArts[a].r+=r;});
+  const combined=Object.entries(allArts).map(([a,d])=>[a,d.o+d.s,d.r]).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxC=combined[0][1];
+  const combBars=combined.map(([a,c])=>`
     <div class="bar-row">
       <div class="bar-nm">${fmtArt(a)}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${(c/maxC*100).toFixed(0)}%"></div></div>
@@ -362,12 +382,12 @@ function renderBoth(){
 
   document.getElementById('bottom-grid').innerHTML = `
     <div class="card" style="grid-column:span 3">
-      <div class="card-hd"><div class="card-title">Топ артикулов — оба магазина суммарно</div><div class="card-badge">2 марта 2026</div></div>
+      <div class="card-hd"><div class="card-title">Топ артикулов — оба магазина</div><div class="card-badge">суммарно</div></div>
       <div class="bars">${combBars}</div>
     </div>`;
 }
 
-renderShop('oding');
+loadData();
 </script>
 </body>
 </html>
