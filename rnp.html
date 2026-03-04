@@ -499,14 +499,16 @@ function renderChart(rows) {
 }
 
 function renderTable(rows) {
-  const today = new Date().toISOString().slice(0,10);
-  document.getElementById('tbl-body').innerHTML = [...rows].reverse().map(r => {
+  const today = new Date().toLocaleDateString('sv-SE');
+  const yest  = new Date(Date.now() - 86400000).toLocaleDateString('sv-SE');
+  const filtered = [...rows].filter(r => r.date !== today).reverse();
+  document.getElementById('tbl-body').innerHTML = filtered.map(r => {
     const drr = r.orders_sum > 0 ? (r.ads_spend / r.orders_sum * 100) : 0;
-    const isT = r.date === today;
-    const d = new Date(r.date);
+    const isY = r.date === yest;
+    const d = new Date(r.date + 'T12:00:00');
     const label = d.toLocaleDateString('ru-RU', {day:'2-digit', month:'short'});
-    return `<tr class="${isT ? 'today-row' : ''}">
-      <td class="td-date">${label}${isT ? '<span class="td-today-badge">сегодня</span>':''}</td>
+    return `<tr class="${isY ? 'today-row' : ''}">
+      <td class="td-date">${label}${isY ? '<span class="td-today-badge">вчера</span>':''}</td>
       <td>${fmtN(r.orders_count)}</td>
       <td>${fmtRub(r.orders_sum)}</td>
       <td>${fmtN(r.sales_count)}</td>
