@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Остатки на складах WB</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0d0d0d; color: #e0e0e0; font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+  body { background: #080c10; color: #dde4ee; font-family: 'Geologica', system-ui, sans-serif; min-height: 100vh; }
 
   .header { background: #141414; border-bottom: 1px solid #2a2a2a; padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   .logo { width: 40px; height: 40px; background: linear-gradient(135deg, #cb11ab, #7c5cfc); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; color: #fff; flex-shrink: 0; }
@@ -93,10 +94,13 @@
 <div class="header">
   <div class="logo">WB</div>
   <div>
-    <div class="header-title">Остатки на складах</div>
-    <div class="header-sub">Гавриш · WB Analytics</div>
+    <div class="header-title">WB Analytics</div>
+    <div class="header-sub">Гавриш · Автоматизация N8N</div>
   </div>
-  <a href="/" class="back-link">← Дашборд</a>
+  <nav class="nav">
+    <a class="nav-item" href="/wb-dashboard/">📊 РнП</a>
+    <a class="nav-item active" href="/wb-dashboard/stocks.html">📦 Остатки</a>
+  </nav>
 </div>
 
 <div class="controls">
