@@ -115,6 +115,13 @@
   .cmp-fill { height:100%; border-radius:5px; animation:grow 0.8s ease both; }
   .cmp-cnt { width:80px; text-align:right; font-size:12px; font-weight:700; }
 
+
+  /* Nav menu */
+  .nav { display:flex; align-items:center; gap:4px; background:var(--s1); border:1px solid var(--border); border-radius:12px; padding:4px; margin-bottom:24px; width:fit-content; }
+  .nav-item { display:flex; align-items:center; gap:8px; padding:8px 18px; border-radius:9px; font-size:13px; font-weight:600; color:var(--muted2); text-decoration:none; transition:all .2s; cursor:pointer; }
+  .nav-item:hover { color:var(--text); background:var(--s2); }
+  .nav-item.active { background:var(--wb); color:#fff; box-shadow:0 2px 12px rgba(203,17,171,0.3); }
+  .nav-item .nav-icon { font-size:15px; }
   .error-banner { background:rgba(255,79,110,0.08); border:1px solid rgba(255,79,110,0.25); border-radius:12px; padding:16px 20px; margin-bottom:20px; font-size:13px; color:var(--red); display:none; }
 </style>
 </head>
@@ -142,6 +149,15 @@
     </div>
   </div>
 
+
+  <nav class="nav">
+    <a class="nav-item active" href="/wb-dashboard/">
+      <span class="nav-icon">📊</span> Продажи
+    </a>
+    <a class="nav-item" href="/wb-dashboard/stocks.html">
+      <span class="nav-icon">📦</span> Остатки
+    </a>
+  </nav>
   <div id="error-banner" class="error-banner"></div>
 
   <div class="tabs">
