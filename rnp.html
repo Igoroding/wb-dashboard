@@ -68,7 +68,7 @@
   .ai-btn { background:var(--wb); border:none; border-radius:8px; padding:9px 20px; color:#fff; font-size:13px; font-weight:700; cursor:pointer; font-family:'Geologica',sans-serif; transition:opacity .2s; display:flex; align-items:center; gap:8px; }
   .ai-btn:hover { opacity:0.85; }
   .ai-btn:disabled { opacity:0.5; cursor:default; }
-  .ai-body { font-size:14px; line-height:1.7; color:var(--text); white-space:pre-wrap; }
+  .ai-body { font-size:14px; line-height:1.7; color:var(--text); }
   .ai-body.empty { color:var(--muted2); font-size:13px; }
   .ai-flag-red  { color:var(--red); font-weight:700; }
   .ai-flag-yellow { color:var(--yellow); font-weight:700; }
@@ -184,7 +184,7 @@ ${tableText}
     try { data = JSON.parse(raw); } catch(e) { throw new Error('Ответ не JSON: ' + raw.slice(0, 200)); }
     const text = data.result || JSON.stringify(data);
     body.className = 'ai-body';
-    body.textContent = text;
+    body.innerHTML = text;
   } catch(e) {
     body.textContent = 'Ошибка: ' + e.message;
   }
@@ -271,7 +271,7 @@ ${tableText}
     try { data = JSON.parse(raw); } catch(e) { throw new Error('Ответ не JSON: ' + raw.slice(0, 200)); }
     const text = data.result || JSON.stringify(data);
     body.className = 'ai-body';
-    body.textContent = text;
+    body.innerHTML = text;
   } catch(e) {
     body.textContent = 'Ошибка: ' + e.message;
   }
@@ -817,7 +817,7 @@ ${tableText}
     try { data = JSON.parse(raw); } catch(e) { throw new Error('Ответ не JSON: ' + raw.slice(0, 200)); }
     const text = data.result || JSON.stringify(data);
     body.className = 'ai-body';
-    body.textContent = text;
+    body.innerHTML = text;
   } catch(e) {
     body.textContent = 'Ошибка: ' + e.message;
   }
