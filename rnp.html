@@ -330,20 +330,35 @@ function renderTempo(rows) {
     return 'var(--red)';
   }
 
+  // Цвет для заказов/продаж: больше — лучше
+  function colorGood(pct) {
+    if (pct >= 95) return 'var(--green)';
+    if (pct >= 70) return 'var(--yellow)';
+    return 'var(--red)';
+  }
+  // Цвет для рекламы: меньше — лучше (по ДРР)
+  function colorAds(drrFact, drrPlan) {
+    if (drrFact <= drrPlan)        return 'var(--green)';
+    if (drrFact <= drrPlan * 1.10) return 'var(--yellow)';
+    return 'var(--red)';
+  }
+  const adsColor = colorAds(factDrr, planDrr);
+  const adsTempoClass = factDrr <= planDrr ? 'tempo-ok' : factDrr <= planDrr * 1.10 ? 'tempo-warn' : 'tempo-bad';
+
   const cards = [
-    { label:'Заказы',  fact:factOrders, plan:planOrders, pct:pctOrders, tempo:tempoOrders, inverse:false, planLabel:'план: '+fmtRub(planOrders), tempoLabel: null },
-    { label:'Продажи', fact:factSales,  plan:planSales,  pct:pctSales,  tempo:tempoSales,  inverse:false, planLabel:'план: '+fmtRub(planSales),  tempoLabel: null },
-    { label:'Реклама', fact:factAds,    plan:planAds,    pct:pctAds,    tempo:tempoAds,    inverse:true,  planLabel:'план ДРР: '+planDrr+'%',    tempoLabel: 'ДРР факт: '+fmtPct(factDrr)+' / план: '+planDrr+'%' },
+    { label:'Заказы',  color:colorGood(pctOrders), fact:fmtRub(factOrders), planLabel:'план: '+fmtRub(planOrders), barW:Math.min(pctOrders,100), pctLabel:fmtPct(pctOrders)+' выполнено', tempoClass:tempoClass(tempoOrders,planOrders,false), tempoLabel:tempoText(tempoOrders,planOrders) },
+    { label:'Продажи', color:colorGood(pctSales),  fact:fmtRub(factSales),  planLabel:'план: '+fmtRub(planSales),  barW:Math.min(pctSales,100),  pctLabel:fmtPct(pctSales)+' выполнено',  tempoClass:tempoClass(tempoSales,planSales,false),   tempoLabel:tempoText(tempoSales,planSales) },
+    { label:'Реклама', color:adsColor,              fact:fmtRub(factAds),    planLabel:'план ДРР: '+planDrr+'%',    barW:Math.min(factDrr/planDrr*100,200)/2, pctLabel:'ДРР: '+fmtPct(factDrr), tempoClass:adsTempoClass, tempoLabel:'факт '+fmtPct(factDrr)+' / план '+planDrr+'%' },
   ];
 
   document.getElementById('tempo-grid').innerHTML = cards.map(c => `
     <div class="tempo-card">
       <div class="tc-label">${c.label}</div>
-      <div class="tc-fact" style="color:${barColor(c.pct,c.inverse)}">${fmtRub(c.fact)}</div>
+      <div class="tc-fact" style="color:${c.color}">${c.fact}</div>
       <div class="tc-plan">${c.planLabel}</div>
-      <div class="progress"><div class="progress-fill" style="width:${Math.min(c.pct,100)}%;background:${barColor(c.pct,c.inverse)}"></div></div>
-      <div class="tc-pct" style="color:${barColor(c.pct,c.inverse)}">${fmtPct(c.pct)} выполнено</div>
-      <div class="tc-tempo ${tempoClass(c.tempo, c.plan, c.inverse)}">${c.tempoLabel !== null ? c.tempoLabel : tempoText(c.tempo, c.plan)}</div>
+      <div class="progress"><div class="progress-fill" style="width:${c.barW}%;background:${c.color}"></div></div>
+      <div class="tc-pct" style="color:${c.color}">${c.pctLabel}</div>
+      <div class="tc-tempo ${c.tempoClass}">${c.tempoLabel}</div>
     </div>
   `).join('');
 }
