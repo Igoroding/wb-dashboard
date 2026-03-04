@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Остатки на складах WB</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d0d0d; color: #e0e0e0; font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+
+  .header { background: #141414; border-bottom: 1px solid #2a2a2a; padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .logo { width: 40px; height: 40px; background: linear-gradient(135deg, #cb11ab, #7c5cfc); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; color: #fff; }
+  .header-title { font-size: 18px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .header-sub { font-size: 11px; color: #666; letter-spacing: 2px; text-transform: uppercase; }
+  .back-link { margin-left: auto; color: #cb11ab; text-decoration: none; font-size: 13px; border: 1px solid #cb11ab33; padding: 6px 14px; border-radius: 8px; }
+  .back-link:hover { background: #cb11ab22; }
+
+  .controls { padding: 16px 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .shop-tabs { display: flex; gap: 8px; }
+  .tab { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 20px; padding: 6px 16px; cursor: pointer; font-size: 13px; color: #aaa; transition: all .2s; }
+  .tab.active { background: #cb11ab; border-color: #cb11ab; color: #fff; }
+  .search-box { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 8px; padding: 6px 12px; color: #e0e0e0; font-size: 13px; width: 220px; }
+  .search-box:focus { outline: none; border-color: #cb11ab55; }
+  .info { margin-left: auto; font-size: 12px; color: #555; }
+
+  .table-wrap { padding: 0 24px 24px; overflow-x: auto; }
+  table { border-collapse: collapse; font-size: 12px; min-width: 100%; }
+  thead { position: sticky; top: 0; z-index: 10; }
+  th { background: #1a1a1a; color: #888; font-weight: 600; padding: 10px 12px; text-align: center; border-bottom: 2px solid #2a2a2a; white-space: nowrap; }
+  th.article-col { text-align: left; min-width: 200px; position: sticky; left: 0; z-index: 11; background: #1a1a1a; }
+  td { padding: 7px 12px; border-bottom: 1px solid #1e1e1e; text-align: center; white-space: nowrap; }
+  td.article-col { text-align: left; position: sticky; left: 0; background: #141414; font-size: 12px; color: #ccc; z-index: 5; min-width: 200px; }
+  tr:hover td { background: #1a1a1a; }
+  tr:hover td.article-col { background: #1f1f1f; }
+
+  .qty { font-weight: 600; }
+  .qty-high { color: #05d69e; }
+  .qty-mid { color: #ffc442; }
+  .qty-low { color: #ff6d3b; }
+  .qty-zero { color: #333; }
+  .qty-new { color: #3b9eff; font-weight: 700; }
+
+  .loading { text-align: center; padding: 80px; color: #555; font-size: 16px; }
+  .empty { text-align: center; padding: 40px; color: #444; }
+  
+  .legend { display: flex; gap: 16px; padding: 0 24px 12px; font-size: 11px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">WB</div>
+  <div>
+    <div class="header-title">Остатки на складах</div>
+    <div class="header-sub">Гавриш · WB Analytics</div>
+  </div>
+  <a href="/" class="back-link">← Дашборд</a>
+</div>
+
+<div class="controls">
+  <div class="shop-tabs">
+    <div class="tab active" onclick="setShop('oding',this)">🌱 Одинг</div>
+    <div class="tab" onclick="setShop('stolnikov',this)">🌿 Стольников</div>
+  </div>
+  <input class="search-box" type="text" placeholder="Поиск артикула..." oninput="filterTable(this.value)">
+  <div class="info" id="info">Загрузка...</div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="dot" style="background:#05d69e"></div> &gt;50 шт</div>
+  <div class="legend-item"><div class="dot" style="background:#ffc442"></div> 10–50 шт</div>
+  <div class="legend-item"><div class="dot" style="background:#ff6d3b"></div> 1–9 шт</div>
+  <div class="legend-item"><div class="dot" style="background:#3b9eff"></div> Новое поступление</div>
+</div>
+
+<div id="loading" class="loading">Загружаем данные из Supabase...</div>
+<div class="table-wrap" id="table-wrap" style="display:none">
+  <table id="main-table">
+    <thead id="thead"></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="empty" id="empty" style="display:none">Нет данных</div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://rkxezsfrmjvriokhzaxk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGV6c2ZybWp2cmlva2h6YXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTM5MTIsImV4cCI6MjA4ODEyOTkxMn0.IOMsGZh7ZGn1LTs2UCxdBWoIWH1LGiprkgR6pwpfabw';
+
+let currentShop = 'oding';
+let allData = [];
+let dates = [];
+let articles = [];
+
+async function loadData(shop) {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('table-wrap').style.display = 'none';
+
+  // Load all records for this shop (paginate if needed)
+  let allRows = [];
+  let from = 0;
+  const pageSize = 1000;
+  while (true) {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/wb_stocks?shop=eq.${shop}&quantity=gt.0&order=date.asc,article.asc&limit=${pageSize}&offset=${from}`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+    );
+    const rows = await res.json();
+    if (!rows || rows.length === 0) break;
+    allRows = allRows.concat(rows);
+    if (rows.length < pageSize) break;
+    from += pageSize;
+  }
+
+  allData = allRows;
+
+  // Get unique dates and articles
+  const dateSet = new Set();
+  const articleSet = new Set();
+  const prevZero = new Set(); // articles that were zero before last day
+
+  // Build pivot
+  const pivot = {}; // article -> date -> qty
+  for (const row of allRows) {
+    if (row.article === '__empty__') continue;
+    dateSet.add(row.date);
+    articleSet.add(row.article);
+    if (!pivot[row.article]) pivot[row.article] = {};
+    pivot[row.article][row.date] = row.quantity;
+  }
+
+  dates = Array.from(dateSet).sort();
+  articles = Array.from(articleSet).sort();
+
+  // Filter: only articles with qty > 0 on latest date OR had qty before but now have qty
+  const lastDate = dates[dates.length - 1];
+  const activeArticles = articles.filter(art => {
+    // Show if has any stock on any day
+    return dates.some(d => (pivot[art][d] || 0) > 0);
+  });
+
+  // Detect "new arrival" — was 0 then became > 0
+  const newArrival = new Set();
+  for (const art of activeArticles) {
+    for (let i = 1; i < dates.length; i++) {
+      const prev = pivot[art][dates[i-1]] || 0;
+      const curr = pivot[art][dates[i]] || 0;
+      if (prev === 0 && curr > 0) newArrival.add(art + '|' + dates[i]);
+    }
+  }
+
+  // Render
+  const thead = document.getElementById('thead');
+  const tbody = document.getElementById('tbody');
+
+  // Format date: "24/2"
+  const fmtDate = d => {
+    const [y,m,day] = d.split('-');
+    return `${parseInt(day)}/${parseInt(m)}`;
+  };
+
+  thead.innerHTML = `<tr>
+    <th class="article-col">Артикул товара</th>
+    ${dates.map(d => `<th>${fmtDate(d)}</th>`).join('')}
+  </tr>`;
+
+  tbody.innerHTML = activeArticles.map(art => {
+    const cells = dates.map(d => {
+      const qty = pivot[art][d] || 0;
+      const key = art + '|' + d;
+      let cls = 'qty-zero';
+      let val = qty > 0 ? qty : '–';
+      if (newArrival.has(key)) cls = 'qty-new';
+      else if (qty > 50) cls = 'qty-high';
+      else if (qty >= 10) cls = 'qty-mid';
+      else if (qty > 0) cls = 'qty-low';
+      return `<td class="qty ${cls}">${val}</td>`;
+    }).join('');
+    return `<tr data-article="${art}"><td class="article-col">${art}</td>${cells}</tr>`;
+  }).join('');
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('table-wrap').style.display = 'block';
+  document.getElementById('info').textContent = `${activeArticles.length} артикулов · ${dates.length} дней`;
+}
+
+function setShop(shop, el) {
+  currentShop = shop;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  loadData(shop);
+}
+
+function filterTable(q) {
+  const rows = document.querySelectorAll('#tbody tr');
+  q = q.toLowerCase();
+  rows.forEach(r => {
+    const art = r.getAttribute('data-article') || '';
+    r.style.display = art.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+loadData('oding');
+</script>
+</body>
+</html>
