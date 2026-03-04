@@ -280,7 +280,7 @@ function renderTempo(rows) {
   const monthStr = currentMonth;
   const [y, m] = monthStr.split('-');
   const totalDays  = new Date(parseInt(y), parseInt(m), 0).getDate();
-  const passedDays = rows.filter(r => r.date <= today).length || 1;
+  const passedDays = rows.filter(r => r.date < today).length || 1;
 
   const factOrders = rows.reduce((s,r) => s + r.orders_sum, 0);
   const factSales  = rows.reduce((s,r) => s + r.sales_sum, 0);
@@ -299,8 +299,13 @@ function renderTempo(rows) {
   const pctSales  = planSales  > 0 ? factSales  / planSales  * 100 : 0;
   const pctAds    = planAds    > 0 ? factAds    / planAds    * 100 : 0;
 
-  function tempoClass(tempo, planVal) {
+  function tempoClass(tempo, planVal, inverse=false) {
     const ratio = planVal > 0 ? tempo / planVal : 0;
+    if (inverse) {
+      if (ratio <= 1.0)  return 'tempo-ok';
+      if (ratio <= 1.10) return 'tempo-warn';
+      return 'tempo-bad';
+    }
     if (ratio >= 0.95) return 'tempo-ok';
     if (ratio >= 0.7)  return 'tempo-warn';
     return 'tempo-bad';
@@ -309,26 +314,33 @@ function renderTempo(rows) {
     const ratio = planVal > 0 ? tempo / planVal * 100 : 0;
     return `Идём на ${ratio.toFixed(0)}% плана`;
   }
-  function barColor(pct) {
+  function barColor(pct, inverse=false) {
+    if (inverse) {
+      // Реклама: меньше — лучше
+      if (pct <= 100) return 'var(--green)';
+      if (pct <= 110) return 'var(--yellow)';
+      return 'var(--red)';
+    }
+    // Заказы/Продажи: больше — лучше
     if (pct >= 95) return 'var(--green)';
-    if (pct >= 60) return 'var(--yellow)';
+    if (pct >= 70) return 'var(--yellow)';
     return 'var(--red)';
   }
 
   const cards = [
-    { label:'Заказы', fact:factOrders, plan:planOrders, pct:pctOrders, tempo:tempoOrders },
-    { label:'Продажи', fact:factSales, plan:planSales, pct:pctSales, tempo:tempoSales },
-    { label:'Реклама', fact:factAds, plan:planAds, pct:pctAds, tempo:tempoAds },
+    { label:'Заказы',  fact:factOrders, plan:planOrders, pct:pctOrders, tempo:tempoOrders, inverse:false },
+    { label:'Продажи', fact:factSales,  plan:planSales,  pct:pctSales,  tempo:tempoSales,  inverse:false },
+    { label:'Реклама', fact:factAds,    plan:planAds,    pct:pctAds,    tempo:tempoAds,    inverse:true  },
   ];
 
   document.getElementById('tempo-grid').innerHTML = cards.map(c => `
     <div class="tempo-card">
       <div class="tc-label">${c.label}</div>
-      <div class="tc-fact" style="color:${barColor(c.pct)}">${fmtRub(c.fact)}</div>
+      <div class="tc-fact" style="color:${barColor(c.pct,c.inverse)}">${fmtRub(c.fact)}</div>
       <div class="tc-plan">план: ${fmtRub(c.plan)}</div>
-      <div class="progress"><div class="progress-fill" style="width:${Math.min(c.pct,100)}%;background:${barColor(c.pct)}"></div></div>
-      <div class="tc-pct" style="color:${barColor(c.pct)}">${fmtPct(c.pct)} выполнено</div>
-      <div class="tc-tempo ${tempoClass(c.tempo, c.plan)}">${tempoText(c.tempo, c.plan)}</div>
+      <div class="progress"><div class="progress-fill" style="width:${Math.min(c.pct,100)}%;background:${barColor(c.pct,c.inverse)}"></div></div>
+      <div class="tc-pct" style="color:${barColor(c.pct,c.inverse)}">${fmtPct(c.pct)} выполнено</div>
+      <div class="tc-tempo ${tempoClass(c.tempo, c.plan, c.inverse)}">${tempoText(c.tempo, c.plan)}</div>
     </div>
   `).join('');
 }
