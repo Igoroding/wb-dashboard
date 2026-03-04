@@ -60,6 +60,20 @@
   .vt { padding:7px 18px; background:var(--s1); border:1px solid var(--border); border-radius:8px; font-size:13px; font-weight:600; color:var(--muted2); cursor:pointer; transition:all .2s; }
   .vt.active { background:var(--s2); border-color:var(--muted); color:var(--text); }
 
+
+  /* AI Analysis */
+  .ai-wrap { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:24px; }
+  .ai-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .ai-title { font-size:13px; font-weight:700; color:var(--muted2); text-transform:uppercase; letter-spacing:1px; }
+  .ai-btn { background:var(--wb); border:none; border-radius:8px; padding:9px 20px; color:#fff; font-size:13px; font-weight:700; cursor:pointer; font-family:'Geologica',sans-serif; transition:opacity .2s; display:flex; align-items:center; gap:8px; }
+  .ai-btn:hover { opacity:0.85; }
+  .ai-btn:disabled { opacity:0.5; cursor:default; }
+  .ai-body { font-size:14px; line-height:1.7; color:var(--text); white-space:pre-wrap; }
+  .ai-body.empty { color:var(--muted2); font-size:13px; }
+  .ai-flag-red  { color:var(--red); font-weight:700; }
+  .ai-flag-yellow { color:var(--yellow); font-weight:700; }
+  .ai-flag-green { color:var(--green); font-weight:700; }
+
   /* Chart */
   .chart-wrap { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:24px; }
   .chart-title { font-size:13px; font-weight:700; color:var(--muted2); text-transform:uppercase; letter-spacing:1px; margin-bottom:20px; }
@@ -95,10 +109,150 @@
   .spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--wb); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px; }
   @keyframes spin { to { transform:rotate(360deg) } }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+async function runAI() {
+  const btn = document.getElementById('ai-btn');
+  const body = document.getElementById('ai-body');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Анализирую...';
+  body.className = 'ai-body empty';
+  body.textContent = 'Загружаю данные и анализирую...';
+
+  // Собираем данные из таблицы (все строки кроме сегодня)
+  const rows = currentRows ? currentRows.filter(r => {
+    const today = new Date().toLocaleDateString('sv-SE');
+    return r.date !== today;
+  }) : [];
+
+  if (rows.length === 0) {
+    body.textContent = 'Нет данных для анализа.';
+    btn.disabled = false;
+    btn.textContent = '✨ Запустить анализ';
+    return;
+  }
+
+  // Форматируем данные для промпта
+  const tableText = rows.map(r => {
+    const d = new Date(r.date + 'T12:00:00');
+    const day = d.toLocaleDateString('ru-RU', {weekday:'short', day:'2-digit', month:'short'});
+    const drr = r.orders_sum > 0 ? (r.ads_spend / r.orders_sum * 100).toFixed(1) : '0';
+    return `${day}: заказы ${r.orders_count}шт/${Math.round(r.orders_sum/1000)}К₽, продажи ${r.sales_count}шт/${Math.round(r.sales_sum/1000)}К₽, реклама ${Math.round(r.ads_spend/1000)}К₽, ДРР ${drr}%`;
+  }).join('\n');
+
+  const planInfo = `План на месяц: заказы ${(plan.orders_plan/1000000).toFixed(1)}М₽, продажи ${(plan.sales_plan/1000000).toFixed(1)}М₽, ДРР ${plan.drr_plan}%`;
+
+  const prompt = `Ты аналитик e-commerce на Wildberries. Проанализируй данные двух магазинов (Одинг + Стольников суммарно) за последние дни.
+
+${planInfo}
+
+Данные по дням (от старых к новым):
+${tableText}
+
+Дай структурированный анализ:
+1. 🔴 Red flags — тревожные сигналы (если есть)
+2. 🟡 Тренды — что меняется, куда движемся
+3. 💡 Гипотезы — почему так происходит, что стоит проверить
+4. ✅ Что хорошо — позитивные моменты
+
+Учитывай сезонность по дням недели (выходные обычно лучше). Будь конкретным, используй цифры. Пиши по-русски, кратко и по делу.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content?.[0]?.text || 'Не удалось получить ответ';
+    body.className = 'ai-body';
+    body.textContent = text;
+  } catch(e) {
+    body.textContent = 'Ошибка: ' + e.message;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔄 Обновить анализ';
+}
+
+</script>
 </head>
 <body>
-<script src="/wb-dashboard/header.js"></script>
+<script src="/wb-dashboard/header.js">
+async function runAI() {
+  const btn = document.getElementById('ai-btn');
+  const body = document.getElementById('ai-body');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Анализирую...';
+  body.className = 'ai-body empty';
+  body.textContent = 'Загружаю данные и анализирую...';
+
+  // Собираем данные из таблицы (все строки кроме сегодня)
+  const rows = currentRows ? currentRows.filter(r => {
+    const today = new Date().toLocaleDateString('sv-SE');
+    return r.date !== today;
+  }) : [];
+
+  if (rows.length === 0) {
+    body.textContent = 'Нет данных для анализа.';
+    btn.disabled = false;
+    btn.textContent = '✨ Запустить анализ';
+    return;
+  }
+
+  // Форматируем данные для промпта
+  const tableText = rows.map(r => {
+    const d = new Date(r.date + 'T12:00:00');
+    const day = d.toLocaleDateString('ru-RU', {weekday:'short', day:'2-digit', month:'short'});
+    const drr = r.orders_sum > 0 ? (r.ads_spend / r.orders_sum * 100).toFixed(1) : '0';
+    return `${day}: заказы ${r.orders_count}шт/${Math.round(r.orders_sum/1000)}К₽, продажи ${r.sales_count}шт/${Math.round(r.sales_sum/1000)}К₽, реклама ${Math.round(r.ads_spend/1000)}К₽, ДРР ${drr}%`;
+  }).join('\n');
+
+  const planInfo = `План на месяц: заказы ${(plan.orders_plan/1000000).toFixed(1)}М₽, продажи ${(plan.sales_plan/1000000).toFixed(1)}М₽, ДРР ${plan.drr_plan}%`;
+
+  const prompt = `Ты аналитик e-commerce на Wildberries. Проанализируй данные двух магазинов (Одинг + Стольников суммарно) за последние дни.
+
+${planInfo}
+
+Данные по дням (от старых к новым):
+${tableText}
+
+Дай структурированный анализ:
+1. 🔴 Red flags — тревожные сигналы (если есть)
+2. 🟡 Тренды — что меняется, куда движемся
+3. 💡 Гипотезы — почему так происходит, что стоит проверить
+4. ✅ Что хорошо — позитивные моменты
+
+Учитывай сезонность по дням недели (выходные обычно лучше). Будь конкретным, используй цифры. Пиши по-русски, кратко и по делу.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content?.[0]?.text || 'Не удалось получить ответ';
+    body.className = 'ai-body';
+    body.textContent = text;
+  } catch(e) {
+    body.textContent = 'Ошибка: ' + e.message;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔄 Обновить анализ';
+}
+
+</script>
 
 <div class="wrap">
   <div id="loading" class="loading"><div class="spinner"></div>Загружаем данные...</div>
@@ -252,6 +406,7 @@ async function savePlan() {
   renderConv(window._rows || []);
 }
 
+let currentRows = [];
 async function loadData(month) {
   const [y, m] = month.split('-');
   const from = `${month}-01`;
@@ -543,6 +698,7 @@ async function switchMonth(month) {
   renderToday(rows);
   renderConv(rows);
   const todayStr = new Date().toLocaleDateString('sv-SE');
+  currentRows = rows;
   renderChart(rows.filter(r => r.date !== todayStr));
   renderTable(rows);
 
@@ -558,6 +714,86 @@ document.getElementById('month-tabs').innerHTML = months.map(m =>
 
 const thisMonth = new Date().toISOString().slice(0, 7);
 switchMonth(thisMonth);
+
+async function runAI() {
+  const btn = document.getElementById('ai-btn');
+  const body = document.getElementById('ai-body');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Анализирую...';
+  body.className = 'ai-body empty';
+  body.textContent = 'Загружаю данные и анализирую...';
+
+  // Собираем данные из таблицы (все строки кроме сегодня)
+  const rows = currentRows ? currentRows.filter(r => {
+    const today = new Date().toLocaleDateString('sv-SE');
+    return r.date !== today;
+  }) : [];
+
+  if (rows.length === 0) {
+    body.textContent = 'Нет данных для анализа.';
+    btn.disabled = false;
+    btn.textContent = '✨ Запустить анализ';
+    return;
+  }
+
+  // Форматируем данные для промпта
+  const tableText = rows.map(r => {
+    const d = new Date(r.date + 'T12:00:00');
+    const day = d.toLocaleDateString('ru-RU', {weekday:'short', day:'2-digit', month:'short'});
+    const drr = r.orders_sum > 0 ? (r.ads_spend / r.orders_sum * 100).toFixed(1) : '0';
+    return `${day}: заказы ${r.orders_count}шт/${Math.round(r.orders_sum/1000)}К₽, продажи ${r.sales_count}шт/${Math.round(r.sales_sum/1000)}К₽, реклама ${Math.round(r.ads_spend/1000)}К₽, ДРР ${drr}%`;
+  }).join('\n');
+
+  const planInfo = `План на месяц: заказы ${(plan.orders_plan/1000000).toFixed(1)}М₽, продажи ${(plan.sales_plan/1000000).toFixed(1)}М₽, ДРР ${plan.drr_plan}%`;
+
+  const prompt = `Ты аналитик e-commerce на Wildberries. Проанализируй данные двух магазинов (Одинг + Стольников суммарно) за последние дни.
+
+${planInfo}
+
+Данные по дням (от старых к новым):
+${tableText}
+
+Дай структурированный анализ:
+1. 🔴 Red flags — тревожные сигналы (если есть)
+2. 🟡 Тренды — что меняется, куда движемся
+3. 💡 Гипотезы — почему так происходит, что стоит проверить
+4. ✅ Что хорошо — позитивные моменты
+
+Учитывай сезонность по дням недели (выходные обычно лучше). Будь конкретным, используй цифры. Пиши по-русски, кратко и по делу.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content?.[0]?.text || 'Не удалось получить ответ';
+    body.className = 'ai-body';
+    body.textContent = text;
+  } catch(e) {
+    body.textContent = 'Ошибка: ' + e.message;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔄 Обновить анализ';
+}
+
 </script>
+
+    <!-- AI Analysis -->
+    <div class="ai-wrap">
+      <div class="ai-header">
+        <div class="ai-title">🤖 ИИ-анализ</div>
+        <button class="ai-btn" id="ai-btn" onclick="runAI()">✨ Запустить анализ</button>
+      </div>
+      <div class="ai-body empty" id="ai-body">Нажмите кнопку, чтобы получить анализ данных за последние 14 дней</div>
+    </div>
+
 </body>
 </html>
