@@ -164,8 +164,11 @@ ${tableText}
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt })
     });
-    const data = await resp.json();
-    const text = data.result || 'Не удалось получить ответ';
+    const raw = await resp.text();
+    if (!raw || !raw.trim()) throw new Error('Webhook вернул пустой ответ. Проверьте workflow в n8n — возможно, Claude API узел падает с ошибкой.');
+    let data;
+    try { data = JSON.parse(raw); } catch(e) { throw new Error('Ответ не JSON: ' + raw.slice(0, 200)); }
+    const text = data.result || JSON.stringify(data);
     body.className = 'ai-body';
     body.textContent = text;
   } catch(e) {
@@ -234,8 +237,11 @@ ${tableText}
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt })
     });
-    const data = await resp.json();
-    const text = data.result || 'Не удалось получить ответ';
+    const raw = await resp.text();
+    if (!raw || !raw.trim()) throw new Error('Webhook вернул пустой ответ. Проверьте workflow в n8n — возможно, Claude API узел падает с ошибкой.');
+    let data;
+    try { data = JSON.parse(raw); } catch(e) { throw new Error('Ответ не JSON: ' + raw.slice(0, 200)); }
+    const text = data.result || JSON.stringify(data);
     body.className = 'ai-body';
     body.textContent = text;
   } catch(e) {
@@ -763,8 +769,11 @@ ${tableText}
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt })
     });
-    const data = await resp.json();
-    const text = data.result || 'Не удалось получить ответ';
+    const raw = await resp.text();
+    if (!raw || !raw.trim()) throw new Error('Webhook вернул пустой ответ. Проверьте workflow в n8n — возможно, Claude API узел падает с ошибкой.');
+    let data;
+    try { data = JSON.parse(raw); } catch(e) { throw new Error('Ответ не JSON: ' + raw.slice(0, 200)); }
+    const text = data.result || JSON.stringify(data);
     body.className = 'ai-body';
     body.textContent = text;
   } catch(e) {
