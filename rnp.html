@@ -158,17 +158,14 @@ ${tableText}
 Учитывай сезонность по дням недели (выходные обычно лучше). Будь конкретным, используй цифры. Пиши по-русски, кратко и по делу.`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const WEBHOOK_URL = 'https://wbtrenz.app.n8n.cloud/webhook/wb-ai-analysis';
+    const resp = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      body: JSON.stringify({ prompt })
     });
     const data = await resp.json();
-    const text = data.content?.[0]?.text || 'Не удалось получить ответ';
+    const text = data.result || 'Не удалось получить ответ';
     body.className = 'ai-body';
     body.textContent = text;
   } catch(e) {
@@ -231,17 +228,14 @@ ${tableText}
 Учитывай сезонность по дням недели (выходные обычно лучше). Будь конкретным, используй цифры. Пиши по-русски, кратко и по делу.`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const WEBHOOK_URL = 'https://wbtrenz.app.n8n.cloud/webhook/wb-ai-analysis';
+    const resp = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      body: JSON.stringify({ prompt })
     });
     const data = await resp.json();
-    const text = data.content?.[0]?.text || 'Не удалось получить ответ';
+    const text = data.result || 'Не удалось получить ответ';
     body.className = 'ai-body';
     body.textContent = text;
   } catch(e) {
@@ -763,17 +757,14 @@ ${tableText}
 Учитывай сезонность по дням недели (выходные обычно лучше). Будь конкретным, используй цифры. Пиши по-русски, кратко и по делу.`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const WEBHOOK_URL = 'https://wbtrenz.app.n8n.cloud/webhook/wb-ai-analysis';
+    const resp = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      body: JSON.stringify({ prompt })
     });
     const data = await resp.json();
-    const text = data.content?.[0]?.text || 'Не удалось получить ответ';
+    const text = data.result || 'Не удалось получить ответ';
     body.className = 'ai-body';
     body.textContent = text;
   } catch(e) {
