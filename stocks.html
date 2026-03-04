@@ -12,40 +12,80 @@
   .logo { width: 40px; height: 40px; background: linear-gradient(135deg, #cb11ab, #7c5cfc); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; color: #fff; flex-shrink: 0; }
   .header-title { font-size: 18px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
   .header-sub { font-size: 11px; color: #666; letter-spacing: 2px; text-transform: uppercase; }
-  .back-link { margin-left: auto; color: #cb11ab; text-decoration: none; font-size: 13px; border: 1px solid #cb11ab33; padding: 6px 14px; border-radius: 8px; transition: background .2s; }
+  .back-link { margin-left: auto; color: #cb11ab; text-decoration: none; font-size: 13px; border: 1px solid #cb11ab33; padding: 6px 14px; border-radius: 8px; }
   .back-link:hover { background: #cb11ab22; }
 
-  .controls { padding: 16px 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid #1e1e1e; }
+  /* Shop tabs */
+  .controls { padding: 14px 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid #1e1e1e; }
   .tab { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 20px; padding: 6px 18px; cursor: pointer; font-size: 13px; color: #aaa; transition: all .2s; }
   .tab.active { background: #cb11ab; border-color: #cb11ab; color: #fff; }
-  .info { margin-left: auto; font-size: 12px; color: #555; }
+  .view-tab { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 8px; padding: 6px 14px; cursor: pointer; font-size: 12px; color: #aaa; transition: all .2s; }
+  .view-tab.active { background: #7c5cfc22; border-color: #7c5cfc; color: #7c5cfc; }
   .articles-link { font-size: 12px; color: #7c5cfc; text-decoration: none; border: 1px solid #7c5cfc33; padding: 4px 10px; border-radius: 6px; }
-  .articles-link:hover { background: #7c5cfc22; }
+  .info { margin-left: auto; font-size: 12px; color: #555; }
 
+  /* Summary bar */
+  .summary-bar { display: flex; gap: 16px; padding: 14px 24px; border-bottom: 1px solid #1e1e1e; flex-wrap: wrap; align-items: center; }
+  .summary-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 10px 18px; display: flex; align-items: center; gap: 12px; min-width: 180px; }
+  .summary-card.danger { border-color: #ff4d4d44; background: #1f1010; }
+  .summary-card.warning { border-color: #ffc44244; background: #1f1b10; }
+  .summary-card.good { border-color: #05d69e44; background: #101f1a; }
+  .sc-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+  .sc-value { font-size: 22px; font-weight: 800; }
+  .sc-value.red { color: #ff4d4d; }
+  .sc-value.yellow { color: #ffc442; }
+  .sc-value.green { color: #05d69e; }
+  .progress-wrap { flex: 1; min-width: 200px; }
+  .progress-bar { height: 6px; background: #2a2a2a; border-radius: 3px; overflow: hidden; margin-top: 4px; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width .5s; }
+
+  /* Risk panel */
+  .risk-panel { margin: 0 24px 16px; background: #1a0f0f; border: 1px solid #ff4d4d33; border-radius: 12px; overflow: hidden; }
+  .risk-header { padding: 12px 18px; background: #200f0f; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+  .risk-header h3 { font-size: 13px; font-weight: 700; color: #ff6b6b; }
+  .risk-header .risk-count { background: #ff4d4d; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+  .risk-header .toggle { margin-left: auto; color: #666; font-size: 12px; }
+  .risk-body { padding: 0 18px 14px; }
+  .risk-items { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; }
+  .risk-item { background: #2a1010; border: 1px solid #ff4d4d44; border-radius: 8px; padding: 8px 14px; }
+  .risk-item.critical { border-color: #ff4d4d; background: #300f0f; }
+  .risk-item .ri-name { font-size: 12px; color: #ddd; font-weight: 600; }
+  .risk-item .ri-days { font-size: 11px; margin-top: 2px; }
+  .ri-days.critical { color: #ff4d4d; }
+  .ri-days.warning { color: #ffc442; }
+  .ri-stock { font-size: 11px; color: #666; margin-top: 1px; }
+
+  /* Legend */
   .legend { display: flex; gap: 16px; padding: 10px 24px; font-size: 11px; flex-wrap: wrap; border-bottom: 1px solid #1a1a1a; }
   .legend-item { display: flex; align-items: center; gap: 6px; color: #666; }
   .dot { width: 8px; height: 8px; border-radius: 50%; }
 
+  /* Table */
   .table-wrap { padding: 0 0 40px; overflow-x: auto; }
   table { border-collapse: collapse; font-size: 12px; width: 100%; }
   thead { position: sticky; top: 0; z-index: 10; }
   th { background: #141414; color: #666; font-weight: 600; padding: 10px 14px; text-align: center; border-bottom: 2px solid #2a2a2a; white-space: nowrap; font-size: 11px; }
   th.art-col { text-align: left; min-width: 220px; position: sticky; left: 0; z-index: 11; background: #141414; padding-left: 24px; }
+  th.today-col { color: #cb11ab; }
   td { padding: 8px 14px; border-bottom: 1px solid #191919; text-align: center; white-space: nowrap; }
   td.art-col { text-align: left; position: sticky; left: 0; background: #0d0d0d; font-size: 12px; color: #bbb; z-index: 5; padding-left: 24px; min-width: 220px; }
+  td.art-col.risk-row { color: #ff8080; }
+  td.art-col.risk-row::after { content: ' ⚠'; font-size: 10px; color: #ff4d4d; }
   tr:hover td { background: #151515; }
   tr:hover td.art-col { background: #181818; }
+  tr.risk-row-tr td { background: #180e0e; }
+  tr.risk-row-tr:hover td { background: #1f1010; }
 
   .qty { font-weight: 600; font-size: 13px; }
   .qty-high  { color: #05d69e; }
   .qty-mid   { color: #ffc442; }
   .qty-low   { color: #ff6d3b; }
-  .qty-zero  { color: #333; font-weight: 400; font-size: 11px; }
+  .qty-zero  { color: #ff3333; font-weight: 700; font-size: 13px; }
   .qty-new   { color: #3b9eff; font-weight: 700; }
-  .qty-today { background: #cb11ab15; border-radius: 4px; padding: 2px 6px; }
+  .qty-today { background: #cb11ab18; border-radius: 4px; padding: 2px 6px; }
 
   .loading { text-align: center; padding: 80px; color: #555; font-size: 15px; }
-  .error-banner { background: #2a1010; border: 1px solid #5a2020; color: #ff8080; padding: 12px 24px; font-size: 13px; margin: 0; }
+  .error-msg { text-align: center; padding: 40px; color: #ff6b6b; }
 </style>
 </head>
 <body>
@@ -59,24 +99,69 @@
   <a href="/" class="back-link">← Дашборд</a>
 </div>
 
-<div id="error-banner" class="error-banner" style="display:none"></div>
-
 <div class="controls">
   <div class="tab active" onclick="setShop('oding',this)">🌱 Одинг</div>
   <div class="tab" onclick="setShop('stolnikov',this)">🌿 Стольников</div>
-  <a class="articles-link" href="/articles.txt" target="_blank">📋 Список артикулов</a>
+  <div style="width:1px;height:20px;background:#2a2a2a;margin:0 4px"></div>
+  <div class="view-tab active" id="vt-table" onclick="setView('table',this)">📊 Таблица</div>
+  <div class="view-tab" id="vt-risk" onclick="setView('risk',this)">⚠️ Только риски</div>
+  <a class="articles-link" href="/wb-dashboard/articles.txt" target="_blank">📋 Список артикулов</a>
   <div class="info" id="info">Загрузка...</div>
+</div>
+
+<!-- Summary bar -->
+<div class="summary-bar" id="summary-bar" style="display:none">
+  <div class="summary-card" id="sc-instock">
+    <div>
+      <div class="sc-label">В наличии</div>
+      <div class="sc-value green" id="sc-instock-val">—</div>
+    </div>
+    <div class="progress-wrap">
+      <div style="font-size:11px;color:#666" id="sc-instock-sub"></div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="background:#05d69e"></div></div>
+    </div>
+  </div>
+  <div class="summary-card danger" id="sc-zero">
+    <div>
+      <div class="sc-label">Нулевые остатки</div>
+      <div class="sc-value red" id="sc-zero-val">—</div>
+    </div>
+    <div style="font-size:11px;color:#ff6b6b;margin-left:8px" id="sc-zero-sub"></div>
+  </div>
+  <div class="summary-card warning" id="sc-risk">
+    <div>
+      <div class="sc-label">⚠ Зона риска (&lt;10 дней)</div>
+      <div class="sc-value yellow" id="sc-risk-val">—</div>
+    </div>
+    <div style="font-size:11px;color:#ffc442;margin-left:8px" id="sc-risk-sub"></div>
+  </div>
+</div>
+
+<!-- Risk panel -->
+<div class="risk-panel" id="risk-panel" style="display:none">
+  <div class="risk-header" onclick="toggleRisk()">
+    <span>🔴</span>
+    <h3>Зона риска — нужна поставка</h3>
+    <span class="risk-count" id="risk-count">0</span>
+    <span class="toggle" id="risk-toggle">▼ скрыть</span>
+  </div>
+  <div class="risk-body" id="risk-body">
+    <div class="risk-items" id="risk-items"></div>
+  </div>
 </div>
 
 <div class="legend">
   <div class="legend-item"><div class="dot" style="background:#05d69e"></div> &gt;50 шт</div>
   <div class="legend-item"><div class="dot" style="background:#ffc442"></div> 10–50 шт</div>
   <div class="legend-item"><div class="dot" style="background:#ff6d3b"></div> 1–9 шт</div>
-  <div class="legend-item"><div class="dot" style="background:#3b9eff"></div> Новое поступление (было 0)</div>
-  <div class="legend-item"><div class="dot" style="background:#333; border:1px solid #444"></div> 0 — нет на складе</div>
+  <div class="legend-item"><div class="dot" style="background:#ff3333"></div> 0 — нет на складе</div>
+  <div class="legend-item"><div class="dot" style="background:#3b9eff"></div> Новое поступление</div>
+  <div class="legend-item"><span style="color:#ff8080">⚠ артикул</span> — риск обнуления &lt;10 дней</div>
 </div>
 
 <div id="loading" class="loading">Загружаем данные...</div>
+<div id="error-msg" class="error-msg" style="display:none"></div>
+
 <div class="table-wrap" id="table-wrap" style="display:none">
   <table id="main-table">
     <thead id="thead"></thead>
@@ -88,9 +173,14 @@
 const SUPABASE_URL = 'https://rkxezsfrmjvriokhzaxk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGV6c2ZybWp2cmlva2h6YXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTM5MTIsImV4cCI6MjA4ODEyOTkxMn0.IOMsGZh7ZGn1LTs2UCxdBWoIWH1LGiprkgR6pwpfabw';
 const ARTICLES_URL = '/wb-dashboard/articles.txt';
+const RISK_DAYS = 10;
 
 let currentShop = 'oding';
+let currentView = 'table';
 let watchList = [];
+let lastPivot = {};
+let lastDates = [];
+let lastRiskItems = [];
 
 async function loadArticles() {
   try {
@@ -98,15 +188,16 @@ async function loadArticles() {
     const text = await res.text();
     watchList = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   } catch(e) {
-    showError('Не удалось загрузить articles.txt: ' + e.message);
+    watchList = [];
   }
 }
 
 async function loadStocks(shop) {
   document.getElementById('loading').style.display = 'block';
   document.getElementById('table-wrap').style.display = 'none';
+  document.getElementById('summary-bar').style.display = 'none';
+  document.getElementById('risk-panel').style.display = 'none';
 
-  // Fetch all rows for this shop (paginate)
   let allRows = [], from = 0;
   const pageSize = 1000;
   while (true) {
@@ -121,7 +212,7 @@ async function loadStocks(shop) {
     from += pageSize;
   }
 
-  // Build pivot: article -> date -> qty
+  // Build pivot
   const pivot = {};
   const dateSet = new Set();
   for (const row of allRows) {
@@ -132,12 +223,36 @@ async function loadStocks(shop) {
   }
 
   const dates = Array.from(dateSet).sort();
-  const today = dates[dates.length - 1] || '';
+  lastDates = dates;
+  lastPivot = pivot;
 
-  // Use watchList order, show all articles from list (even if no data = 0)
+  const today = dates[dates.length - 1] || '';
   const articles = watchList.length > 0 ? watchList : Object.keys(pivot).sort();
 
-  // Detect new arrivals: was 0 on prev day, > 0 today
+  // --- Risk calculation ---
+  // avg daily sales ≈ avg daily drop in stock over last 7 days (ignoring days with new arrivals)
+  const riskMap = {}; // article -> { daysLeft, avgSales, currentStock }
+  for (const art of articles) {
+    const currStock = (pivot[art] && pivot[art][today]) || 0;
+    // Calculate average daily drop over last 7 days
+    const recent = dates.slice(-8); // up to 8 days for 7 deltas
+    let totalDrop = 0, countDays = 0;
+    for (let i = 1; i < recent.length; i++) {
+      const prev = (pivot[art] && pivot[art][recent[i-1]]) || 0;
+      const curr = (pivot[art] && pivot[art][recent[i]]) || 0;
+      const drop = prev - curr;
+      // Only count days where stock dropped (not replenishment days)
+      if (drop > 0) { totalDrop += drop; countDays++; }
+    }
+    const avgSales = countDays > 0 ? totalDrop / countDays : 0;
+    const daysLeft = avgSales > 0 ? Math.floor(currStock / avgSales) : (currStock > 0 ? 999 : 0);
+    if (daysLeft < RISK_DAYS || currStock === 0) {
+      riskMap[art] = { daysLeft, avgSales: Math.round(avgSales * 10) / 10, currStock };
+    }
+  }
+  lastRiskItems = Object.entries(riskMap).sort((a,b) => a[1].daysLeft - b[1].daysLeft);
+
+  // --- New arrival detection ---
   const newArrival = new Set();
   for (const art of articles) {
     for (let i = 1; i < dates.length; i++) {
@@ -147,39 +262,74 @@ async function loadStocks(shop) {
     }
   }
 
-  // Format date header
-  const fmtDate = d => {
-    const [y,m,day] = d.split('-');
-    return `${parseInt(day)}/${parseInt(m)}`;
-  };
+  // --- Summary ---
+  const inStockCount = articles.filter(a => ((pivot[a] && pivot[a][today]) || 0) > 0).length;
+  const zeroCount = articles.length - inStockCount;
+  const riskCount = lastRiskItems.length;
+  const pct = Math.round(inStockCount / articles.length * 100);
 
-  // Render header
+  document.getElementById('sc-instock-val').textContent = pct + '%';
+  document.getElementById('sc-instock-sub').textContent = `${inStockCount} из ${articles.length} артикулов`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-fill').style.background = pct > 70 ? '#05d69e' : pct > 40 ? '#ffc442' : '#ff4d4d';
+  document.getElementById('sc-zero-val').textContent = zeroCount;
+  document.getElementById('sc-zero-sub').textContent = zeroCount > 0 ? 'позиций без остатков' : '✓ все в наличии';
+  document.getElementById('sc-risk-val').textContent = riskCount;
+  document.getElementById('sc-risk-sub').textContent = riskCount > 0 ? 'нужна поставка' : '✓ запасов хватает';
+  document.getElementById('summary-bar').style.display = 'flex';
+  document.getElementById('info').textContent = `${articles.length} артикулов · ${dates.length} дней`;
+
+  // --- Risk panel ---
+  if (lastRiskItems.length > 0) {
+    document.getElementById('risk-count').textContent = lastRiskItems.length;
+    document.getElementById('risk-items').innerHTML = lastRiskItems.map(([art, r]) => {
+      const isCritical = r.daysLeft <= 3 || r.currStock === 0;
+      const daysText = r.currStock === 0 ? '🔴 Нет остатков' :
+        r.daysLeft === 999 ? '❓ Нет данных о продажах' :
+        `${r.daysLeft <= 3 ? '🔴' : '🟡'} ~${r.daysLeft} дн. до нуля`;
+      return `<div class="risk-item${isCritical ? ' critical' : ''}">
+        <div class="ri-name">${art}</div>
+        <div class="ri-days ${isCritical ? 'critical' : 'warning'}">${daysText}</div>
+        <div class="ri-stock">На складе: ${r.currStock} шт · Продаж/день: ~${r.avgSales}</div>
+      </div>`;
+    }).join('');
+    document.getElementById('risk-panel').style.display = 'block';
+  }
+
+  // --- Render table ---
+  const fmtDate = d => { const [y,m,day] = d.split('-'); return `${parseInt(day)}/${parseInt(m)}`; };
+
+  const filteredArticles = currentView === 'risk'
+    ? articles.filter(a => riskMap[a])
+    : articles;
+
   document.getElementById('thead').innerHTML = `<tr>
     <th class="art-col">Артикул товара</th>
-    ${dates.map(d => `<th${d === today ? ' style="color:#cb11ab"' : ''}>${fmtDate(d)}</th>`).join('')}
+    ${dates.map(d => `<th${d === today ? ' class="today-col"' : ''}>${fmtDate(d)}</th>`).join('')}
   </tr>`;
 
-  // Render rows
-  document.getElementById('tbody').innerHTML = articles.map(art => {
+  document.getElementById('tbody').innerHTML = filteredArticles.map(art => {
+    const isRisk = !!riskMap[art];
     const cells = dates.map(d => {
       const qty = (pivot[art] && pivot[art][d]) || 0;
       const key = art + '|' + d;
       const isToday = d === today;
-      let cls = 'qty-zero';
+      let cls = qty === 0 ? 'qty-zero' : '';
       if (newArrival.has(key)) cls = 'qty-new';
       else if (qty > 50) cls = 'qty-high';
       else if (qty >= 10) cls = 'qty-mid';
       else if (qty > 0) cls = 'qty-low';
-      const val = qty > 0 ? qty : '0';
+      else cls = 'qty-zero';
       const todayCls = isToday ? ' qty-today' : '';
-      return `<td class="qty ${cls}${todayCls}">${val}</td>`;
+      return `<td class="qty ${cls}${todayCls}">${qty}</td>`;
     }).join('');
-    return `<tr><td class="art-col">${art}</td>${cells}</tr>`;
+    return `<tr class="${isRisk ? 'risk-row-tr' : ''}">
+      <td class="art-col${isRisk ? ' risk-row' : ''}">${art}</td>${cells}
+    </tr>`;
   }).join('');
 
   document.getElementById('loading').style.display = 'none';
   document.getElementById('table-wrap').style.display = 'block';
-  document.getElementById('info').textContent = `${articles.length} артикулов · ${dates.length} дней`;
 }
 
 function setShop(shop, el) {
@@ -189,13 +339,20 @@ function setShop(shop, el) {
   loadStocks(shop);
 }
 
-function showError(msg) {
-  const b = document.getElementById('error-banner');
-  b.style.display = 'block';
-  b.textContent = '⚠ ' + msg;
+function setView(view, el) {
+  currentView = view;
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  loadStocks(currentShop);
 }
 
-// Init
+let riskOpen = true;
+function toggleRisk() {
+  riskOpen = !riskOpen;
+  document.getElementById('risk-body').style.display = riskOpen ? 'block' : 'none';
+  document.getElementById('risk-toggle').textContent = riskOpen ? '▼ скрыть' : '▶ показать';
+}
+
 (async () => {
   await loadArticles();
   await loadStocks('oding');
