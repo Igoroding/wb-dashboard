@@ -146,12 +146,12 @@
 
     <!-- Toggle -->
     <div class="view-toggle">
-      <div class="vt active" onclick="setView('chart',this)">📈 График</div>
-      <div class="vt" onclick="setView('table',this)">📋 Таблица</div>
+      <div class="vt" onclick="setView('chart',this)">📈 График</div>
+      <div class="vt active" onclick="setView('table',this)">📋 Таблица</div>
     </div>
 
     <!-- Chart -->
-    <div class="chart-wrap" id="chart-wrap">
+    <div class="chart-wrap" id="chart-wrap" style="display:none">
       <div class="chart-title">Динамика за месяц</div>
       <div class="chart-legend">
         <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#cb11ab"></div>Заказы ₽</div>
@@ -163,7 +163,7 @@
     </div>
 
     <!-- Table -->
-    <div class="tbl-wrap" id="tbl-wrap" style="display:none">
+    <div class="tbl-wrap" id="tbl-wrap">
       <table>
         <thead>
           <tr>
@@ -352,7 +352,6 @@ function renderToday(rows) {
     <div class="td-card"><div class="td-icon">✅</div><div class="td-val" style="color:var(--green)">${fmtN(r.sales_count||0)}</div><div class="td-label">Продаж вчера</div><div class="td-sub">${fmtRub(r.sales_sum||0)}</div></div>
     <div class="td-card"><div class="td-icon">📢</div><div class="td-val" style="color:var(--yellow)">${fmtRub(r.ads_spend||0)}</div><div class="td-label">Реклама вчера</div><div class="td-sub">дата: ${yest}</div></div>
     <div class="td-card"><div class="td-icon">📊</div><div class="td-val" style="color:${drr > (plan.drr_plan||10) ? 'var(--red)' : 'var(--green)'}">${fmtPct(drr)}</div><div class="td-label">ДРР вчера</div><div class="td-sub">план: ${plan.drr_plan||10}%</div></div>
-    <div class="td-card"><div class="td-icon">💰</div><div class="td-val" style="color:var(--blue)">${fmtRub((r.orders_sum||0)+(r.sales_sum||0))}</div><div class="td-label">Оборот вчера</div><div class="td-sub">заказы + продажи</div></div>
   `;
 }
 
@@ -370,10 +369,8 @@ function renderConv(rows) {
   const drr_plan = plan.drr_plan || 10;
 
   const convs = [
-    { label:'% Выкупа', fact: fmtPct(vyкup), planTxt:'план: 70%', ok: vyкup >= 70 },
     { label:'ДРР', fact: fmtPct(drr), planTxt:`план: ${drr_plan}%`, ok: drr <= drr_plan },
     { label:'Ср. чек заказа', fact: fmtRub(avgOrder), planTxt:'план: 170 ₽', ok: avgOrder >= 170 },
-    { label:'Ср. чек продажи', fact: fmtRub(avgSale), planTxt:'план: 170 ₽', ok: avgSale >= 170 },
   ];
 
   document.getElementById('conv-grid').innerHTML = convs.map(c => `
