@@ -9,43 +9,43 @@
   body { background: #0d0d0d; color: #e0e0e0; font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
 
   .header { background: #141414; border-bottom: 1px solid #2a2a2a; padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .logo { width: 40px; height: 40px; background: linear-gradient(135deg, #cb11ab, #7c5cfc); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; color: #fff; }
+  .logo { width: 40px; height: 40px; background: linear-gradient(135deg, #cb11ab, #7c5cfc); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; color: #fff; flex-shrink: 0; }
   .header-title { font-size: 18px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
   .header-sub { font-size: 11px; color: #666; letter-spacing: 2px; text-transform: uppercase; }
-  .back-link { margin-left: auto; color: #cb11ab; text-decoration: none; font-size: 13px; border: 1px solid #cb11ab33; padding: 6px 14px; border-radius: 8px; }
+  .back-link { margin-left: auto; color: #cb11ab; text-decoration: none; font-size: 13px; border: 1px solid #cb11ab33; padding: 6px 14px; border-radius: 8px; transition: background .2s; }
   .back-link:hover { background: #cb11ab22; }
 
-  .controls { padding: 16px 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-  .shop-tabs { display: flex; gap: 8px; }
-  .tab { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 20px; padding: 6px 16px; cursor: pointer; font-size: 13px; color: #aaa; transition: all .2s; }
+  .controls { padding: 16px 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid #1e1e1e; }
+  .tab { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 20px; padding: 6px 18px; cursor: pointer; font-size: 13px; color: #aaa; transition: all .2s; }
   .tab.active { background: #cb11ab; border-color: #cb11ab; color: #fff; }
-  .search-box { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 8px; padding: 6px 12px; color: #e0e0e0; font-size: 13px; width: 220px; }
-  .search-box:focus { outline: none; border-color: #cb11ab55; }
   .info { margin-left: auto; font-size: 12px; color: #555; }
+  .articles-link { font-size: 12px; color: #7c5cfc; text-decoration: none; border: 1px solid #7c5cfc33; padding: 4px 10px; border-radius: 6px; }
+  .articles-link:hover { background: #7c5cfc22; }
 
-  .table-wrap { padding: 0 24px 24px; overflow-x: auto; }
-  table { border-collapse: collapse; font-size: 12px; min-width: 100%; }
-  thead { position: sticky; top: 0; z-index: 10; }
-  th { background: #1a1a1a; color: #888; font-weight: 600; padding: 10px 12px; text-align: center; border-bottom: 2px solid #2a2a2a; white-space: nowrap; }
-  th.article-col { text-align: left; min-width: 200px; position: sticky; left: 0; z-index: 11; background: #1a1a1a; }
-  td { padding: 7px 12px; border-bottom: 1px solid #1e1e1e; text-align: center; white-space: nowrap; }
-  td.article-col { text-align: left; position: sticky; left: 0; background: #141414; font-size: 12px; color: #ccc; z-index: 5; min-width: 200px; }
-  tr:hover td { background: #1a1a1a; }
-  tr:hover td.article-col { background: #1f1f1f; }
-
-  .qty { font-weight: 600; }
-  .qty-high { color: #05d69e; }
-  .qty-mid { color: #ffc442; }
-  .qty-low { color: #ff6d3b; }
-  .qty-zero { color: #333; }
-  .qty-new { color: #3b9eff; font-weight: 700; }
-
-  .loading { text-align: center; padding: 80px; color: #555; font-size: 16px; }
-  .empty { text-align: center; padding: 40px; color: #444; }
-  
-  .legend { display: flex; gap: 16px; padding: 0 24px 12px; font-size: 11px; flex-wrap: wrap; }
-  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend { display: flex; gap: 16px; padding: 10px 24px; font-size: 11px; flex-wrap: wrap; border-bottom: 1px solid #1a1a1a; }
+  .legend-item { display: flex; align-items: center; gap: 6px; color: #666; }
   .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .table-wrap { padding: 0 0 40px; overflow-x: auto; }
+  table { border-collapse: collapse; font-size: 12px; width: 100%; }
+  thead { position: sticky; top: 0; z-index: 10; }
+  th { background: #141414; color: #666; font-weight: 600; padding: 10px 14px; text-align: center; border-bottom: 2px solid #2a2a2a; white-space: nowrap; font-size: 11px; }
+  th.art-col { text-align: left; min-width: 220px; position: sticky; left: 0; z-index: 11; background: #141414; padding-left: 24px; }
+  td { padding: 8px 14px; border-bottom: 1px solid #191919; text-align: center; white-space: nowrap; }
+  td.art-col { text-align: left; position: sticky; left: 0; background: #0d0d0d; font-size: 12px; color: #bbb; z-index: 5; padding-left: 24px; min-width: 220px; }
+  tr:hover td { background: #151515; }
+  tr:hover td.art-col { background: #181818; }
+
+  .qty { font-weight: 600; font-size: 13px; }
+  .qty-high  { color: #05d69e; }
+  .qty-mid   { color: #ffc442; }
+  .qty-low   { color: #ff6d3b; }
+  .qty-zero  { color: #333; font-weight: 400; font-size: 11px; }
+  .qty-new   { color: #3b9eff; font-weight: 700; }
+  .qty-today { background: #cb11ab15; border-radius: 4px; padding: 2px 6px; }
+
+  .loading { text-align: center; padding: 80px; color: #555; font-size: 15px; }
+  .error-banner { background: #2a1010; border: 1px solid #5a2020; color: #ff8080; padding: 12px 24px; font-size: 13px; margin: 0; }
 </style>
 </head>
 <body>
@@ -59,12 +59,12 @@
   <a href="/" class="back-link">← Дашборд</a>
 </div>
 
+<div id="error-banner" class="error-banner" style="display:none"></div>
+
 <div class="controls">
-  <div class="shop-tabs">
-    <div class="tab active" onclick="setShop('oding',this)">🌱 Одинг</div>
-    <div class="tab" onclick="setShop('stolnikov',this)">🌿 Стольников</div>
-  </div>
-  <input class="search-box" type="text" placeholder="Поиск артикула..." oninput="filterTable(this.value)">
+  <div class="tab active" onclick="setShop('oding',this)">🌱 Одинг</div>
+  <div class="tab" onclick="setShop('stolnikov',this)">🌿 Стольников</div>
+  <a class="articles-link" href="/articles.txt" target="_blank">📋 Список артикулов</a>
   <div class="info" id="info">Загрузка...</div>
 </div>
 
@@ -72,38 +72,46 @@
   <div class="legend-item"><div class="dot" style="background:#05d69e"></div> &gt;50 шт</div>
   <div class="legend-item"><div class="dot" style="background:#ffc442"></div> 10–50 шт</div>
   <div class="legend-item"><div class="dot" style="background:#ff6d3b"></div> 1–9 шт</div>
-  <div class="legend-item"><div class="dot" style="background:#3b9eff"></div> Новое поступление</div>
+  <div class="legend-item"><div class="dot" style="background:#3b9eff"></div> Новое поступление (было 0)</div>
+  <div class="legend-item"><div class="dot" style="background:#333; border:1px solid #444"></div> 0 — нет на складе</div>
 </div>
 
-<div id="loading" class="loading">Загружаем данные из Supabase...</div>
+<div id="loading" class="loading">Загружаем данные...</div>
 <div class="table-wrap" id="table-wrap" style="display:none">
   <table id="main-table">
     <thead id="thead"></thead>
     <tbody id="tbody"></tbody>
   </table>
-  <div class="empty" id="empty" style="display:none">Нет данных</div>
 </div>
 
 <script>
 const SUPABASE_URL = 'https://rkxezsfrmjvriokhzaxk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGV6c2ZybWp2cmlva2h6YXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTM5MTIsImV4cCI6MjA4ODEyOTkxMn0.IOMsGZh7ZGn1LTs2UCxdBWoIWH1LGiprkgR6pwpfabw';
+const ARTICLES_URL = '/wb-dashboard/articles.txt';
 
 let currentShop = 'oding';
-let allData = [];
-let dates = [];
-let articles = [];
+let watchList = [];
 
-async function loadData(shop) {
+async function loadArticles() {
+  try {
+    const res = await fetch(ARTICLES_URL + '?t=' + Date.now());
+    const text = await res.text();
+    watchList = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  } catch(e) {
+    showError('Не удалось загрузить articles.txt: ' + e.message);
+  }
+}
+
+async function loadStocks(shop) {
   document.getElementById('loading').style.display = 'block';
   document.getElementById('table-wrap').style.display = 'none';
 
-  // Load all records for this shop (paginate if needed)
-  let allRows = [];
-  let from = 0;
+  // Fetch all rows for this shop (paginate)
+  let allRows = [], from = 0;
   const pageSize = 1000;
   while (true) {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/wb_stocks?shop=eq.${shop}&quantity=gt.0&order=date.asc,article.asc&limit=${pageSize}&offset=${from}`,
+      `${SUPABASE_URL}/rest/v1/wb_stocks?shop=eq.${shop}&order=date.asc,article.asc&limit=${pageSize}&offset=${from}`,
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
     );
     const rows = await res.json();
@@ -113,95 +121,85 @@ async function loadData(shop) {
     from += pageSize;
   }
 
-  allData = allRows;
-
-  // Get unique dates and articles
+  // Build pivot: article -> date -> qty
+  const pivot = {};
   const dateSet = new Set();
-  const articleSet = new Set();
-  const prevZero = new Set(); // articles that were zero before last day
-
-  // Build pivot
-  const pivot = {}; // article -> date -> qty
   for (const row of allRows) {
     if (row.article === '__empty__') continue;
     dateSet.add(row.date);
-    articleSet.add(row.article);
     if (!pivot[row.article]) pivot[row.article] = {};
     pivot[row.article][row.date] = row.quantity;
   }
 
-  dates = Array.from(dateSet).sort();
-  articles = Array.from(articleSet).sort();
+  const dates = Array.from(dateSet).sort();
+  const today = dates[dates.length - 1] || '';
 
-  // Filter: only articles with qty > 0 on latest date OR had qty before but now have qty
-  const lastDate = dates[dates.length - 1];
-  const activeArticles = articles.filter(art => {
-    // Show if has any stock on any day
-    return dates.some(d => (pivot[art][d] || 0) > 0);
-  });
+  // Use watchList order, show all articles from list (even if no data = 0)
+  const articles = watchList.length > 0 ? watchList : Object.keys(pivot).sort();
 
-  // Detect "new arrival" — was 0 then became > 0
+  // Detect new arrivals: was 0 on prev day, > 0 today
   const newArrival = new Set();
-  for (const art of activeArticles) {
+  for (const art of articles) {
     for (let i = 1; i < dates.length; i++) {
-      const prev = pivot[art][dates[i-1]] || 0;
-      const curr = pivot[art][dates[i]] || 0;
+      const prev = (pivot[art] && pivot[art][dates[i-1]]) || 0;
+      const curr = (pivot[art] && pivot[art][dates[i]]) || 0;
       if (prev === 0 && curr > 0) newArrival.add(art + '|' + dates[i]);
     }
   }
 
-  // Render
-  const thead = document.getElementById('thead');
-  const tbody = document.getElementById('tbody');
-
-  // Format date: "24/2"
+  // Format date header
   const fmtDate = d => {
     const [y,m,day] = d.split('-');
     return `${parseInt(day)}/${parseInt(m)}`;
   };
 
-  thead.innerHTML = `<tr>
-    <th class="article-col">Артикул товара</th>
-    ${dates.map(d => `<th>${fmtDate(d)}</th>`).join('')}
+  // Render header
+  document.getElementById('thead').innerHTML = `<tr>
+    <th class="art-col">Артикул товара</th>
+    ${dates.map(d => `<th${d === today ? ' style="color:#cb11ab"' : ''}>${fmtDate(d)}</th>`).join('')}
   </tr>`;
 
-  tbody.innerHTML = activeArticles.map(art => {
+  // Render rows
+  document.getElementById('tbody').innerHTML = articles.map(art => {
     const cells = dates.map(d => {
-      const qty = pivot[art][d] || 0;
+      const qty = (pivot[art] && pivot[art][d]) || 0;
       const key = art + '|' + d;
+      const isToday = d === today;
       let cls = 'qty-zero';
-      let val = qty > 0 ? qty : '–';
       if (newArrival.has(key)) cls = 'qty-new';
       else if (qty > 50) cls = 'qty-high';
       else if (qty >= 10) cls = 'qty-mid';
       else if (qty > 0) cls = 'qty-low';
-      return `<td class="qty ${cls}">${val}</td>`;
+      const val = qty > 0 ? qty : '0';
+      const todayCls = isToday ? ' qty-today' : '';
+      return `<td class="qty ${cls}${todayCls}">${val}</td>`;
     }).join('');
-    return `<tr data-article="${art}"><td class="article-col">${art}</td>${cells}</tr>`;
+    return `<tr><td class="art-col">${art}</td>${cells}</tr>`;
   }).join('');
 
   document.getElementById('loading').style.display = 'none';
   document.getElementById('table-wrap').style.display = 'block';
-  document.getElementById('info').textContent = `${activeArticles.length} артикулов · ${dates.length} дней`;
+  document.getElementById('info').textContent = `${articles.length} артикулов · ${dates.length} дней`;
 }
 
 function setShop(shop, el) {
   currentShop = shop;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  loadData(shop);
+  loadStocks(shop);
 }
 
-function filterTable(q) {
-  const rows = document.querySelectorAll('#tbody tr');
-  q = q.toLowerCase();
-  rows.forEach(r => {
-    const art = r.getAttribute('data-article') || '';
-    r.style.display = art.toLowerCase().includes(q) ? '' : 'none';
-  });
+function showError(msg) {
+  const b = document.getElementById('error-banner');
+  b.style.display = 'block';
+  b.textContent = '⚠ ' + msg;
 }
 
-loadData('oding');
+// Init
+(async () => {
+  await loadArticles();
+  await loadStocks('oding');
+})();
 </script>
 </body>
 </html>
