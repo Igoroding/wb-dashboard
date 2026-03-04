@@ -293,11 +293,14 @@ function renderTempo(rows) {
 
   const tempoOrders = totalDays > 0 ? (factOrders / passedDays) * totalDays : 0;
   const tempoSales  = totalDays > 0 ? (factSales  / passedDays) * totalDays : 0;
-  const tempoAds    = totalDays > 0 ? (factAds    / passedDays) * totalDays : 0;
 
   const pctOrders = planOrders > 0 ? factOrders / planOrders * 100 : 0;
   const pctSales  = planSales  > 0 ? factSales  / planSales  * 100 : 0;
-  const pctAds    = planAds    > 0 ? factAds    / planAds    * 100 : 0;
+
+  // Реклама: оцениваем через ДРР (факт ДРР vs план ДРР)
+  const factDrr = factOrders > 0 ? factAds / factOrders * 100 : 0;
+  const pctAds  = planDrr > 0 ? factDrr / planDrr * 100 : 0; // >100 = перерасход
+  const tempoAds = factDrr; // для tempoText покажем сам ДРР
 
   function tempoClass(tempo, planVal, inverse=false) {
     const ratio = planVal > 0 ? tempo / planVal : 0;
@@ -328,19 +331,19 @@ function renderTempo(rows) {
   }
 
   const cards = [
-    { label:'Заказы',  fact:factOrders, plan:planOrders, pct:pctOrders, tempo:tempoOrders, inverse:false },
-    { label:'Продажи', fact:factSales,  plan:planSales,  pct:pctSales,  tempo:tempoSales,  inverse:false },
-    { label:'Реклама', fact:factAds,    plan:planAds,    pct:pctAds,    tempo:tempoAds,    inverse:true  },
+    { label:'Заказы',  fact:factOrders, plan:planOrders, pct:pctOrders, tempo:tempoOrders, inverse:false, planLabel:'план: '+fmtRub(planOrders), tempoLabel: null },
+    { label:'Продажи', fact:factSales,  plan:planSales,  pct:pctSales,  tempo:tempoSales,  inverse:false, planLabel:'план: '+fmtRub(planSales),  tempoLabel: null },
+    { label:'Реклама', fact:factAds,    plan:planAds,    pct:pctAds,    tempo:tempoAds,    inverse:true,  planLabel:'план ДРР: '+planDrr+'%',    tempoLabel: 'ДРР факт: '+fmtPct(factDrr)+' / план: '+planDrr+'%' },
   ];
 
   document.getElementById('tempo-grid').innerHTML = cards.map(c => `
     <div class="tempo-card">
       <div class="tc-label">${c.label}</div>
       <div class="tc-fact" style="color:${barColor(c.pct,c.inverse)}">${fmtRub(c.fact)}</div>
-      <div class="tc-plan">план: ${fmtRub(c.plan)}</div>
+      <div class="tc-plan">${c.planLabel}</div>
       <div class="progress"><div class="progress-fill" style="width:${Math.min(c.pct,100)}%;background:${barColor(c.pct,c.inverse)}"></div></div>
       <div class="tc-pct" style="color:${barColor(c.pct,c.inverse)}">${fmtPct(c.pct)} выполнено</div>
-      <div class="tc-tempo ${tempoClass(c.tempo, c.plan, c.inverse)}">${tempoText(c.tempo, c.plan)}</div>
+      <div class="tc-tempo ${tempoClass(c.tempo, c.plan, c.inverse)}">${c.tempoLabel !== null ? c.tempoLabel : tempoText(c.tempo, c.plan)}</div>
     </div>
   `).join('');
 }
