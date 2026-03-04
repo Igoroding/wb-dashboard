@@ -146,8 +146,8 @@
 
     <!-- Toggle -->
     <div class="view-toggle">
-      <div class="vt" onclick="setView('chart',this)">📈 График</div>
       <div class="vt active" onclick="setView('table',this)">📋 Таблица</div>
+      <div class="vt" onclick="setView('chart',this)">📈 График</div>
     </div>
 
     <!-- Chart -->
@@ -208,8 +208,12 @@ function getMonths() {
   const months = [];
   const now = new Date();
   for (let i = 0; i < 4; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push(d.toISOString().slice(0, 7));
+    const y = now.getFullYear();
+    const m = now.getMonth() - i; // может быть отрицательным
+    const date = new Date(y, m, 1);
+    const my = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    months.push(`${my}-${mm}`);
   }
   return months;
 }
