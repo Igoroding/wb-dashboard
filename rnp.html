@@ -117,23 +117,37 @@ async function runAI() {
   btn.disabled = true;
   btn.textContent = '⏳ Анализирую...';
   body.className = 'ai-body empty';
-  body.textContent = 'Загружаю данные и анализирую...';
+  body.textContent = 'Загружаю данные за 14 дней...';
 
-  // Собираем данные из таблицы (все строки кроме сегодня)
-  const rows = currentRows ? currentRows.filter(r => {
-    const today = new Date().toLocaleDateString('sv-SE');
-    return r.date !== today;
-  }) : [];
+  // Загружаем последние 14 дней напрямую из Supabase (независимо от выбранного месяца)
+  const today = new Date().toLocaleDateString('sv-SE');
+  const from14 = new Date(Date.now() - 14 * 86400000).toLocaleDateString('sv-SE');
+  let ai14rows = [];
+  try {
+    const raw = await sbGet(`/rest/v1/wb_rnp?date=gte.${from14}&date=lt.${today}&order=date.asc&limit=200`);
+    const byDate = {};
+    for (const r of (raw || [])) {
+      if (!byDate[r.date]) byDate[r.date] = { date: r.date, orders_count:0, orders_sum:0, sales_count:0, sales_sum:0, ads_spend:0 };
+      byDate[r.date].orders_count += r.orders_count || 0;
+      byDate[r.date].orders_sum   += r.orders_sum   || 0;
+      byDate[r.date].sales_count  += r.sales_count  || 0;
+      byDate[r.date].sales_sum    += r.sales_sum    || 0;
+      byDate[r.date].ads_spend    += r.ads_spend    || 0;
+    }
+    ai14rows = Object.values(byDate).sort((a,b) => a.date.localeCompare(b.date));
+  } catch(e) {}
 
-  if (rows.length === 0) {
+  if (ai14rows.length === 0) {
     body.textContent = 'Нет данных для анализа.';
     btn.disabled = false;
     btn.textContent = '✨ Запустить анализ';
     return;
   }
 
+  body.textContent = `Получено ${ai14rows.length} дней данных. Отправляю на анализ...`;
+
   // Форматируем данные для промпта
-  const tableText = rows.map(r => {
+  const tableText = ai14rows.map(r => {
     const d = new Date(r.date + 'T12:00:00');
     const day = d.toLocaleDateString('ru-RU', {weekday:'short', day:'2-digit', month:'short'});
     const drr = r.orders_sum > 0 ? (r.ads_spend / r.orders_sum * 100).toFixed(1) : '0';
@@ -142,7 +156,7 @@ async function runAI() {
 
   const planInfo = `План на месяц: заказы ${(plan.orders_plan/1000000).toFixed(1)}М₽, продажи ${(plan.sales_plan/1000000).toFixed(1)}М₽, ДРР ${plan.drr_plan}%`;
 
-  const prompt = `Ты аналитик e-commerce на Wildberries. Проанализируй данные двух магазинов (Одинг + Стольников суммарно) за последние дни.
+  const prompt = `Проанализируй данные двух магазинов на Wildberries (Одинг + Стольников, суммарно) за последние 14 дней.
 
 ${planInfo}
 
@@ -155,7 +169,7 @@ ${tableText}
 3. 💡 Гипотезы — почему так происходит, что стоит проверить
 4. ✅ Что хорошо — позитивные моменты
 
-Учитывай сезонность по дням недели (выходные обычно лучше). Будь конкретным, используй цифры. Пиши по-русски, кратко и по делу.`;
+Будь конкретным, используй цифры из данных. Пиши по-русски, кратко и по делу.`;
 
   try {
     const WEBHOOK_URL = 'https://wbtrenz.app.n8n.cloud/webhook/wb-ai-analysis';
@@ -190,23 +204,37 @@ async function runAI() {
   btn.disabled = true;
   btn.textContent = '⏳ Анализирую...';
   body.className = 'ai-body empty';
-  body.textContent = 'Загружаю данные и анализирую...';
+  body.textContent = 'Загружаю данные за 14 дней...';
 
-  // Собираем данные из таблицы (все строки кроме сегодня)
-  const rows = currentRows ? currentRows.filter(r => {
-    const today = new Date().toLocaleDateString('sv-SE');
-    return r.date !== today;
-  }) : [];
+  // Загружаем последние 14 дней напрямую из Supabase (независимо от выбранного месяца)
+  const today = new Date().toLocaleDateString('sv-SE');
+  const from14 = new Date(Date.now() - 14 * 86400000).toLocaleDateString('sv-SE');
+  let ai14rows = [];
+  try {
+    const raw = await sbGet(`/rest/v1/wb_rnp?date=gte.${from14}&date=lt.${today}&order=date.asc&limit=200`);
+    const byDate = {};
+    for (const r of (raw || [])) {
+      if (!byDate[r.date]) byDate[r.date] = { date: r.date, orders_count:0, orders_sum:0, sales_count:0, sales_sum:0, ads_spend:0 };
+      byDate[r.date].orders_count += r.orders_count || 0;
+      byDate[r.date].orders_sum   += r.orders_sum   || 0;
+      byDate[r.date].sales_count  += r.sales_count  || 0;
+      byDate[r.date].sales_sum    += r.sales_sum    || 0;
+      byDate[r.date].ads_spend    += r.ads_spend    || 0;
+    }
+    ai14rows = Object.values(byDate).sort((a,b) => a.date.localeCompare(b.date));
+  } catch(e) {}
 
-  if (rows.length === 0) {
+  if (ai14rows.length === 0) {
     body.textContent = 'Нет данных для анализа.';
     btn.disabled = false;
     btn.textContent = '✨ Запустить анализ';
     return;
   }
 
+  body.textContent = `Получено ${ai14rows.length} дней данных. Отправляю на анализ...`;
+
   // Форматируем данные для промпта
-  const tableText = rows.map(r => {
+  const tableText = ai14rows.map(r => {
     const d = new Date(r.date + 'T12:00:00');
     const day = d.toLocaleDateString('ru-RU', {weekday:'short', day:'2-digit', month:'short'});
     const drr = r.orders_sum > 0 ? (r.ads_spend / r.orders_sum * 100).toFixed(1) : '0';
@@ -215,7 +243,7 @@ async function runAI() {
 
   const planInfo = `План на месяц: заказы ${(plan.orders_plan/1000000).toFixed(1)}М₽, продажи ${(plan.sales_plan/1000000).toFixed(1)}М₽, ДРР ${plan.drr_plan}%`;
 
-  const prompt = `Ты аналитик e-commerce на Wildberries. Проанализируй данные двух магазинов (Одинг + Стольников суммарно) за последние дни.
+  const prompt = `Проанализируй данные двух магазинов на Wildberries (Одинг + Стольников, суммарно) за последние 14 дней.
 
 ${planInfo}
 
@@ -228,7 +256,7 @@ ${tableText}
 3. 💡 Гипотезы — почему так происходит, что стоит проверить
 4. ✅ Что хорошо — позитивные моменты
 
-Учитывай сезонность по дням недели (выходные обычно лучше). Будь конкретным, используй цифры. Пиши по-русски, кратко и по делу.`;
+Будь конкретным, используй цифры из данных. Пиши по-русски, кратко и по делу.`;
 
   try {
     const WEBHOOK_URL = 'https://wbtrenz.app.n8n.cloud/webhook/wb-ai-analysis';
@@ -722,23 +750,37 @@ async function runAI() {
   btn.disabled = true;
   btn.textContent = '⏳ Анализирую...';
   body.className = 'ai-body empty';
-  body.textContent = 'Загружаю данные и анализирую...';
+  body.textContent = 'Загружаю данные за 14 дней...';
 
-  // Собираем данные из таблицы (все строки кроме сегодня)
-  const rows = currentRows ? currentRows.filter(r => {
-    const today = new Date().toLocaleDateString('sv-SE');
-    return r.date !== today;
-  }) : [];
+  // Загружаем последние 14 дней напрямую из Supabase (независимо от выбранного месяца)
+  const today = new Date().toLocaleDateString('sv-SE');
+  const from14 = new Date(Date.now() - 14 * 86400000).toLocaleDateString('sv-SE');
+  let ai14rows = [];
+  try {
+    const raw = await sbGet(`/rest/v1/wb_rnp?date=gte.${from14}&date=lt.${today}&order=date.asc&limit=200`);
+    const byDate = {};
+    for (const r of (raw || [])) {
+      if (!byDate[r.date]) byDate[r.date] = { date: r.date, orders_count:0, orders_sum:0, sales_count:0, sales_sum:0, ads_spend:0 };
+      byDate[r.date].orders_count += r.orders_count || 0;
+      byDate[r.date].orders_sum   += r.orders_sum   || 0;
+      byDate[r.date].sales_count  += r.sales_count  || 0;
+      byDate[r.date].sales_sum    += r.sales_sum    || 0;
+      byDate[r.date].ads_spend    += r.ads_spend    || 0;
+    }
+    ai14rows = Object.values(byDate).sort((a,b) => a.date.localeCompare(b.date));
+  } catch(e) {}
 
-  if (rows.length === 0) {
+  if (ai14rows.length === 0) {
     body.textContent = 'Нет данных для анализа.';
     btn.disabled = false;
     btn.textContent = '✨ Запустить анализ';
     return;
   }
 
+  body.textContent = `Получено ${ai14rows.length} дней данных. Отправляю на анализ...`;
+
   // Форматируем данные для промпта
-  const tableText = rows.map(r => {
+  const tableText = ai14rows.map(r => {
     const d = new Date(r.date + 'T12:00:00');
     const day = d.toLocaleDateString('ru-RU', {weekday:'short', day:'2-digit', month:'short'});
     const drr = r.orders_sum > 0 ? (r.ads_spend / r.orders_sum * 100).toFixed(1) : '0';
@@ -747,7 +789,7 @@ async function runAI() {
 
   const planInfo = `План на месяц: заказы ${(plan.orders_plan/1000000).toFixed(1)}М₽, продажи ${(plan.sales_plan/1000000).toFixed(1)}М₽, ДРР ${plan.drr_plan}%`;
 
-  const prompt = `Ты аналитик e-commerce на Wildberries. Проанализируй данные двух магазинов (Одинг + Стольников суммарно) за последние дни.
+  const prompt = `Проанализируй данные двух магазинов на Wildberries (Одинг + Стольников, суммарно) за последние 14 дней.
 
 ${planInfo}
 
@@ -760,7 +802,7 @@ ${tableText}
 3. 💡 Гипотезы — почему так происходит, что стоит проверить
 4. ✅ Что хорошо — позитивные моменты
 
-Учитывай сезонность по дням недели (выходные обычно лучше). Будь конкретным, используй цифры. Пиши по-русски, кратко и по делу.`;
+Будь конкретным, используй цифры из данных. Пиши по-русски, кратко и по делу.`;
 
   try {
     const WEBHOOK_URL = 'https://wbtrenz.app.n8n.cloud/webhook/wb-ai-analysis';
