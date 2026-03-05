@@ -114,6 +114,7 @@
   <div class="view-tab" id="vt-risk" onclick="setView('risk',this)">⚠️ Только риски</div>
   <a class="articles-link" href="/wb-dashboard/articles.txt" target="_blank">📋 Список артикулов</a>
   <div class="info" id="info">Загрузка...</div>
+  <button class="ai-btn" id="ai-btn" onclick="runStocksAI()" style="margin-left:auto">✨ AI-анализ склада</button>
 </div>
 
 <!-- Summary bar -->
@@ -169,10 +170,9 @@
 <div id="loading" class="loading">Загружаем данные...</div>
 <div id="error-msg" class="error-msg" style="display:none"></div>
 
-<!-- AI Analysis -->
+<!-- AI Panel -->
 <div class="ai-section" id="ai-section" style="display:none">
-  <button class="ai-btn" id="ai-btn" onclick="runStocksAI()">✨ AI-анализ склада</button>
-  <div class="ai-panel" id="ai-panel">Загружаю анализ...</div>
+  <div class="ai-panel visible" id="ai-panel"></div>
 </div>
 
 <div class="table-wrap" id="table-wrap" style="display:none">
@@ -343,7 +343,6 @@ async function loadStocks(shop) {
 
   document.getElementById('loading').style.display = 'none';
   document.getElementById('table-wrap').style.display = 'block';
-  document.getElementById('ai-section').style.display = 'block';
 }
 
 function setShop(shop, el) {
@@ -373,7 +372,7 @@ async function runStocksAI() {
 
   btn.disabled = true;
   btn.textContent = '⏳ Анализирую...';
-  panel.classList.add('visible');
+  document.getElementById('ai-section').style.display = 'block';
   panel.innerHTML = 'Собираю данные...';
 
   const dates = lastDates;
