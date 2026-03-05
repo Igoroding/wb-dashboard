@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
- <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Остатки на складах WB</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -82,6 +82,25 @@
 
   .loading { text-align: center; padding: 80px; color: #555; font-size: 15px; }
   .error-msg { text-align: center; padding: 40px; color: #ff6b6b; }
+
+  /* AI Analysis block */
+  .ai-section { margin: 0 24px 20px; }
+  .ai-btn {
+    background: linear-gradient(135deg, #7c5cfc, #5c3cdc);
+    border: none; border-radius: 10px; padding: 10px 22px;
+    color: #fff; font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: 'Geologica', sans-serif; transition: opacity .2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ai-btn:hover { opacity: 0.85; }
+  .ai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ai-panel {
+    margin-top: 14px; background: #0e0e1a; border: 1px solid #7c5cfc44;
+    border-radius: 12px; padding: 20px 24px;
+    font-size: 14px; line-height: 1.75; color: #dde4ee;
+    display: none;
+  }
+  .ai-panel.visible { display: block; }
 </style>
 </head>
 <body>
@@ -149,6 +168,12 @@
 
 <div id="loading" class="loading">Загружаем данные...</div>
 <div id="error-msg" class="error-msg" style="display:none"></div>
+
+<!-- AI Analysis -->
+<div class="ai-section" id="ai-section" style="display:none">
+  <button class="ai-btn" id="ai-btn" onclick="runStocksAI()">✨ AI-анализ склада</button>
+  <div class="ai-panel" id="ai-panel">Загружаю анализ...</div>
+</div>
 
 <div class="table-wrap" id="table-wrap" style="display:none">
   <table id="main-table">
@@ -318,6 +343,7 @@ async function loadStocks(shop) {
 
   document.getElementById('loading').style.display = 'none';
   document.getElementById('table-wrap').style.display = 'block';
+  document.getElementById('ai-section').style.display = 'block';
 }
 
 function setShop(shop, el) {
@@ -339,6 +365,152 @@ function toggleRisk() {
   riskOpen = !riskOpen;
   document.getElementById('risk-body').style.display = riskOpen ? 'block' : 'none';
   document.getElementById('risk-toggle').textContent = riskOpen ? '▼ скрыть' : '▶ показать';
+}
+
+async function runStocksAI() {
+  const btn = document.getElementById('ai-btn');
+  const panel = document.getElementById('ai-panel');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Анализирую...';
+  panel.classList.add('visible');
+  panel.innerHTML = 'Собираю данные...';
+
+  const dates = lastDates;
+  const pivot = lastPivot;
+  const articles = watchList.length > 0 ? watchList : Object.keys(pivot).sort();
+  const today = dates[dates.length - 1] || '';
+
+  if (dates.length < 3) {
+    panel.innerHTML = 'Недостаточно данных — нужно минимум 3 дня. Данные накапливаются ежедневно.';
+    btn.disabled = false;
+    btn.textContent = '✨ AI-анализ склада';
+    return;
+  }
+
+  // Build per-article stats
+  const artStats = [];
+  for (const art of articles) {
+    const stockToday = (pivot[art]?.[today]) || 0;
+
+    // Daily deltas (drops = sales, jumps = restocking)
+    const deltas = [];
+    for (let i = 1; i < dates.length; i++) {
+      const prev = pivot[art]?.[dates[i-1]] || 0;
+      const curr = pivot[art]?.[dates[i]] || 0;
+      deltas.push({ date: dates[i], delta: curr - prev, prev, curr });
+    }
+
+    const drops = deltas.filter(d => d.delta < 0);
+    const restocks = deltas.filter(d => d.delta > 0);
+    const avgSalesPerDay = drops.length > 0
+      ? Math.round(-drops.reduce((s, d) => s + d.delta, 0) / drops.length * 10) / 10
+      : 0;
+
+    // Trend: compare last 3 days vs previous 3 days
+    const recent3 = drops.filter(d => dates.indexOf(d.date) >= dates.length - 3);
+    const prev3 = drops.filter(d => {
+      const i = dates.indexOf(d.date);
+      return i >= dates.length - 6 && i < dates.length - 3;
+    });
+    const recentAvg = recent3.length > 0 ? -recent3.reduce((s,d) => s+d.delta, 0)/recent3.length : 0;
+    const prevAvg = prev3.length > 0 ? -prev3.reduce((s,d) => s+d.delta, 0)/prev3.length : 0;
+    const trendPct = prevAvg > 0 ? Math.round((recentAvg - prevAvg) / prevAvg * 100) : null;
+
+    const daysLeft = avgSalesPerDay > 0 ? Math.floor(stockToday / avgSalesPerDay) : (stockToday > 0 ? 999 : 0);
+
+    artStats.push({
+      art,
+      stockToday,
+      avgSalesPerDay,
+      daysLeft,
+      trendPct,
+      lastRestock: restocks.length > 0 ? restocks[restocks.length-1].date : null,
+      hasData: drops.length > 0
+    });
+  }
+
+  // Sort by urgency for the prompt
+  const critical = artStats.filter(a => a.daysLeft <= 5 && a.stockToday >= 0).sort((a,b) => a.daysLeft - b.daysLeft);
+  const warning  = artStats.filter(a => a.daysLeft > 5 && a.daysLeft <= 14).sort((a,b) => a.daysLeft - b.daysLeft);
+  const trending = artStats.filter(a => a.trendPct !== null && Math.abs(a.trendPct) >= 50);
+  const stagnant = artStats.filter(a => a.avgSalesPerDay === 0 && a.stockToday > 0 && a.hasData);
+  const zeros    = artStats.filter(a => a.stockToday === 0);
+
+  const lines = [];
+  lines.push(`Магазин: ${currentShop === 'oding' ? 'Одинг' : 'Стольников'}`);
+  lines.push(`Период данных: ${dates[0]} — ${today} (${dates.length} дней)`);
+  lines.push(`Всего артикулов: ${articles.length}`);
+  lines.push('');
+
+  lines.push('КРИТИЧЕСКИЕ (менее 5 дней до нуля):');
+  critical.forEach(a => lines.push(`  ${a.art}: ${a.stockToday} шт, ~${a.avgSalesPerDay}/день, осталось ~${a.daysLeft === 999 ? '∞' : a.daysLeft} дней`));
+  if (critical.length === 0) lines.push('  нет');
+
+  lines.push('');
+  lines.push('ЗОНА РИСКА (5–14 дней):');
+  warning.forEach(a => lines.push(`  ${a.art}: ${a.stockToday} шт, ~${a.avgSalesPerDay}/день, осталось ~${a.daysLeft} дней`));
+  if (warning.length === 0) lines.push('  нет');
+
+  lines.push('');
+  lines.push('НУЛЕВЫЕ ОСТАТКИ:');
+  zeros.forEach(a => lines.push(`  ${a.art}: 0 шт (продажи были: ${a.avgSalesPerDay > 0 ? '~'+a.avgSalesPerDay+'/день' : 'нет данных'})`));
+  if (zeros.length === 0) lines.push('  нет');
+
+  lines.push('');
+  lines.push('РЕЗКОЕ ИЗМЕНЕНИЕ ПРОДАЖ (последние 3 дня vs предыдущие 3 дня):');
+  trending.forEach(a => {
+    const dir = a.trendPct > 0 ? '⬆ рост' : '⬇ падение';
+    lines.push(`  ${a.art}: ${dir} ${Math.abs(a.trendPct)}%, сейчас ~${a.avgSalesPerDay}/день, остаток ${a.stockToday} шт`);
+  });
+  if (trending.length === 0) lines.push('  нет значимых изменений');
+
+  lines.push('');
+  lines.push('ТОВАРЫ БЕЗ ДВИЖЕНИЯ (есть остаток, нет продаж):');
+  stagnant.slice(0, 10).forEach(a => lines.push(`  ${a.art}: ${a.stockToday} шт`));
+  if (stagnant.length === 0) lines.push('  нет');
+
+  const prompt = `Ты — эксперт по управлению складом и товарными запасами для магазинов на Wildberries.
+Мы продаём семена растений, аудитория — дачники и садоводы. Сейчас март — начало активного сезона, спрос растёт.
+
+Проанализируй данные по остаткам и дай конкретные рекомендации:
+
+${lines.join('\n')}
+
+Структурируй ответ в HTML (используй <b>, <br>, без markdown):
+
+<b>🚨 Срочно завезти</b><br>
+— артикулы которые закончатся в ближайшие дни, конкретные объёмы поставки<br>
+<br>
+<b>📦 Запланировать поставку</b><br>
+— артикулы в зоне риска, рекомендуемые сроки<br>
+<br>
+<b>📈 Растущие позиции</b><br>
+— где продажи ускорились, нужно ли нарастить запас<br>
+<br>
+<b>❄️ Замороженный товар</b><br>
+— что лежит без движения, что с этим делать<br>
+<br>
+<b>💡 Общие рекомендации</b><br>
+— 2-3 стратегических совета с учётом сезонности<br>
+
+Будь конкретным. Указывай артикулы и цифры. Пиши по-русски кратко.`;
+
+  try {
+    const res = await fetch('https://wbtrenz.app.n8n.cloud/webhook/wb-ai-v7', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+    const data = await res.json();
+    const text = data.result || JSON.stringify(data);
+    panel.innerHTML = text;
+  } catch(e) {
+    panel.innerHTML = 'Ошибка: ' + e.message;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔄 Обновить анализ';
 }
 
 (async () => {
