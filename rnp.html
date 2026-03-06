@@ -60,7 +60,6 @@
   .vt { padding:7px 18px; background:var(--s1); border:1px solid var(--border); border-radius:8px; font-size:13px; font-weight:600; color:var(--muted2); cursor:pointer; transition:all .2s; }
   .vt.active { background:var(--s2); border-color:var(--muted); color:var(--text); }
 
-
   /* AI Analysis */
   .ai-wrap { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:24px; }
   .ai-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
@@ -109,179 +108,11 @@
   .spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--wb); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px; }
   @keyframes spin { to { transform:rotate(360deg) } }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
-async function runAI() {
-  const btn = document.getElementById('ai-btn');
-  const body = document.getElementById('ai-body');
-
-  btn.disabled = true;
-  btn.textContent = '⏳ Анализирую...';
-  body.className = 'ai-body empty';
-  body.textContent = 'Загружаю данные за 14 дней...';
-
-  // Загружаем последние 14 дней напрямую из Supabase (независимо от выбранного месяца)
-  const today = new Date().toLocaleDateString('sv-SE');
-  const from14 = new Date(Date.now() - 14 * 86400000).toLocaleDateString('sv-SE');
-  let ai14rows = [];
-  try {
-    const raw = await sbGet(`/rest/v1/wb_rnp?date=gte.${from14}&date=lt.${today}&order=date.asc&limit=200`);
-    const byDate = {};
-    for (const r of (raw || [])) {
-      if (!byDate[r.date]) byDate[r.date] = { date: r.date, orders_count:0, orders_sum:0, sales_count:0, sales_sum:0, ads_spend:0 };
-      byDate[r.date].orders_count += r.orders_count || 0;
-      byDate[r.date].orders_sum   += r.orders_sum   || 0;
-      byDate[r.date].sales_count  += r.sales_count  || 0;
-      byDate[r.date].sales_sum    += r.sales_sum    || 0;
-      byDate[r.date].ads_spend    += r.ads_spend    || 0;
-    }
-    ai14rows = Object.values(byDate).sort((a,b) => a.date.localeCompare(b.date));
-  } catch(e) {}
-
-  if (ai14rows.length === 0) {
-    body.textContent = 'Нет данных для анализа.';
-    btn.disabled = false;
-    btn.textContent = '✨ Запустить анализ';
-    return;
-  }
-
-  body.textContent = `Получено ${ai14rows.length} дней данных. Отправляю на анализ...`;
-
-  // Форматируем данные для промпта
-  const tableText = ai14rows.map(r => {
-    const d = new Date(r.date + 'T12:00:00');
-    const day = d.toLocaleDateString('ru-RU', {weekday:'short', day:'2-digit', month:'short'});
-    const drr = r.orders_sum > 0 ? (r.ads_spend / r.orders_sum * 100).toFixed(1) : '0';
-    return `${day}: заказы ${r.orders_count}шт/${Math.round(r.orders_sum/1000)}К₽, продажи ${r.sales_count}шт/${Math.round(r.sales_sum/1000)}К₽, реклама ${Math.round(r.ads_spend/1000)}К₽, ДРР ${drr}%`;
-  }).join('\n');
-
-  const planInfo = `План на месяц: заказы ${(plan.orders_plan/1000000).toFixed(1)}М₽, продажи ${(plan.sales_plan/1000000).toFixed(1)}М₽, ДРР ${plan.drr_plan}%`;
-
-  const prompt = `Проанализируй данные двух магазинов на Wildberries (Одинг + Стольников, суммарно) за последние 14 дней.
-
-${planInfo}
-
-Данные по дням (от старых к новым):
-${tableText}
-
-Дай структурированный анализ:
-1. 🔴 Red flags — тревожные сигналы (если есть)
-2. 🟡 Тренды — что меняется, куда движемся
-3. 💡 Гипотезы — почему так происходит, что стоит проверить
-4. ✅ Что хорошо — позитивные моменты
-
-Будь конкретным, используй цифры из данных. Пиши по-русски, кратко и по делу.`;
-
-  try {
-    const WEBHOOK_URL = 'https://wbtrenz.app.n8n.cloud/webhook/wb-ai-v7';
-    const resp = await fetch(WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    });
-    const raw = await resp.text();
-    if (!raw || !raw.trim()) throw new Error('Webhook вернул пустой ответ. Проверьте workflow в n8n — возможно, Claude API узел падает с ошибкой.');
-    let data;
-    try { data = JSON.parse(raw); } catch(e) { throw new Error('Ответ не JSON: ' + raw.slice(0, 200)); }
-    const text = data.result || JSON.stringify(data);
-    body.className = 'ai-body';
-    body.innerHTML = text;
-  } catch(e) {
-    body.textContent = 'Ошибка: ' + e.message;
-  }
-
-  btn.disabled = false;
-  btn.textContent = '🔄 Обновить анализ';
-}
-
-</script>
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
-<script src="/wb-dashboard/header.js">
-async function runAI() {
-  const btn = document.getElementById('ai-btn');
-  const body = document.getElementById('ai-body');
-
-  btn.disabled = true;
-  btn.textContent = '⏳ Анализирую...';
-  body.className = 'ai-body empty';
-  body.textContent = 'Загружаю данные за 14 дней...';
-
-  // Загружаем последние 14 дней напрямую из Supabase (независимо от выбранного месяца)
-  const today = new Date().toLocaleDateString('sv-SE');
-  const from14 = new Date(Date.now() - 14 * 86400000).toLocaleDateString('sv-SE');
-  let ai14rows = [];
-  try {
-    const raw = await sbGet(`/rest/v1/wb_rnp?date=gte.${from14}&date=lt.${today}&order=date.asc&limit=200`);
-    const byDate = {};
-    for (const r of (raw || [])) {
-      if (!byDate[r.date]) byDate[r.date] = { date: r.date, orders_count:0, orders_sum:0, sales_count:0, sales_sum:0, ads_spend:0 };
-      byDate[r.date].orders_count += r.orders_count || 0;
-      byDate[r.date].orders_sum   += r.orders_sum   || 0;
-      byDate[r.date].sales_count  += r.sales_count  || 0;
-      byDate[r.date].sales_sum    += r.sales_sum    || 0;
-      byDate[r.date].ads_spend    += r.ads_spend    || 0;
-    }
-    ai14rows = Object.values(byDate).sort((a,b) => a.date.localeCompare(b.date));
-  } catch(e) {}
-
-  if (ai14rows.length === 0) {
-    body.textContent = 'Нет данных для анализа.';
-    btn.disabled = false;
-    btn.textContent = '✨ Запустить анализ';
-    return;
-  }
-
-  body.textContent = `Получено ${ai14rows.length} дней данных. Отправляю на анализ...`;
-
-  // Форматируем данные для промпта
-  const tableText = ai14rows.map(r => {
-    const d = new Date(r.date + 'T12:00:00');
-    const day = d.toLocaleDateString('ru-RU', {weekday:'short', day:'2-digit', month:'short'});
-    const drr = r.orders_sum > 0 ? (r.ads_spend / r.orders_sum * 100).toFixed(1) : '0';
-    return `${day}: заказы ${r.orders_count}шт/${Math.round(r.orders_sum/1000)}К₽, продажи ${r.sales_count}шт/${Math.round(r.sales_sum/1000)}К₽, реклама ${Math.round(r.ads_spend/1000)}К₽, ДРР ${drr}%`;
-  }).join('\n');
-
-  const planInfo = `План на месяц: заказы ${(plan.orders_plan/1000000).toFixed(1)}М₽, продажи ${(plan.sales_plan/1000000).toFixed(1)}М₽, ДРР ${plan.drr_plan}%`;
-
-  const prompt = `Проанализируй данные двух магазинов на Wildberries (Одинг + Стольников, суммарно) за последние 14 дней.
-
-${planInfo}
-
-Данные по дням (от старых к новым):
-${tableText}
-
-Дай структурированный анализ:
-1. 🔴 Red flags — тревожные сигналы (если есть)
-2. 🟡 Тренды — что меняется, куда движемся
-3. 💡 Гипотезы — почему так происходит, что стоит проверить
-4. ✅ Что хорошо — позитивные моменты
-
-Будь конкретным, используй цифры из данных. Пиши по-русски, кратко и по делу.`;
-
-  try {
-    const WEBHOOK_URL = 'https://wbtrenz.app.n8n.cloud/webhook/wb-ai-v7';
-    const resp = await fetch(WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    });
-    const raw = await resp.text();
-    if (!raw || !raw.trim()) throw new Error('Webhook вернул пустой ответ. Проверьте workflow в n8n — возможно, Claude API узел падает с ошибкой.');
-    let data;
-    try { data = JSON.parse(raw); } catch(e) { throw new Error('Ответ не JSON: ' + raw.slice(0, 200)); }
-    const text = data.result || JSON.stringify(data);
-    body.className = 'ai-body';
-    body.innerHTML = text;
-  } catch(e) {
-    body.textContent = 'Ошибка: ' + e.message;
-  }
-
-  btn.disabled = false;
-  btn.textContent = '🔄 Обновить анализ';
-}
-
-</script>
+<script src="/wb-dashboard/header.js"></script>
 
 <div class="wrap">
   <div id="loading" class="loading"><div class="spinner"></div>Загружаем данные...</div>
@@ -481,10 +312,9 @@ function renderTempo(rows) {
   const pctOrders = planOrders > 0 ? factOrders / planOrders * 100 : 0;
   const pctSales  = planSales  > 0 ? factSales  / planSales  * 100 : 0;
 
-  // Реклама: оцениваем через ДРР (факт ДРР vs план ДРР)
   const factDrr = factOrders > 0 ? factAds / factOrders * 100 : 0;
-  const pctAds  = planDrr > 0 ? factDrr / planDrr * 100 : 0; // >100 = перерасход
-  const tempoAds = factDrr; // для tempoText покажем сам ДРР
+  const pctAds  = planDrr > 0 ? factDrr / planDrr * 100 : 0;
+  const tempoAds = factDrr;
 
   function tempoClass(tempo, planVal, inverse=false) {
     const ratio = planVal > 0 ? tempo / planVal : 0;
@@ -501,26 +331,11 @@ function renderTempo(rows) {
     const ratio = planVal > 0 ? tempo / planVal * 100 : 0;
     return `Идём на ${ratio.toFixed(0)}% плана`;
   }
-  function barColor(pct, inverse=false) {
-    if (inverse) {
-      // Реклама: меньше — лучше
-      if (pct <= 100) return 'var(--green)';
-      if (pct <= 110) return 'var(--yellow)';
-      return 'var(--red)';
-    }
-    // Заказы/Продажи: больше — лучше
-    if (pct >= 95) return 'var(--green)';
-    if (pct >= 70) return 'var(--yellow)';
-    return 'var(--red)';
-  }
-
-  // Цвет для заказов/продаж: больше — лучше
   function colorGood(pct) {
     if (pct >= 95) return 'var(--green)';
     if (pct >= 70) return 'var(--yellow)';
     return 'var(--red)';
   }
-  // Цвет для рекламы: меньше — лучше (по ДРР)
   function colorAds(drrFact, drrPlan) {
     if (drrFact <= drrPlan)        return 'var(--green)';
     if (drrFact <= drrPlan * 1.10) return 'var(--yellow)';
@@ -553,8 +368,8 @@ function renderToday(rows) {
   const yest = today.toISOString().slice(0,10);
   const r = rows.find(x => x.date === yest) || {};
   const drr = r.orders_sum > 0 ? (r.ads_spend / r.orders_sum * 100) : 0;
+}
 
-  }
 function renderConv(rows) {
   const factOrders = rows.reduce((s,r) => s + (r.orders_count||0), 0);
   const factSales  = rows.reduce((s,r) => s + (r.sales_count||0), 0);
@@ -567,9 +382,7 @@ function renderConv(rows) {
   const avgSale  = factSales  > 0 ? rows.reduce((s,r)=>s+(r.sales_sum||0),0) / factSales : 0;
 
   const drr_plan = plan.drr_plan || 10;
-
-  const convs = [
-  ];
+  const convs = [];
 
   document.getElementById('conv-grid').innerHTML = convs.map(c => `
     <div class="conv-card">
@@ -684,15 +497,14 @@ function renderChart(rows) {
 
 function renderTable(rows) {
   const today = new Date().toLocaleDateString('sv-SE');
-  const yest  = new Date(Date.now() - 86400000).toLocaleDateString('sv-SE');
-  const filtered = [...rows].filter(r => r.date !== today).reverse();
+  const filtered = [...rows].reverse();
   document.getElementById('tbl-body').innerHTML = filtered.map(r => {
     const drr = r.orders_sum > 0 ? (r.ads_spend / r.orders_sum * 100) : 0;
-    const isY = r.date === yest;
+    const isToday = r.date === today;
     const d = new Date(r.date + 'T12:00:00');
     const label = d.toLocaleDateString('ru-RU', {day:'2-digit', month:'short'});
-    return `<tr class="${isY ? 'today-row' : ''}">
-      <td class="td-date">${label}${isY ? '<span class="td-today-badge">вчера</span>':''}</td>
+    return `<tr class="${isToday ? 'today-row' : ''}">
+      <td class="td-date">${label}${isToday ? '<span class="td-today-badge">сегодня</span>' : ''}</td>
       <td>${fmtN(r.orders_count)}</td>
       <td>${fmtRub(r.orders_sum)}</td>
       <td>${fmtN(r.sales_count)}</td>
@@ -753,7 +565,6 @@ async function runAI() {
   body.className = 'ai-body empty';
   body.textContent = 'Загружаю данные за 14 дней...';
 
-  // Загружаем последние 14 дней напрямую из Supabase (независимо от выбранного месяца)
   const today = new Date().toLocaleDateString('sv-SE');
   const from14 = new Date(Date.now() - 14 * 86400000).toLocaleDateString('sv-SE');
   let ai14rows = [];
@@ -780,7 +591,6 @@ async function runAI() {
 
   body.textContent = `Получено ${ai14rows.length} дней данных. Отправляю на анализ...`;
 
-  // Форматируем данные для промпта
   const tableText = ai14rows.map(r => {
     const d = new Date(r.date + 'T12:00:00');
     const day = d.toLocaleDateString('ru-RU', {weekday:'short', day:'2-digit', month:'short'});
@@ -813,7 +623,7 @@ ${tableText}
       body: JSON.stringify({ prompt })
     });
     const raw = await resp.text();
-    if (!raw || !raw.trim()) throw new Error('Webhook вернул пустой ответ. Проверьте workflow в n8n — возможно, Claude API узел падает с ошибкой.');
+    if (!raw || !raw.trim()) throw new Error('Webhook вернул пустой ответ. Проверьте workflow в n8n.');
     let data;
     try { data = JSON.parse(raw); } catch(e) { throw new Error('Ответ не JSON: ' + raw.slice(0, 200)); }
     const text = data.result || JSON.stringify(data);
@@ -826,7 +636,6 @@ ${tableText}
   btn.disabled = false;
   btn.textContent = '🔄 Обновить анализ';
 }
-
 </script>
 
     <!-- AI Analysis -->
