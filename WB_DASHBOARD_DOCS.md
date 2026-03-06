@@ -1,210 +1,276 @@
-# WB Analytics Dashboard — Полная документация проекта
+# 📊 WB Dashboard — Документация проекта
 
-## Обзор проекта
+> Дашборд мониторинга продаж на Wildberries для двух магазинов: **Одинг** и **Стольников**.  
+> Данные суммируются. Продаём семена растений, аудитория — дачники и садоводы.
 
-Автоматизированный дашборд для отслеживания продаж и остатков на Wildberries для двух магазинов: **Одинг** и **Стольников**. Данные собираются через n8n, хранятся в Supabase PostgreSQL, отображаются на GitHub Pages.
+---
 
-### Архитектура
+## 🏗️ Архитектура
+
 ```
-n8n (по расписанию 8:00)
-  → WB Statistics API
-  → Supabase PostgreSQL
-      → GitHub Pages (дашборд читает через Supabase REST API)
+Wildberries API
+      ↓
+   n8n (сбор данных, ежедневно в 08:00)
+      ↓
+Supabase PostgreSQL (хранение)
+      ↓
+GitHub Pages (дашборд, статический HTML)
+      ↓
+Polza.ai / GPT-4o (AI-анализ по запросу)
 ```
 
 ---
 
-## Доступы и credentials
+## 🌐 Ссылки
 
-### WB API токены
-- **Одинг** (oID: 4038628):
-  `Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwOTA0djEiLCJ0eXAiOiJKV1QifQ.eyJhY2MiOjEsImVudCI6MSwiZXhwIjoxNzg3ODk1ODUzLCJpZCI6IjAxOWM5YjBkLTFhYzAtN2M2Ni04ZmE0LTAxYzgyOTU3ZTNjZSIsImlpZCI6MjMwOTk4ODYsIm9pZCI6NDAzODYyOCwicyI6MTA3Mzc0MTg3Miwic2lkIjoiMzY1N2IzMmMtMzQ1NC00MjFhLWE2OWItNmFmZGIxNDIzMTlmIiwidCI6ZmFsc2UsInVpZCI6MjMwOTk4ODZ9.rttnRBrfaovQHYfEx6a0w0QudsIZ2xRdu66JskIybwKvVxQLNMjXqaBlmFpKulC2RmoxuIlW2OgX6f8r1VSRnQ`
-  Срок: ~июнь 2026
-
-- **Стольников** (oID: 406043):
-  `Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwOTA0djEiLCJ0eXAiOiJKV1QifQ.eyJhY2MiOjEsImVudCI6MSwiZXhwIjoxNzg3OTQ1ODQyLCJpZCI6IjAxOWM5ZTA3LWUyZWEtNzEzNC1hOWU0LWUzZjM2YzFiY2U1OCIsImlpZCI6MjMwOTk4ODYsIm9pZCI6NDA2MDQzLCJzIjoxMDczNzQxODcyLCJzaWQiOiJhYmNjNzZjZS1kYzg1LTQ2NjItYjYzZi0yNjRkMjZmZWZmNjciLCJ0IjpmYWxzZSwidWlkIjoyMzA5OTg4Nn0.qDIYGXHM-58J8I9QMKgX7h_RiVYfeEwvNyDCgUAg1eQm8hGgvjVeJZ7b8RoDKJl2uw72I-7D2LKPQnMPONCsYA`
-  Срок: ~июнь 2026
-
-### Supabase
-- **URL**: `https://rkxezsfrmjvriokhzaxk.supabase.co`
-- **Проект**: wb-dashboard (Frankfurt)
-- **Anon key** (публичный, для дашборда):
-  `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGV6c2ZybWp2cmlva2h6YXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTM5MTIsImV4cCI6MjA4ODEyOTkxMn0.IOMsGZh7ZGn1LTs2UCxdBWoIWH1LGiprkgR6pwpfabw`
-- **Service role key** (только для n8n, не светить публично):
-  `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGV6c2ZybWp2cmlva2h6YXhrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjU1MzkxMiwiZXhwIjoyMDg4MTI5OTEyfQ.H2SP-_ixQogUenbKKyOW0_R-YBJI0Bfc-Sp3vc_KadE`
-
-### GitHub
-- **Репозиторий**: https://github.com/Igoroding/wb-dashboard
-- **GitHub Pages URL**: https://igoroding.github.io/wb-dashboard/
-- **Token**: `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`
-
-### n8n
-- **URL**: https://wbtrenz.app.n8n.cloud
-- **Тариф**: Trial (12 дней осталось на момент 04.03.2026, 32/1000 executions)
-- **Workflow ID**: `mj21wHs4EuWJfGZA` (единый workflow со всеми цепочками)
+| Сервис | URL |
+|--------|-----|
+| n8n | https://wbtrenz.app.n8n.cloud |
+| Supabase | https://supabase.com/dashboard/project/rkxezsfrmjvriokhzaxk |
+| Polza.ai | https://polza.ai |
 
 ---
 
-## Структура базы данных (Supabase)
+## 📁 Файлы в репозитории
 
-### Таблица `wb_orders` — ежедневная сводка заказов
+| Файл | Назначение |
+|------|-----------|
+| `rnp.html` | Дашборд РнП (заказы, продажи, реклама, ДРР) |
+| `stocks.html` | Дашборд остатков товаров на складах WB |
+| `favicon.svg` | Фавикон (зелёный график на тёмном фоне), подключён на обеих страницах |
+| `articles.txt` | Список артикулов для фильтрации в stocks.html |
+| `README.md` | Эта документация |
+
+---
+
+## 🗄️ Supabase
+
+**Project ID:** `rkxezsfrmjvriokhzaxk`  
+**URL:** `https://rkxezsfrmjvriokhzaxk.supabase.co`
+
+### Ключи
+- **anon key** (для дашборда): `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGV6c2ZybWp2cmlva2h6YXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTM5MTIsImV4cCI6MjA4ODEyOTkxMn0.IOMsGZh7ZGn1LTs2UCxdBWoIWH1LGiprkgR6pwpfabw`
+- **service_role key** (для n8n): `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGV6c2ZybWp2cmlva2h6YXhrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjU1MzkxMiwiZXhwIjoyMDg4MTI5OTEyfQ.H2SP-_ixQogUenbKKyOW0_R-YBJI0Bfc-Sp3vc_KadE`
+
+### Таблицы
+
+#### `wb_rnp` — заказы, продажи, реклама по дням
 ```sql
-CREATE TABLE wb_orders (
-  id bigint generated always as identity primary key,
-  shop text not null,                    -- 'oding' | 'stolnikov'
-  date date not null,                    -- дата (вчера на момент запуска)
-  orders integer default 0,             -- кол-во заказов
-  cancelled integer default 0,          -- кол-во отмен
-  revenue numeric default 0,            -- выручка в рублях
-  articles integer default 0,           -- кол-во уникальных артикулов
-  top_articles jsonb default '[]',       -- [[артикул, кол-во, выручка], ...]
-  warehouses jsonb default '[]',         -- [[склад, кол-во], ...]
-  spark_orders jsonb default '[]',       -- [int x7] данные для спарклайна заказов
-  spark_revenue jsonb default '[]',      -- [int x7] данные для спарклайна выручки
-  spark_days jsonb default '[]',         -- ['01 мар.', ...] подписи дней
-  created_at timestamptz default now(),
-  UNIQUE(shop, date)
+CREATE TABLE wb_rnp (
+  date         date NOT NULL,
+  shop         text NOT NULL,  -- 'oding' | 'stolnikov'
+  orders_count integer DEFAULT 0,
+  orders_sum   numeric DEFAULT 0,
+  sales_count  integer DEFAULT 0,
+  sales_sum    numeric DEFAULT 0,
+  ads_spend    numeric DEFAULT 0,
+  PRIMARY KEY (date, shop)
 );
 ```
 
-### Таблица `wb_stocks` — ежедневные остатки по артикулам
+#### `wb_stocks` — остатки товаров на складах
 ```sql
 CREATE TABLE wb_stocks (
-  id bigint generated always as identity primary key,
-  shop text not null,                    -- 'oding' | 'stolnikov'
-  date date not null,                    -- дата снятия остатков
-  article text not null,                 -- артикул товара (supplierArticle)
-  quantity integer default 0,            -- кол-во на складе WB (не в пути)
-  created_at timestamptz default now(),
-  UNIQUE(shop, date, article)
+  shop     text NOT NULL,
+  date     date NOT NULL,
+  article  text NOT NULL,
+  quantity integer DEFAULT 0,
+  PRIMARY KEY (shop, date, article)
 );
 ```
 
-### Row Level Security (для обеих таблиц)
+#### `wb_plan` — план на месяц
 ```sql
-ALTER TABLE wb_orders ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public read" ON wb_orders FOR SELECT USING (true);
-CREATE POLICY "Service insert" ON wb_orders FOR INSERT WITH CHECK (true);
-CREATE POLICY "Service update" ON wb_orders FOR UPDATE USING (true);
--- То же самое для wb_stocks
+CREATE TABLE wb_plan (
+  month        text PRIMARY KEY,  -- формат 'YYYY-MM'
+  orders_plan  numeric DEFAULT 0,
+  sales_plan   numeric DEFAULT 0,
+  drr_plan     numeric DEFAULT 10,
+  updated_at   timestamptz DEFAULT now()
+);
+-- Обязательно: RLS политика для записи через anon key
+ALTER TABLE wb_plan ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "allow all" ON wb_plan FOR ALL USING (true) WITH CHECK (true);
 ```
 
 ---
 
-## n8n Workflows
+## ⚙️ n8n
 
-Все workflow находятся в одном n8n workflow (ID: `mj21wHs4EuWJfGZA`) в виде нескольких независимых цепочек.
+**Единый workflow:** `WB AI v7` (id: `mj21wHs4EuWJfGZA`)
 
-### Цепочка 1: Заказы Одинг → Supabase
-**Расписание**: `0 8 * * *` (каждый день в 8:00)
-**Цепочка**: Триггер1 → WB API1 (orders) → Агрегация1 → Сохранить в Supabase1
+### Расписание (UTC, ежедневно)
+| Время | Действие |
+|-------|---------|
+| 08:00 | Остатки Одинг |
+| 08:05 | Остатки Стольников |
+| 08:20 | Заказы + Продажи + Реклама Стольников |
+| 08:00 | Заказы + Продажи + Реклама Одинг |
 
-WB API endpoint: `GET https://statistics-api.wildberries.ru/api/v1/supplier/orders?dateFrom={{вчера}}`
+### Логика сбора РнП
+1. Заказы за 14 дней (`/api/v1/supplier/orders`)
+2. Wait 1 мин (rate limit)
+3. Продажи (`/api/v1/supplier/sales`) + Реклама (`/adv/v1/upd`)
+4. Агрегация по дням, фильтр отмен (isCancel) и возвратов (saleID начинается с R)
+5. Upsert в Supabase (`on_conflict=date,shop`)
 
-Агрегация считает за вчерашний день: заказы, отмены, выручку, топ артикулов, склады.
-Спарклайны строятся за последние 7 дней.
-Upsert в Supabase: `POST /rest/v1/wb_orders?on_conflict=shop,date`
+**Важно:** используется `priceWithDisc` — соответствует WB Partners.
 
-### Цепочка 2: Заказы Стольников → Supabase
-**Расписание**: `10 8 * * *` (каждый день в 8:10)
-Аналогично цепочке 1, но с токеном Стольников.
+### AI webhook
+- **Путь:** `POST /webhook/wb-ai-v7`
+- **Узлы:** Webhook → Build Request (Code) → Polza.ai API → Parse Response → Respond
+- **Модель:** `gpt-4o` через Polza.ai
+- **Ключ Polza.ai:** `pza_HoGxwLzyc3j_nQMCweE6wf1wal9gEsH8`
+- **HTTP узел:** `specifyBody: json`, `jsonBody: ={{ JSON.stringify($json) }}`, заголовок только `Authorization`
+- **Ответ:** HTML (рендерится через `innerHTML` в дашборде)
 
-### Цепочка 3: Остатки Одинг → Supabase
-**Расписание**: `5 8 * * *` (каждый день в 8:05)
-**Цепочка**: Триггер → WB Stocks API → Агрегация → Сохранить в Supabase
+### Актуальный код узла Build Request:
+```javascript
+const inp = $input.first().json;
+const prompt = (inp.body && inp.body.prompt) ? String(inp.body.prompt) : 'тест';
 
-WB API endpoint: `GET https://statistics-api.wildberries.ru/api/v1/supplier/stocks?dateFrom=2020-01-01`
+const sys = `Ты — опытный аналитик e-commerce, специализируешься на Wildberries.
 
-Агрегация: суммирует `quantity` (только на складе, не в пути) по каждому артикулу.
-Записывает каждый артикул отдельной строкой в `wb_stocks`.
+КОНТЕКСТ БИЗНЕСА:
+- Магазины продают семена растений (два магазина: Одинг и Стольников, данные суммируются)
+- Целевая аудитория — дачники и садоводы
+- Сейчас март — зимний сезон, выходные традиционно лучше будних
 
-### Цепочка 4: Остатки Стольников → Supabase
-**Расписание**: `15 8 * * *` (каждый день в 8:15)
-Аналогично цепочке 3.
+ФОРМАТИРОВАНИЕ ЧИСЕЛ:
+- Всегда пиши полные числа: не "2827К₽", а "2 827 000 ₽"
+- Не сокращай тысячи и миллионы буквами К и М
 
-### Важные ограничения WB API
-- Rate limit: ~1 запрос в минуту **на аккаунт продавца** (не по IP)
-- Оба магазина принадлежат одному аккаунту WB (uid: 23099886)
-- Нельзя делать параллельные запросы — нужна пауза 5-10 мин между цепочками
-- При превышении лимита ошибка: "The service is receiving too many requests from you"
+МЕТРИКИ — ВАЖНЫЕ ПРАВИЛА:
+- ДРР = реклама / заказы * 100%. Целевой ДРР берётся из строки "План на месяц" в данных (поле "ДРР X%")
+- Желтая зона — превышение цели до 5 пп, красный флаг — превышение более чем на 5 пп
+- Высокий ДРР на отдельные дни — НЕ красный флаг. Иногда это стратегия роста позиций. Оценивай ДРР только в среднем за 7+ дней
+- Если ДРР высокий и заказы растут — это инвестиция в позиции, не проблема
+- % выкупа — НЕ АНАЛИЗИРОВАТЬ, данные некорректны
 
----
+ОГРАНИЧЕНИЯ ВЫБОРКИ:
+- 14 дней — мало для выводов о закономерностях по дням недели, не делай обобщений
 
-## Файлы на GitHub Pages
+СТИЛЬ ОТВЕТА:
+- Используй HTML (не Markdown): <b>жирный</b>, <br> для переноса
+- Структура строго:
+  <b>🔴 Тревожные сигналы</b><br>
+  <b>📈 Динамика</b><br>
+  <b>💡 Гипотезы</b><br>
+  <b>✅ Позитивное</b><br>
+  <b>📋 План месяца</b><br>
+- В каждом блоке максимум 2-3 строки с конкретными цифрами
+- Пиши кратко, без воды`;
 
-### `index.html` — главный дашборд
-Показывает сводку заказов за вчера: карточки с метриками, топ артикулов, склады, спарклайны.
-Читает данные из Supabase через anon key (REST API).
-Переключение между магазинами: Одинг / Стольников / Сравнение.
-
-### `stocks.html` — таблица остатков
-Пивот-таблица: артикулы по вертикали, даты по горизонтали.
-Показывает только артикулы из `articles.txt`.
-Если артикул есть в списке но нет данных — показывает 0.
-Цветовая индикация: >50 (зелёный), 10-50 (жёлтый), 1-9 (оранжевый), 0 (серый), новое поступление (синий).
-
-### `articles.txt` — список отслеживаемых артикулов
-Простой текстовый файл, каждый артикул с новой строки.
-Загружается динамически при открытии stocks.html.
-Редактировать прямо на GitHub — изменения вступают в силу мгновенно.
-
----
-
-## Supabase REST API (для дашборда)
-
-### Получить последние заказы (оба магазина)
-```
-GET /rest/v1/wb_orders?select=*&order=date.desc&limit=2
-Headers: apikey: <anon_key>, Authorization: Bearer <anon_key>
-```
-
-### Получить остатки по магазину
-```
-GET /rest/v1/wb_stocks?shop=eq.oding&order=date.asc,article.asc&limit=1000
-```
-
-### Upsert заказов (n8n)
-```
-POST /rest/v1/wb_orders?on_conflict=shop,date
-Headers: + Prefer: resolution=merge-duplicates
-```
-
-### Upsert остатков (n8n)
-```
-POST /rest/v1/wb_stocks?on_conflict=shop,date,article
-Headers: + Prefer: resolution=merge-duplicates
+return [{
+  json: {
+    model: "gpt-4o",
+    max_tokens: 1000,
+    messages: [
+      { role: "system", content: sys },
+      { role: "user",   content: prompt }
+    ]
+  }
+}];
 ```
 
 ---
 
-## Текущий статус (04.03.2026)
+## 🔑 Токены Wildberries
 
-- ✅ Supabase: таблицы `wb_orders` и `wb_stocks` созданы, RLS настроен
-- ✅ n8n: все 4 цепочки работают, данные пишутся корректно
-- ✅ GitHub Pages: `index.html` показывает реальные данные из Supabase
-- ✅ `stocks.html` создана, ожидает загрузки на GitHub
-- ✅ `articles.txt` создан, ожидает загрузки на GitHub
-- ⚠️ n8n триал заканчивается ~16 марта 2026 — нужно перейти на платный план или self-hosted
+Хранятся в узлах n8n. При истечении обновить в WB Partners → Настройки → Токены.
 
-### Данные в базе
-- `wb_orders`: записи за 03.03.2026 (Одинг: 450 заказов, 55 916 ₽; Стольников: 1078 заказов, 126 039 ₽)
-- `wb_stocks`: остатки за 04.03.2026 (244 артикула Стольников, данные Одинг)
+- **Стольников** (oid: 406043) — статистика + реклама
+- **Одинг** (oid: 4038628) — статистика + реклама
 
 ---
 
-## Что планировалось / TODO
+## 📊 Дашборд rnp.html
 
-- [ ] Добавить ссылку на stocks.html с главного дашборда
-- [ ] Когда закончится триал n8n — решить вопрос с хостингом (self-hosted или платный)
-- [ ] Обновить WB токены до истечения срока (июнь 2026)
-- [ ] Возможные доработки дашборда: динамика по дням, сравнение с прошлой неделей
+### Функции
+- Вкладки по месяцам (автоматически)
+- Темп выполнения плана нарастающим итогом
+- Таблица по дням: заказы, продажи, реклама, ДРР
+- График Chart.js (заказы + реклама)
+- AI-анализ: кнопка → webhook → GPT-4o → HTML блок
+- План на месяц (заказы, продажи, ДРР) — сохраняется в `wb_plan`
+
+### Ключевые детали
+- AI результат: `body.innerHTML = text` (не textContent!)
+- AI грузит отдельно 14 дней: `wb_rnp?date=gte.${from14}&date=lt.${today}`
+- Целевой ДРР передаётся в промпт из `plan.drr_plan`
+- Прогноз = текущий темп × оставшиеся дни
+- Цены: `priceWithDisc`
 
 ---
 
-## Как продолжить в новом чате
+## 📦 Дашборд stocks.html
 
-Скопируйте этот документ и передайте ИИ-ассистенту со словами:
+### Функции
+- Переключение между магазинами (Одинг / Стольников)
+- Сводка: % в наличии, нулевые остатки, зона риска (<10 дней)
+- Панель риска: артикулы с критическим запасом
+- Таблица: артикулы × даты, цветовая индикация
+- Новые поступления выделены синим
+- **Кнопка «✨ AI-анализ склада»** — в шапке, всегда видна
 
-> "Вот документация нашего проекта WB дашборд. Продолжи работу."
+### AI-анализ склада (как работает)
+1. JS вычисляет по каждому артикулу: остаток, среднее продаж/день, дней до нуля, тренд (последние 3 дня vs предыдущие 3)
+2. Формирует промпт с секциями: критические, зона риска, нулевые, тренды, замороженные
+3. Отправляет на `/webhook/wb-ai-v7` (тот же что РнП)
+4. Возвращает рекомендации по поставкам в HTML
 
-Все credentials, структура БД, логика workflow — всё здесь.
+### Структура ответа AI по складу
+- 🚨 Срочно завезти
+- 📦 Запланировать поставку
+- 📈 Растущие позиции
+- ❄️ Замороженный товар
+- 💡 Общие рекомендации
+
+---
+
+## 🔧 Типичные проблемы и решения
+
+| Проблема | Причина | Решение |
+|----------|---------|---------|
+| Данные не обновляются | n8n workflow упал | Проверить Executions в n8n |
+| Расхождение с WB Partners | Неверное поле цены | Убедиться что используется `priceWithDisc` |
+| AI возвращает пустой ответ | Ошибка в n8n узле | Открыть последний Execution, найти упавший узел |
+| Ошибка 415 от Polza.ai | Content-Type не передан | `specifyBody: json` в HTTP узле (не raw) |
+| Ошибка 400 от Polza.ai | Пустое тело запроса | Ключ в Code узле и HTTP узле должны совпадать |
+| План не сохраняется | Нет RLS политики на `wb_plan` | Выполнить SQL CREATE POLICY (см. выше) |
+| Rate limit WB API | Слишком частые запросы | Wait 1 мин между заказами и продажами |
+| AI теги отображаются как текст | `textContent` вместо `innerHTML` | Заменить на `body.innerHTML = text` |
+
+---
+
+## 💬 Промпт для нового чата
+
+```
+Мы разрабатываем дашборд для мониторинга продаж на Wildberries.
+
+БИЗНЕС: два магазина (Одинг + Стольников), продают семена растений.
+Аудитория — дачники и садоводы. Данные суммируются по двум магазинам.
+
+СТЕК:
+- GitHub Pages: rnp.html, stocks.html, favicon.svg, articles.txt
+- n8n: wbtrenz.app.n8n.cloud (workflow "WB AI v7", id: mj21wHs4EuWJfGZA)
+- Supabase: rkxezsfrmjvriokhzaxk.supabase.co
+  Таблицы: wb_rnp (заказы/продажи/реклама), wb_stocks (остатки), wb_plan (план на месяц)
+- Polza.ai: GPT-4o через OpenAI-совместимый API
+  Ключ: pza_HoGxwLzyc3j_nQMCweE6wf1wal9gEsH8
+  Webhook: POST https://wbtrenz.app.n8n.cloud/webhook/wb-ai-v7
+- WB API: статистика + реклама для обоих магазинов
+
+КЛЮЧЕВЫЕ ДЕТАЛИ:
+- Цены: priceWithDisc (соответствует WB Partners)
+- Сбор данных: ежедневно ~08:00 UTC, за 14 дней назад
+- AI ответы рендерятся через innerHTML (HTML формат, не Markdown)
+- Webhook один для обоих дашбордов (РнП и Остатки)
+- wb_plan требует RLS политику "allow all" для записи через anon key
+- HTTP узел Polza.ai: specifyBody=json, заголовок только Authorization
+- Полная документация: README.md в корне репозитория
+```
+
+---
+
+*Последнее обновление: март 2026*
