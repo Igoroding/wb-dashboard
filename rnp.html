@@ -212,6 +212,8 @@ const SB_HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABA
 
 let currentMonth = '';
 let plan = { orders_plan: 11000000, sales_plan: 8000000, drr_plan: 10 };
+let journalOpen = true;
+let journalEntries = [];
 let currentView = 'chart';
 
 const fmtRub = n => new Intl.NumberFormat('ru-RU').format(Math.round(n)) + ' ₽';
@@ -582,8 +584,6 @@ loadJournal();
 document.getElementById('journal-date').value = new Date().toLocaleDateString('sv-SE');
 
 // ─── JOURNAL ───────────────────────────────────────────────
-let journalOpen = true;
-let journalEntries = [];
 
 function toggleJournal() {
   journalOpen = !journalOpen;
@@ -697,7 +697,34 @@ async function runAI() {
       recentJournal.slice().reverse().map(e => `${e.date}: ${e.note}`).join('\n')
     : '';
 
-  const prompt = `Проанализируй данные магазинов на Wildberries (Одинг + Стольников, суммарно).\n\n${planInfo}\n\nДанные по дням:\n${tableText}${journalText}`;
+  // Fetch latest stocks and build summary
+  let stocksText = '';
+  try {
+    const latestDateRows = await sbGet('/rest/v1/wb_stocks?select=date&order=date.desc&limit=1');
+    if (latestDateRows && latestDateRows.length > 0) {
+      const lastDate = latestDateRows[0].date;
+      const stocks = await sbGet(`/rest/v1/wb_stocks?date=eq.${lastDate}&order=article.asc&limit=500`);
+      if (stocks && stocks.length > 0) {
+        const byArticle = {};
+        for (const s of stocks) {
+          if (s.article === '__empty__') continue;
+          if (!byArticle[s.article]) byArticle[s.article] = 0;
+          byArticle[s.article] += s.quantity || 0;
+        }
+        const sorted = Object.entries(byArticle).sort((a, b) => a[1] - b[1]);
+        const zero = sorted.filter(([,q]) => q === 0);
+        const low  = sorted.filter(([,q]) => q > 0 && q <= 20);
+        const ok   = sorted.filter(([,q]) => q > 20);
+        const parts = [];
+        if (zero.length) parts.push(`Нулевые остатки (${zero.length} арт.): ${zero.map(([a]) => a).join(', ')}`);
+        if (low.length)  parts.push(`Критически мало ≤20 шт (${low.length} арт.): ${low.map(([a,q]) => a + ':' + q).join(', ')}`);
+        parts.push(`В достатке >20 шт: ${ok.length} артикулов`);
+        stocksText = '\n\nОстатки на складе (на ' + lastDate + ', суммарно по двум магазинам):\n' + parts.join('\n');
+      }
+    }
+  } catch(e) {}
+
+  const prompt = `Проанализируй данные магазинов на Wildberries (Одинг + Стольников, суммарно).\n\n${planInfo}\n\nДанные по дням:\n${tableText}${stocksText}${journalText}`;
 
   try {
     const WEBHOOK_URL = 'https://wbtrenz.app.n8n.cloud/webhook/wb-ai-v7';
