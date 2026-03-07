@@ -62,6 +62,26 @@
 
   /* AI Analysis */
   .ai-wrap { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:24px; }
+  /* Journal */
+  .journal-wrap { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:20px 24px; margin-bottom:24px; }
+  .journal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; cursor:pointer; user-select:none; }
+  .journal-title { font-size:13px; font-weight:700; color:var(--muted2); text-transform:uppercase; letter-spacing:1px; }
+  .journal-toggle { font-size:12px; color:var(--muted2); }
+  .journal-form { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .journal-date-input { background:var(--s2); border:1px solid var(--border); border-radius:8px; padding:7px 12px; color:var(--text); font-size:13px; font-family:'Geologica',sans-serif; width:140px; }
+  .journal-text-input { background:var(--s2); border:1px solid var(--border); border-radius:8px; padding:7px 12px; color:var(--text); font-size:13px; font-family:'Geologica',sans-serif; flex:1; min-width:200px; }
+  .journal-date-input:focus, .journal-text-input:focus { outline:none; border-color:var(--wb); }
+  .journal-save { background:var(--wb); border:none; border-radius:8px; padding:8px 16px; color:#fff; font-size:13px; font-weight:700; cursor:pointer; font-family:'Geologica',sans-serif; white-space:nowrap; }
+  .journal-save:hover { opacity:0.85; }
+  .journal-list { display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto; }
+  .journal-entry { display:flex; gap:10px; align-items:flex-start; padding:8px 10px; background:var(--s2); border-radius:8px; font-size:13px; }
+  .journal-entry-date { color:var(--muted2); font-weight:600; white-space:nowrap; min-width:80px; }
+  .journal-entry-note { color:var(--text); flex:1; line-height:1.4; }
+  .journal-entry-del { color:var(--muted); cursor:pointer; font-size:16px; line-height:1; opacity:0.5; }
+  .journal-entry-del:hover { opacity:1; color:var(--red); }
+  .journal-empty { color:var(--muted2); font-size:13px; }
+  .journal-saved { font-size:12px; color:var(--green); margin-left:8px; opacity:0; transition:opacity .3s; }
+
   .ai-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
   .ai-title { font-size:13px; font-weight:700; color:var(--muted2); text-transform:uppercase; letter-spacing:1px; }
   .ai-btn { background:var(--wb); border:none; border-radius:8px; padding:9px 20px; color:#fff; font-size:13px; font-weight:700; cursor:pointer; font-family:'Geologica',sans-serif; transition:opacity .2s; display:flex; align-items:center; gap:8px; }
@@ -356,10 +376,10 @@ function renderTempo(rows) {
   document.getElementById('tempo-grid').innerHTML = cards.map(c => `
     <div class="tempo-card">
       <div class="tc-label">${c.label}</div>
-      <div class="tc-fact" style="color:${c.color}">${c.fact}</div>
+      <div class="tc-fact" style="color:var(--text)">${c.fact}</div>
       <div class="tc-plan">${c.planLabel}</div>
-      <div class="progress"><div class="progress-fill" style="width:${c.barW}%;background:${c.color}"></div></div>
-      <div class="tc-pct" style="color:${c.color}">${c.pctLabel}</div>
+      <div class="progress"><div class="progress-fill" style="width:${c.barW}%;background:${c.barColor}"></div></div>
+      <div class="tc-pct" style="color:${c.barColor}">${c.pctLabel}</div>
       <div class="tc-tempo ${c.tempoClass}">${c.tempoLabel}</div>
     </div>
   `).join('');
@@ -558,7 +578,75 @@ document.getElementById('month-tabs').innerHTML = months.map(m =>
 
 const thisMonth = new Date().toISOString().slice(0, 7);
 switchMonth(thisMonth);
+loadJournal();
+document.getElementById('journal-date').value = new Date().toLocaleDateString('sv-SE');
 
+// ─── JOURNAL ───────────────────────────────────────────────
+let journalOpen = true;
+let journalEntries = [];
+
+function toggleJournal() {
+  journalOpen = !journalOpen;
+  document.getElementById('journal-body').style.display = journalOpen ? 'block' : 'none';
+  document.getElementById('journal-toggle').textContent = journalOpen ? '▲' : '▼';
+}
+
+async function loadJournal() {
+  try {
+    const rows = await sbGet('/rest/v1/wb_journal?order=date.desc,created_at.desc&limit=60');
+    journalEntries = rows || [];
+    renderJournal();
+  } catch(e) { journalEntries = []; }
+}
+
+function renderJournal() {
+  const list = document.getElementById('journal-list');
+  if (!journalEntries.length) {
+    list.innerHTML = '<div class="journal-empty">Записей пока нет</div>';
+    return;
+  }
+  list.innerHTML = journalEntries.map(e => `
+    <div class="journal-entry">
+      <span class="journal-entry-date">${e.date}</span>
+      <span class="journal-entry-note">${e.note}</span>
+      <span class="journal-entry-del" onclick="deleteJournalEntry(${e.id})">×</span>
+    </div>
+  `).join('');
+}
+
+async function saveJournalEntry() {
+  const dateEl = document.getElementById('journal-date');
+  const noteEl = document.getElementById('journal-note');
+  const savedEl = document.getElementById('journal-saved');
+  const note = noteEl.value.trim();
+  if (!note) return;
+  const date = dateEl.value || new Date().toLocaleDateString('sv-SE');
+  try {
+    await sbPost('/rest/v1/wb_journal', { date, note });
+    noteEl.value = '';
+    savedEl.style.opacity = '1';
+    setTimeout(() => savedEl.style.opacity = '0', 2000);
+    await loadJournal();
+  } catch(e) { alert('Ошибка: ' + e.message); }
+}
+
+async function deleteJournalEntry(id) {
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/wb_journal?id=eq.' + id, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    await loadJournal();
+  } catch(e) {}
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'journal-note') {
+    saveJournalEntry();
+  }
+});
+
+// ─── AI ANALYSIS ───────────────────────────────────────────
 async function runAI() {
   const btn = document.getElementById('ai-btn');
   const body = document.getElementById('ai-body');
@@ -603,20 +691,13 @@ async function runAI() {
 
   const planInfo = `План на месяц: заказы ${(plan.orders_plan/1000000).toFixed(1)}М₽, продажи ${(plan.sales_plan/1000000).toFixed(1)}М₽, ДРР ${plan.drr_plan}%`;
 
-  const prompt = `Проанализируй данные двух магазинов на Wildberries (Одинг + Стольников, суммарно) за последние 14 дней.
+  const recentJournal = journalEntries.filter(e => e.date >= from14 && e.date <= today);
+  const journalText = recentJournal.length > 0
+    ? '\n\nДействия и события за период (внутренний дневник — учитывай при анализе):\n' +
+      recentJournal.slice().reverse().map(e => `${e.date}: ${e.note}`).join('\n')
+    : '';
 
-${planInfo}
-
-Данные по дням (от старых к новым):
-${tableText}
-
-Дай структурированный анализ:
-1. 🔴 Red flags — тревожные сигналы (если есть)
-2. 🟡 Тренды — что меняется, куда движемся
-3. 💡 Гипотезы — почему так происходит, что стоит проверить
-4. ✅ Что хорошо — позитивные моменты
-
-Будь конкретным, используй цифры из данных. Пиши по-русски, кратко и по делу.`;
+  const prompt = `Проанализируй данные магазинов на Wildberries (Одинг + Стольников, суммарно).\n\n${planInfo}\n\nДанные по дням:\n${tableText}${journalText}`;
 
   try {
     const WEBHOOK_URL = 'https://wbtrenz.app.n8n.cloud/webhook/wb-ai-v7';
@@ -638,8 +719,26 @@ ${tableText}
 
   btn.disabled = false;
   btn.textContent = '🔄 Обновить анализ';
-}
-</script>
+}</script>
+
+    <!-- Journal -->
+    <div class="journal-wrap">
+      <div class="journal-header" onclick="toggleJournal()">
+        <div class="journal-title">📓 Дневник действий</div>
+        <span id="journal-toggle">▲</span>
+      </div>
+      <div id="journal-body">
+        <div class="journal-form">
+          <input type="date" id="journal-date" class="journal-date-input">
+          <input type="text" id="journal-note" class="journal-text-input" placeholder="Запись: запустили новую РК, вошли в акцию, сменили креатив...">
+          <button class="journal-save" onclick="saveJournalEntry()">Добавить</button>
+          <span class="journal-saved" id="journal-saved">✓ Сохранено</span>
+        </div>
+        <div class="journal-list" id="journal-list">
+          <div class="journal-empty">Загрузка...</div>
+        </div>
+      </div>
+    </div>
 
     <!-- AI Analysis -->
     <div class="ai-wrap">
