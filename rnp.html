@@ -672,6 +672,19 @@ document.addEventListener('keydown', function(e) {
 
 // ─── AI ANALYSIS ───────────────────────────────────────────
 
+function parseAISuggestions(text) {
+  const match = text.match(/\[ВОПРОСЫ:\s*([^\]]+)\]/);
+  if (!match) return { clean: text, suggestions: [] };
+  const suggestions = match[1].split('|').map(s => s.trim()).filter(Boolean);
+  const clean = text.replace(match[0], '').trim();
+  return { clean, suggestions };
+}
+
+function useSuggestion(btn) {
+  document.getElementById('ai-followup-input').value = btn.textContent;
+  sendFollowUp();
+}
+
 function renderChat() {
   const body = document.getElementById('ai-body');
   if (aiMessages.length === 0) {
@@ -683,18 +696,33 @@ function renderChat() {
   body.className = 'ai-body';
   // Skip system messages and the first user message (raw data dump)
   const chatMsgs = aiMessages.filter((m, i) => m.role !== 'system' && !(i === 0 && m.role === 'user'));
-  body.innerHTML = '<div class="ai-chat">' + chatMsgs.map(m => {
+
+  let lastSuggestions = [];
+  const bubbles = chatMsgs.map((m, idx) => {
     const isBot = m.role === 'assistant';
     const isTyping = m.typing === true;
+    const isLast = idx === chatMsgs.length - 1;
+    let displayContent = m.content;
+    if (isBot && !isTyping) {
+      const parsed = parseAISuggestions(m.content);
+      displayContent = parsed.clean;
+      if (isLast) lastSuggestions = parsed.suggestions;
+    }
     return `<div class="ai-bubble ${isBot ? 'bot' : 'user'}${isTyping ? ' typing' : ''}">
       <div class="ai-bubble-avatar">${isBot ? '🤖' : '👤'}</div>
-      <div class="ai-bubble-text">${isBot ? m.content : m.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      <div class="ai-bubble-text">${isBot ? displayContent : m.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
     </div>`;
-  }).join('') + '</div>';
-  // Show follow-up input after first bot reply
+  }).join('');
+
+  const chipsHtml = lastSuggestions.length > 0
+    ? `<div class="ai-suggestions">${lastSuggestions.map(q =>
+        `<button class="ai-suggestion-chip" onclick="useSuggestion(this)">${q}</button>`
+      ).join('')}</div>`
+    : '';
+
+  body.innerHTML = '<div class="ai-chat">' + bubbles + '</div>' + chipsHtml;
   const hasReply = chatMsgs.some(m => m.role === 'assistant' && !m.typing);
   document.getElementById('ai-followup').style.display = hasReply ? 'flex' : 'none';
-  // Scroll to bottom
   body.scrollTop = body.scrollHeight;
 }
 
