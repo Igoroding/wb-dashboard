@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Склады WB | WB Dashboard</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <script src="header.js"></script>
+  <script src="header.js" defer></script>
   <style>
     :root {
       --bg:      #080c10;
@@ -170,7 +170,7 @@ async function loadData() {
   btn.classList.add('loading'); btn.disabled = true;
   hideErr();
   try {
-    const res = await fetch(WEBHOOK, { headers: { 'Accept': 'application/json' } });
+    const res = await fetch(WEBHOOK);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const raw = await res.json();
     state.data = process(raw);
