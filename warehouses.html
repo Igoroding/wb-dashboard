@@ -277,6 +277,13 @@ function process(raw) {
   // Добавляем btype=1 (Короб) если вообще есть данные tariffs — они всегда для коробов
   if (boxT.length) btypes.add(1);
 
+  // Диагностика: логируем все имена складов
+  const allNames = Object.keys(wmap).sort();
+  console.log('[WB Warehouses] Total warehouses in wmap:', allNames.length);
+  const nevin = allNames.filter(n => n.toLowerCase().includes('невин') || n.toLowerCase().includes('nevin'));
+  console.log('[WB Warehouses] Невинномысск variants:', nevin);
+  const kotovsk = allNames.filter(n => n.toLowerCase().includes('котов'));
+  console.log('[WB Warehouses] Котовск variants:', kotovsk);
   return { warehouses: Object.values(wmap), today, btypes: [...btypes].sort() };
 }
 
@@ -317,22 +324,36 @@ function render() {
   }
 
   const rows = warehouses.filter(w => {
+    // Скрываем Маркетплейс-склады (зарубежные, нерелевантны)
+    if (w.name.toLowerCase().startsWith('маркетплейс')) return false;
     if (state.tp==='wh'&&w.isSC) return false;
     if (state.tp==='sc'&&!w.isSC) return false;
-    // Фильтр по логистике — применяем всегда (данные из box tariffs надёжны)
+    // Фильтр по логистике
     if (state.maxLog < 9999) {
       const logPct = getLogPct(w);
       if (logPct !== null && logPct > state.maxLog) return false;
     }
-    // Фильтр по коэфф. приёмки — только если есть acceptance-данные
-    const bd = getBD(w);
-    if (bd.length) {
-      if (Math.min(...bd.map(d=>d.coef)) > state.mxc) return false;
+    // Для коробов: acceptance API не возвращает данные — используем box tariffs
+    // Показываем только если у склада ЕСТЬ слоты приёмки (любой тип) ИЛИ это короб с тарифом
+    const allDays = Object.values(w.days);
+    const hasAnySlots = allDays.some(d => d.allow && d.coef >= 0);
+    const bd = getBD(w); // слоты для текущего типа поставки
+
+    if (state.boxTypeID === 1) {
+      // Короб: показываем если есть тариф И есть хоть какие-то слоты в acceptance (для любого типа)
+      // Если acceptance вообще нет данных по складу — тоже показываем (только тариф)
+      if (!w.tariff) return false;
+      if (allDays.length > 0 && !hasAnySlots) return false; // есть данные но все закрыты
+    } else {
+      // Другие типы: нужны слоты
+      if (!bd.length) return false;
+      if (!bd.some(d => d.allow && d.coef >= 0)) return false;
     }
-    // Показываем склад если есть хоть какие-то данные
-    // Для коробов (btype=1): показываем если склад есть в box tariffs (даже без acceptance-данных)
-    // Для других типов: нужны acceptance-данные
-    return bd.length > 0 || (state.boxTypeID === 1 && w.tariff != null);
+
+    // Фильтр по мин. коэффициенту приёмки
+    if (bd.length && Math.min(...bd.map(d=>d.coef)) > state.mxc) return false;
+
+    return true;
   }).sort((a,b)=>{
     const bda=getBD(a), bdb=getBD(b);
     const am = bda.length ? Math.min(...bda.map(d=>d.coef)) : Infinity;
