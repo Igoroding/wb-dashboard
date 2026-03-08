@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Склады WB | WB Dashboard</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg:      #0c0c18;
+      --bg2:     #13132a;
+      --bg3:     #1e1e3a;
+      --bg4:     #252545;
+      --text:    #e4e4f0;
+      --text2:   #8888aa;
+      --accent:  #7c6fff;
+      --border:  #252545;
+      --green:   #22c55e;
+      --yellow:  #f59e0b;
+      --orange:  #f97316;
+      --red:     #ef4444;
+      --purple:  #a78bfa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-link {
+      color: var(--text2);
+      text-decoration: none;
+      padding: 5px 11px;
+      border-radius: 7px;
+      font-size: 13px;
+      transition: .15s;
+    }
+    .nav-link:hover { background: var(--bg3); color: var(--text); }
+    .nav-link.active { background: var(--accent); color: #fff; }
+    .header-title { font-size: 15px; font-weight: 600; margin-left: 4px; flex: 1; }
+    .last-update { font-size: 12px; color: var(--text2); }
+    .btn {
+      border: none;
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: .15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: .85; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .spinner {
+      width: 13px; height: 13px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      display: none;
+      animation: spin .75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading .spinner { display: block; }
+    .loading .btn-text { display: none; }
+
+    /* ── MAIN ── */
+    .main { padding: 16px 20px 32px; }
+
+    /* ── FILTERS ── */
+    .filters {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      align-items: center;
+    }
+    .filter-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .filter-label { font-size: 12px; color: var(--text2); white-space: nowrap; }
+    .filter-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: .12s;
+    }
+    .filter-btn:hover { color: var(--text); border-color: var(--accent); }
+    .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ── SUMMARY ── */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .summary-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .summary-card .val {
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .summary-card .lbl { font-size: 11px; color: var(--text2); line-height: 1.4; }
+    .col-green  { color: var(--green); }
+    .col-yellow { color: var(--yellow); }
+    .col-orange { color: var(--orange); }
+    .col-gray   { color: var(--text2); }
+
+    /* ── ERROR ── */
+    .error-bar {
+      background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.3);
+      border-radius: 8px;
+      padding: 9px 14px;
+      margin-bottom: 12px;
+      color: #fca5a5;
+      font-size: 13px;
+      display: none;
+    }
+    .error-bar.show { display: block; }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: auto;
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    thead th {
+      background: var(--bg3);
+      padding: 8px 6px;
+      font-size: 11px;
+      color: var(--text2);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    thead th.th-left { text-align: left; padding-left: 14px; }
+    thead th.th-center { text-align: center; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,.04); transition: background .1s; }
+    tbody tr:hover { background: rgba(255,255,255,.025); }
+    tbody tr:last-child { border-bottom: none; }
+    td { padding: 7px 6px; vertical-align: middle; }
+
+    .td-name { padding: 7px 14px; white-space: nowrap; }
+    .wd-name { font-weight: 500; font-size: 13px; }
+    .wd-geo  { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .badge-sc {
+      display: inline-block;
+      background: rgba(124,111,255,.2);
+      color: var(--accent);
+      font-size: 10px;
+      border-radius: 4px;
+      padding: 1px 5px;
+      margin-left: 5px;
+      vertical-align: middle;
+    }
+
+    /* ── COEF CELLS ── */
+    .td-coef { text-align: center; padding: 4px 3px; width: 40px; min-width: 40px; }
+    .coef-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 26px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: default;
+      letter-spacing: -.3px;
+    }
+    .c-free  { background: rgba(34,197,94,.2);  color: #4ade80; }
+    .c-1     { background: rgba(134,239,172,.18);color: #86efac; }
+    .c-2     { background: rgba(253,224,71,.18); color: #fde047; }
+    .c-3     { background: rgba(253,186,64,.18); color: #fbbf24; }
+    .c-4     { background: rgba(249,115,22,.18); color: #fb923c; }
+    .c-5     { background: rgba(249,115,22,.25); color: #f97316; }
+    .c-high  { background: rgba(239,68,68,.2);   color: #fca5a5; }
+    .c-off   { background: rgba(55,65,81,.25);   color: #4b5563; }
+    .c-today { box-shadow: 0 0 0 2px var(--accent); }
+
+    .th-today { color: var(--accent) !important; }
+    .th-wknd  { color: var(--purple) !important; }
+
+    .td-stat { text-align: center; padding: 7px 8px; white-space: nowrap; }
+    .pct-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .pct-ok   { background: rgba(34,197,94,.15);  color: #4ade80; }
+    .pct-mid  { background: rgba(245,158,11,.15);  color: #fbbf24; }
+    .pct-hi   { background: rgba(239,68,68,.15);   color: #fca5a5; }
+
+    .min-coef-date { display: block; font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+    /* ── STATE MESSAGES ── */
+    .state-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 48px 32px;
+      text-align: center;
+      color: var(--text2);
+    }
+    .state-box .ico { font-size: 52px; margin-bottom: 14px; }
+    .state-box h3 { color: var(--text); font-size: 16px; margin-bottom: 8px; }
+    .state-box p  { font-size: 13px; line-height: 1.7; }
+
+
+    /* ── LEGEND ── */
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text2);
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-pill {
+      width: 30px; height: 20px;
+      border-radius: 5px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <nav class="nav-links">
+    <a href="rnp.html"         class="nav-link">📊 РнП</a>
+    <a href="stocks.html"      class="nav-link">📦 Остатки</a>
+    <a href="warehouses.html"  class="nav-link active">🏭 Склады</a>
+  </nav>
+  <span class="header-title">Склады Wildberries — коэффициенты приёмки</span>
+  <span class="last-update" id="lastUpdate">нет данных</span>
+  <button class="btn btn-primary" id="btnRefresh" onclick="loadData()">
+    <div class="spinner"></div>
+    <span class="btn-text">🔄 Обновить</span>
+  </button>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <div class="error-bar" id="errBar"></div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-group">
+      <span class="filter-label">Округ:</span>
+      <div id="fRegion" style="display:flex;gap:4px;flex-wrap:wrap">
+        <!-- populated by JS -->
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Макс. коэф:</span>
+      <div style="display:flex;gap:4px">
+        <button class="filter-btn"       data-mxc="999" onclick="setMxc(this,999)">Все</button>
+        <button class="filter-btn active" data-mxc="5"   onclick="setMxc(this,5)">≤ 5</button>
+        <button class="filter-btn"       data-mxc="3"   onclick="setMxc(this,3)">≤ 3</button>
+        <button class="filter-btn"       data-mxc="1"   onclick="setMxc(this,1)">≤ 1</button>
+        <button class="filter-btn"       data-mxc="0"   onclick="setMxc(this,0)">Бесплатно</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Тип:</span>
+      <div style="display:flex;gap:4px">
+        <button class="filter-btn active" data-tp="all" onclick="setTp(this,'all')">Все</button>
+        <button class="filter-btn"        data-tp="wh"  onclick="setTp(this,'wh')">Склады</button>
+        <button class="filter-btn"        data-tp="sc"  onclick="setTp(this,'sc')">СЦ</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Поставка:</span>
+      <div id="fBox" style="display:flex;gap:4px"></div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary" id="summary"></div>
+
+  <!-- Content -->
+  <div id="content">
+    <div class="state-box">
+      <div class="ico">🏭</div>
+      <h3>Нажмите «Обновить» для загрузки данных</h3>
+      <p>Загружаются коэффициенты приёмки на ближайшие 14 дней,<br>
+         стоимость логистики и хранения по складам Wildberries.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   CONFIG
+───────────────────────────────────────────── */
+const WEBHOOK = 'https://wbtrenz.app.n8n.cloud/webhook/wb-warehouses';
+
+// WB token (Одинг, любой токен подходит для тарифных методов)
+const WB_TOKEN = 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwOTA0djEiLCJ0eXAiOiJKV1QifQ.eyJhY2MiOjEsImVudCI6MSwiZXhwIjoxNzg3ODk1ODUzLCJpZCI6IjAxOWM5YjBkLTFhYzAtN2M2Ni04ZmE0LTAxYzgyOTU3ZTNjZSIsImlpZCI6MjMwOTk4ODYsIm9pZCI6NDAzODYyOCwicyI6MTA3Mzc0MTg3Miwic2lkIjoiMzY1N2IzMmMtMzQ1NC00MjFhLWE2OWItNmFmZGIxNDIzMTlmIiwidCI6ZmFsc2UsInVpZCI6MjMwOTk4ODZ9.rttnRBrfaovQHYfEx6a0w0QudsIZ2xRdu66JskIybwKvVxQLNMjXqaBlmFpKulC2RmoxuIlW2OgX6f8r1VSRnQ';
+
+const BOX_TYPE_NAMES = { 1:'Короб', 2:'Монопаллет', 3:'Суперсейф', 5:'Суперсейф QR', 6:'Монопаллет QR' };
+const DOW = ['вс','пн','вт','ср','чт','пт','сб'];
+const GEO_ABBR = {
+  'Центральный':      'ЦФО',
+  'Северо-Западный':  'СЗФО',
+  'Приволжский':      'ПФО',
+  'Южный':            'ЮФО',
+  'Северо-Кавказский':'СКФО',
+  'Уральский':        'УФО',
+  'Сибирский':        'СФО',
+  'Дальневосточный':  'ДВФО'
+};
+const DEFAULT_REGIONS = new Set(['Центральный','Северо-Западный','Приволжский']);
+
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+let state = {
+  data:       null,
+  regions:    new Set(DEFAULT_REGIONS),
+  mxc:        5,
+  tp:         'all',
+  boxTypeID:  1
+};
+
+/* ─────────────────────────────────────────────
+   LOAD DATA  (calls n8n webhook)
+───────────────────────────────────────────── */
+async function loadData() {
+  const btn = document.getElementById('btnRefresh');
+  btn.classList.add('loading'); btn.disabled = true;
+  hideErr();
+  try {
+    const res = await fetch(WEBHOOK, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status} — возможно, webhook не настроен`);
+    const raw = await res.json();
+    state.data = process(raw);
+    document.getElementById('lastUpdate').textContent =
+      'Обновлено: ' + new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    rebuildFilters();
+    render();
+  } catch(e) {
+    showErr(e.message);
+    renderSetup();
+  } finally {
+    btn.classList.remove('loading'); btn.disabled = false;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   PROCESS  raw n8n response → structured data
+───────────────────────────────────────────── */
+function process(raw) {
+  // n8n sends: { acceptCoefs: [...], boxTariffs: [...] }
+  // acceptCoefs can also be the direct WB array (flat response)
+  let accept = [];
+  if (Array.isArray(raw)) accept = raw;
+  else if (Array.isArray(raw.acceptCoefs)) accept = raw.acceptCoefs;
+  else if (raw.result && Array.isArray(raw.result.acceptCoefs)) accept = raw.result.acceptCoefs;
+
+  let boxT = [];
+  if (Array.isArray(raw.boxTariffs)) boxT = raw.boxTariffs;
+  else if (raw.result && Array.isArray(raw.result.boxTariffs)) boxT = raw.result.boxTariffs;
+  else if (raw.response?.data?.warehouseList) boxT = raw.response.data.warehouseList;
+
+  const today = new Date().toISOString().slice(0,10);
+
+  // Box tariffs map  name → {geoName, boxDeliveryCoefExpr, boxStorageCoefExpr, ...}
+  const tmap = {};
+  for (const t of boxT) tmap[t.warehouseName] = t;
+
+  // Group acceptance coefs by warehouse
+  const wmap = {};
+  for (const d of accept) {
+    const id = d.warehouseID;
+    if (!wmap[id]) {
+      const geo  = geoShort(tmap[d.warehouseName]?.geoName);
+      wmap[id] = {
+        id, name: d.warehouseName,
+        isSC: !!d.isSortingCenter,
+        geo,  geoFull: tmap[d.warehouseName]?.geoName || null,
+        tariff: tmap[d.warehouseName] || null,
+        days: {}   //  "YYYY-MM-DD_boxTypeID" → day
+      };
+    }
+    const key = d.date.slice(0,10) + '_' + (d.boxTypeID||1);
+    wmap[id].days[key] = {
+      date:    d.date.slice(0,10),
+      coef:    d.coefficient,
+      allow:   d.allowUnload,
+      btype:   d.boxTypeID || 1,
+      storC:   d.storageCoef,
+      delC:    d.deliveryCoef,
+      delBase: d.deliveryBaseLiter,
+      stoBase: d.storageBaseLiter
+    };
+  }
+
+  // Collect all box types present
+  const btypes = new Set();
+  Object.values(wmap).forEach(w =>
+    Object.values(w.days).forEach(d => btypes.add(d.btype)));
+
+  return { warehouses: Object.values(wmap), today, btypes: [...btypes].sort() };
+}
+
+function geoShort(name) {
+  if (!name) return null;
+  for (const k of Object.keys(GEO_ABBR)) if (name.includes(k)) return k;
+  return name.split(' ')[0];
+}
+
+/* ─────────────────────────────────────────────
+   REBUILD FILTERS after data load
+───────────────────────────────────────────── */
+function rebuildFilters() {
+  const { warehouses, btypes } = state.data;
+
+  // Regions present in data
+  const regions = [...new Set(warehouses.map(w=>w.geo).filter(Boolean))].sort((a,b)=>{
+    const order=['Центральный','Северо-Западный','Приволжский','Южный','Северо-Кавказский','Уральский','Сибирский','Дальневосточный'];
+    return order.indexOf(a)-order.indexOf(b);
+  });
+
+  const fr = document.getElementById('fRegion');
+  fr.innerHTML = regions.map(r=>`
+    <button class="filter-btn ${state.regions.has(r)?'active':''}" onclick="togR(this,'${r}')">
+      ${GEO_ABBR[r]||r.slice(0,3)}
+    </button>`).join('');
+
+  const fb = document.getElementById('fBox');
+  fb.innerHTML = btypes.map(t=>`
+    <button class="filter-btn ${state.boxTypeID===t?'active':''}" onclick="setBox(this,${t})">
+      ${BOX_TYPE_NAMES[t]||'Тип '+t}
+    </button>`).join('');
+}
+
+/* ─────────────────────────────────────────────
+   FILTER HANDLERS
+───────────────────────────────────────────── */
+function togR(btn,r){
+  state.regions.has(r)
+    ? (state.regions.size>1 && state.regions.delete(r))
+    : state.regions.add(r);
+  btn.classList.toggle('active', state.regions.has(r));
+  if(state.data) render();
+}
+function setMxc(btn,v){
+  state.mxc=v;
+  document.querySelectorAll('[data-mxc]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); if(state.data) render();
+}
+function setTp(btn,v){
+  state.tp=v;
+  document.querySelectorAll('[data-tp]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); if(state.data) render();
+}
+function setBox(btn,v){
+  state.boxTypeID=v;
+  document.querySelectorAll('#fBox .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); if(state.data) render();
+}
+
+/* ─────────────────────────────────────────────
+   RENDER
+───────────────────────────────────────────── */
+function render() {
+  const { warehouses, today } = state.data;
+
+  // 14-day range
+  const dates=[];
+  for(let i=0;i<14;i++){
+    const d=new Date(today+'T12:00:00');
+    d.setDate(d.getDate()+i);
+    dates.push(d.toISOString().slice(0,10));
+  }
+
+  // Helper: get days for selected box type
+  function getBoxDays(w) {
+    return Object.values(w.days).filter(d=>d.btype===state.boxTypeID && d.allow && d.coef>=0);
+  }
+
+  // Filter
+  const rows = warehouses.filter(w=>{
+    if(w.geo && !state.regions.has(w.geo)) return false;
+    if(state.tp==='wh' && w.isSC) return false;
+    if(state.tp==='sc' && !w.isSC) return false;
+    const bd=getBoxDays(w);
+    if(!bd.length) return false;
+    const mn=Math.min(...bd.map(d=>d.coef));
+    return mn<=state.mxc;
+  });
+
+  // Sort: min coef asc → name
+  rows.sort((a,b)=>{
+    const am=Math.min(...getBoxDays(a).map(d=>d.coef));
+    const bm=Math.min(...getBoxDays(b).map(d=>d.coef));
+    return am!==bm ? am-bm : a.name.localeCompare(b.name,'ru');
+  });
+
+  // Summary
+  const avlToday = rows.filter(w=>
+    Object.values(w.days).some(d=>d.date===today&&d.btype===state.boxTypeID&&d.allow&&d.coef>=0)).length;
+  const freeToday = rows.filter(w=>
+    Object.values(w.days).some(d=>d.date===today&&d.btype===state.boxTypeID&&d.allow&&d.coef===0)).length;
+  const freeAny = rows.filter(w=>
+    getBoxDays(w).some(d=>d.coef===0)).length;
+  const avgArr = rows.map(w=>{
+    const bd=getBoxDays(w); return bd.length?Math.min(...bd.map(d=>d.coef)):null;
+  }).filter(x=>x!==null);
+  const avg = avgArr.length ? (avgArr.reduce((a,b)=>a+b,0)/avgArr.length).toFixed(1) : '—';
+
+  document.getElementById('summary').innerHTML=`
+    <div class="summary-card">
+      <div class="val col-green">${rows.length}</div>
+      <div class="lbl">Складов по фильтру</div>
+    </div>
+    <div class="summary-card">
+      <div class="val ${avlToday>0?'col-green':'col-orange'}">${avlToday}</div>
+      <div class="lbl">Доступны сегодня</div>
+    </div>
+    <div class="summary-card">
+      <div class="val ${freeToday>0?'col-green':'col-gray'}">${freeToday}</div>
+      <div class="lbl">Бесплатная приёмка сегодня</div>
+    </div>
+    <div class="summary-card">
+      <div class="val ${freeAny>0?'col-green':'col-gray'}">${freeAny}</div>
+      <div class="lbl">Бесплатная на 14 дней</div>
+    </div>
+    <div class="summary-card">
+      <div class="val ${parseFloat(avg)<=2?'col-green':parseFloat(avg)<=4?'col-yellow':'col-orange'}">${avg}</div>
+      <div class="lbl">Средний мин. коэффициент</div>
+    </div>`;
+
+  if(!rows.length){
+    document.getElementById('content').innerHTML=`
+      <div class="state-box">
+        <div class="ico">🔍</div>
+        <h3>Нет складов по выбранным фильтрам</h3>
+        <p>Расширьте фильтры регионов или коэффициента</p>
+      </div>`;
+    return;
+  }
+
+  // Table header
+  const hdates = dates.map(d=>{
+    const dt=new Date(d+'T12:00:00');
+    const wd=dt.getDay();
+    const isT=(d===today), isW=(wd===0||wd===6);
+    return `<th class="th-center ${isT?'th-today':isW?'th-wknd':''}" style="min-width:40px">
+              <div>${dt.getDate()}</div>
+              <div style="font-weight:400;font-size:10px">${DOW[wd]}</div>
+            </th>`;
+  }).join('');
+
+  // Table rows
+  const trows = rows.map(w=>{
+    const bd = getBoxDays(w);
+
+    // Day cells
+    const dcells = dates.map(d=>{
+      const day = w.days[d+'_'+state.boxTypeID];
+      const isT  = (d===today);
+      let cls='c-off', lbl='—', tip='Нет данных';
+      if(day){
+        if(!day.allow||day.coef<0){ cls='c-off'; lbl='✗'; tip='Недоступно'; }
+        else if(day.coef===0){  cls='c-free'; lbl='Б';      tip='Бесплатная приёмка'; }
+        else if(day.coef===1){  cls='c-1';    lbl='×1';     tip=`×1 = 3,5 ₽/л`; }
+        else if(day.coef===2){  cls='c-2';    lbl='×2';     tip=`×2 = 7 ₽/л`; }
+        else if(day.coef===3){  cls='c-3';    lbl='×3';     tip=`×3 = 10,5 ₽/л`; }
+        else if(day.coef===4){  cls='c-4';    lbl='×4';     tip=`×4 = 14 ₽/л`; }
+        else if(day.coef===5){  cls='c-5';    lbl='×5';     tip=`×5 = 17,5 ₽/л`; }
+        else{                   cls='c-high'; lbl='×'+day.coef; tip=`×${day.coef} = ${(3.5*day.coef).toFixed(1)} ₽/л`; }
+      }
+      return `<td class="td-coef">
+        <span class="coef-pill ${cls}${isT?' c-today':''}" title="${tip}">${lbl}</span>
+      </td>`;
+    }).join('');
+
+    // Min coef cell
+    const mn   = bd.length ? Math.min(...bd.map(d=>d.coef)) : null;
+    const mnD  = mn!==null ? bd.find(d=>d.coef===mn)?.date : null;
+    const mnDstr = mnD ? (mnD===today?'сегодня':
+      new Date(mnD+'T12:00:00').toLocaleDateString('ru-RU',{day:'numeric',month:'short'})) : '—';
+    let mnCls='c-off', mnLbl='—';
+    if(mn!==null){
+      if(mn===0){mnCls='c-free';mnLbl='Бесплатно';}
+      else if(mn===1){mnCls='c-1';mnLbl='×1';}
+      else if(mn<=3){mnCls='c-2';mnLbl='×'+mn;}
+      else if(mn<=5){mnCls='c-4';mnLbl='×'+mn;}
+      else{mnCls='c-high';mnLbl='×'+mn;}
+    }
+
+    // Logistics/storage from tariff
+    let logV='—', stoV='—';
+    const t=w.tariff;
+    if(t){
+      const lc=parseInt(t.boxDeliveryCoefExpr), sc=parseInt(t.boxStorageCoefExpr);
+      if(!isNaN(lc)) logV=`<span class="pct-badge ${lc>200?'pct-hi':lc>130?'pct-mid':'pct-ok'}">${lc}%</span>`;
+      if(!isNaN(sc)) stoV=`<span class="pct-badge ${sc>150?'pct-hi':sc>100?'pct-mid':'pct-ok'}">${sc}%</span>`;
+    } else if(bd.length){
+      const d0=bd[0];
+      if(d0.delC!=null){const v=Math.round(d0.delC*100);logV=`<span class="pct-badge ${v>200?'pct-hi':v>130?'pct-mid':'pct-ok'}">${v}%</span>`;}
+      if(d0.storC!=null){const v=Math.round(d0.storC*100);stoV=`<span class="pct-badge ${v>150?'pct-hi':v>100?'pct-mid':'pct-ok'}">${v}%</span>`;}
+    }
+
+    const abbr = GEO_ABBR[w.geo]||w.geo||'';
+    return `<tr>
+      <td class="td-name">
+        <div class="wd-name">${w.name}${w.isSC?'<span class="badge-sc">СЦ</span>':''}</div>
+        ${abbr?`<div class="wd-geo">${abbr}</div>`:''}
+      </td>
+      ${dcells}
+      <td class="td-stat">
+        <span class="coef-pill ${mnCls}" style="width:auto;padding:0 8px">${mnLbl}</span>
+        <span class="min-coef-date">${mnDstr}</span>
+      </td>
+      <td class="td-stat">${logV}</td>
+      <td class="td-stat">${stoV}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('content').innerHTML=`
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="th-left" style="width:180px">Склад</th>
+            ${hdates}
+            <th class="th-center" style="min-width:90px">Мин. коэф</th>
+            <th class="th-center" style="min-width:72px" title="Коэффициент логистики (доставка от склада WB до покупателя)">Логистика</th>
+            <th class="th-center" style="min-width:72px" title="Коэффициент хранения">Хранение</th>
+          </tr>
+        </thead>
+        <tbody>${trows}</tbody>
+      </table>
+      <div class="legend">
+        <b style="color:var(--text2);font-size:11px">Коэффициент приёмки:</b>
+        <span class="legend-item"><span class="legend-pill c-free">Б</span> Бесплатно</span>
+        <span class="legend-item"><span class="legend-pill c-1">×1</span> 3,5 ₽/л</span>
+        <span class="legend-item"><span class="legend-pill c-2">×2</span> 7 ₽/л</span>
+        <span class="legend-item"><span class="legend-pill c-3">×3</span></span>
+        <span class="legend-item"><span class="legend-pill c-4">×4</span></span>
+        <span class="legend-item"><span class="legend-pill c-high">×N</span> Дорого</span>
+        <span class="legend-item"><span class="legend-pill c-off">✗</span> Закрыто</span>
+        <span style="margin-left:auto;color:var(--text2)">Логистика/Хранение: % от базового тарифа · 
+          <span class="pct-badge pct-ok">≤130%</span> 
+          <span class="pct-badge pct-mid">131–200%</span> 
+          <span class="pct-badge pct-hi">&gt;200%</span>
+        </span>
+      </div>
+    </div>`;
+}
+
+/* ─────────────────────────────────────────────
+   SETUP INSTRUCTIONS (shown when webhook missing)
+───────────────────────────────────────────── */
+function renderSetup() {
+  document.getElementById('content').innerHTML=`
+    <div class="state-box">
+      <div class="ico">⚙️</div>
+      <h3>Webhook не отвечает</h3>
+      <p>Активируйте workflow <b>WB Warehouses</b> в n8n,<br>
+         затем снова нажмите «Обновить».</p>
+    </div>`;
+}
+
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function showErr(msg) {
+  const el=document.getElementById('errBar');
+  el.textContent='⚠️ '+msg; el.classList.add('show');
+}
+function hideErr(){ document.getElementById('errBar').classList.remove('show'); }
+</script>
+</body>
+</html>
