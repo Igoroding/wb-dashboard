@@ -119,10 +119,6 @@
 
   <div class="filters">
     <div class="filter-group">
-      <span class="filter-label">Округ:</span>
-      <div id="fRegion" style="display:flex;gap:4px;flex-wrap:wrap"></div>
-    </div>
-    <div class="filter-group">
       <span class="filter-label">Макс. коэф:</span>
       <div style="display:flex;gap:4px">
         <button class="filter-btn"        data-mxc="999" onclick="setMxc(this,999)">Все</button>
@@ -176,7 +172,7 @@ const BOX_TYPE_NAMES = { 1:'Короб', 2:'Монопаллет', 3:'Супер
 const DOW = ['вс','пн','вт','ср','чт','пт','сб'];
 const GEO_ABBR = { 'Центральный':'ЦФО','Северо-Западный':'СЗФО','Приволжский':'ПФО','Южный':'ЮФО','Северо-Кавказский':'СКФО','Уральский':'УФО','Сибирский':'СФО','Дальневосточный':'ДВФО' };
 
-let state = { data: null, regions: new Set(['Центральный','Северо-Западный','Приволжский','Южный']), mxc: 5, tp: 'all', boxTypeID: 1, maxLog: 120 };
+let state = { data: null, mxc: 5, tp: 'all', boxTypeID: 1, maxLog: 120 };
 
 async function wbFetch(url) {
   const res = await fetch(url, { headers: { 'Authorization': WB_TOKEN } });
@@ -236,25 +232,14 @@ function geoShort(name) {
 
 function rebuildFilters() {
   const { warehouses, btypes } = state.data;
-  const order = ['Центральный','Северо-Западный','Приволжский','Южный','Северо-Кавказский','Уральский','Сибирский','Дальневосточный'];
-  const regions = [...new Set(warehouses.map(w=>w.geo).filter(Boolean))].sort((a,b)=>order.indexOf(a)-order.indexOf(b));
-
   // Авто-выбор: если текущий тип поставки отсутствует в данных — берём первый доступный
   if (btypes.length && !btypes.includes(state.boxTypeID)) {
     state.boxTypeID = btypes.includes(1) ? 1 : btypes[0];
   }
 
-  // Авто-сброс регионов: если ни один дефолтный не найден — включаем все
-  const availGeo = new Set(warehouses.map(w=>w.geo).filter(Boolean));
-  if (![...state.regions].some(r => availGeo.has(r)) && availGeo.size) {
-    state.regions = new Set([...availGeo]);
-  }
-
-  document.getElementById('fRegion').innerHTML = regions.map(r=>`<button class="filter-btn ${state.regions.has(r)?'active':''}" onclick="togR(this,'${r}')">${GEO_ABBR[r]||r.slice(0,3)}</button>`).join('');
   document.getElementById('fBox').innerHTML = btypes.map(t=>`<button class="filter-btn ${state.boxTypeID===t?'active':''}" onclick="setBox(this,${t})">${BOX_TYPE_NAMES[t]||'Тип '+t}</button>`).join('');
 }
 
-function togR(btn,r) { state.regions.has(r)?(state.regions.size>1&&state.regions.delete(r)):state.regions.add(r); btn.classList.toggle('active',state.regions.has(r)); if(state.data)render(); }
 function setMxc(btn,v) { state.mxc=v; document.querySelectorAll('[data-mxc]').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); if(state.data)render(); }
 function setTp(btn,v)  { state.tp=v;  document.querySelectorAll('[data-tp]').forEach(b=>b.classList.remove('active'));  btn.classList.add('active'); if(state.data)render(); }
 function setBox(btn,v) { state.boxTypeID=v; document.querySelectorAll('#fBox .filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); if(state.data)render(); }
@@ -275,7 +260,6 @@ function render() {
   }
 
   const rows = warehouses.filter(w => {
-    if (w.geo && !state.regions.has(w.geo)) return false;
     if (state.tp==='wh'&&w.isSC) return false;
     if (state.tp==='sc'&&!w.isSC) return false;
     const bd=getBD(w); if(!bd.length) return false;
