@@ -229,6 +229,18 @@ function rebuildFilters() {
   const { warehouses, btypes } = state.data;
   const order = ['Центральный','Северо-Западный','Приволжский','Южный','Северо-Кавказский','Уральский','Сибирский','Дальневосточный'];
   const regions = [...new Set(warehouses.map(w=>w.geo).filter(Boolean))].sort((a,b)=>order.indexOf(a)-order.indexOf(b));
+
+  // Авто-выбор: если текущий тип поставки отсутствует в данных — берём первый доступный
+  if (btypes.length && !btypes.includes(state.boxTypeID)) {
+    state.boxTypeID = btypes.includes(1) ? 1 : btypes[0];
+  }
+
+  // Авто-сброс регионов: если ни один дефолтный не найден — включаем все
+  const availGeo = new Set(warehouses.map(w=>w.geo).filter(Boolean));
+  if (![...state.regions].some(r => availGeo.has(r)) && availGeo.size) {
+    state.regions = new Set([...availGeo]);
+  }
+
   document.getElementById('fRegion').innerHTML = regions.map(r=>`<button class="filter-btn ${state.regions.has(r)?'active':''}" onclick="togR(this,'${r}')">${GEO_ABBR[r]||r.slice(0,3)}</button>`).join('');
   document.getElementById('fBox').innerHTML = btypes.map(t=>`<button class="filter-btn ${state.boxTypeID===t?'active':''}" onclick="setBox(this,${t})">${BOX_TYPE_NAMES[t]||'Тип '+t}</button>`).join('');
 }
