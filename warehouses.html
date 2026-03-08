@@ -170,7 +170,9 @@ async function loadData() {
   btn.classList.add('loading'); btn.disabled = true;
   hideErr();
   try {
-    const res = await fetch(WEBHOOK);
+    const res = await fetch(WEBHOOK, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const raw = await res.json();
     state.data = process(raw);
