@@ -170,18 +170,19 @@ async function loadData() {
   btn.classList.add('loading'); btn.disabled = true;
   hideErr();
   try {
-    const res = await fetch(WEBHOOK, {
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const raw = await res.json();
+    const res = await fetch(WEBHOOK, { headers: { 'Accept': 'application/json' } });
+    const text = await res.text();
+    if (!text || !text.trim()) throw new Error('n8n вернул пустой ответ (HTTP '+res.status+'). Откройте n8n → Executions → проверьте узел Accept API.');
+    let raw;
+    try { raw = JSON.parse(text); } catch(e) { throw new Error('Невалидный JSON: '+text.slice(0,300)); }
+    if (!res.ok) throw new Error('HTTP '+res.status+': '+text.slice(0,200));
     state.data = process(raw);
-    document.getElementById('lastUpdate').textContent = 'Обновлено: ' + new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('lastUpdate').textContent = 'Обновлено: '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
     rebuildFilters();
     render();
   } catch(e) {
     showErr(e.message);
-    document.getElementById('content').innerHTML = '<div class="state-box"><div class="ico">⚙️</div><h3>Webhook не отвечает</h3><p>Активируйте workflow <b>WB Warehouses Webhook</b> в n8n,<br>затем снова нажмите «Обновить».</p></div>';
+    document.getElementById('content').innerHTML = `<div class="state-box"><div class="ico">🔍</div><h3>Диагностика ошибки</h3><p style="font-family:monospace;font-size:11px;text-align:left;background:#080c10;padding:12px;border-radius:8px;margin-top:12px;border:1px solid #1a2333;word-break:break-word">${e.message}</p><p style="margin-top:12px;font-size:12px">Откройте <b>n8n → Executions</b> и найдите последний запуск</p></div>`;
   } finally {
     btn.classList.remove('loading'); btn.disabled = false;
   }
