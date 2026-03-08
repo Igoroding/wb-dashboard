@@ -144,9 +144,9 @@
       <span class="filter-label">Логистика:</span>
       <div style="display:flex;gap:4px">
         <button class="filter-btn"        data-log="9999" onclick="setLog(this,9999)">Все</button>
-        <button class="filter-btn active" data-log="120"  onclick="setLog(this,120)">≤ 120%</button>
+        <button class="filter-btn active" data-log="125"  onclick="setLog(this,125)">≤ 125%</button>
+        <button class="filter-btn"        data-log="110"  onclick="setLog(this,110)">≤ 110%</button>
         <button class="filter-btn"        data-log="100"  onclick="setLog(this,100)">≤ 100%</button>
-        <button class="filter-btn"        data-log="80"   onclick="setLog(this,80)">≤ 80%</button>
       </div>
     </div>
   </div>
@@ -172,7 +172,7 @@ const BOX_TYPE_NAMES = { 1:'Короб', 2:'Монопаллет', 3:'Супер
 const DOW = ['вс','пн','вт','ср','чт','пт','сб'];
 const GEO_ABBR = { 'Центральный':'ЦФО','Северо-Западный':'СЗФО','Приволжский':'ПФО','Южный':'ЮФО','Северо-Кавказский':'СКФО','Уральский':'УФО','Сибирский':'СФО','Дальневосточный':'ДВФО' };
 
-let state = { data: null, mxc: 5, tp: 'all', boxTypeID: 1, maxLog: 120 };
+let state = { data: null, mxc: 5, tp: 'all', boxTypeID: 1, maxLog: 125 };
 
 async function wbFetch(url) {
   const res = await fetch(url, { headers: { 'Authorization': WB_TOKEN } });
@@ -196,7 +196,9 @@ async function loadData() {
     const acceptCoefs = Array.isArray(acceptRaw) ? acceptRaw : [];
     const boxTariffs  = boxRaw?.response?.data?.warehouseList || [];
     state.data = process({ acceptCoefs, boxTariffs });
-    document.getElementById('lastUpdate').textContent = 'Обновлено: ' + new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('lastUpdate').textContent =
+      'Обновлено: ' + new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}) +
+      ' · приёмка: ' + acceptCoefs.length + ' записей, тарифы: ' + boxTariffs.length + ' складов';
     rebuildFilters();
     render();
   } catch(e) {
@@ -211,16 +213,70 @@ function process(raw) {
   let accept = Array.isArray(raw) ? raw : (raw.acceptCoefs || raw.result?.acceptCoefs || []);
   let boxT   = raw.boxTariffs || raw.result?.boxTariffs || raw.response?.data?.warehouseList || [];
   const today = new Date().toISOString().slice(0,10);
+
+  // Индекс тарифов по имени склада
   const tmap = {};
   for (const t of boxT) tmap[t.warehouseName] = t;
-  const wmap = {};
+
+  // Индекс acceptance-данных по имени склада (для поиска deliveryCoef)
+  const amap = {}; // warehouseName -> [{delC, storC, coef, date, ...}]
   for (const d of accept) {
-    const id = d.warehouseID;
-    if (!wmap[id]) wmap[id] = { id, name: d.warehouseName, isSC: !!d.isSortingCenter, geo: geoShort(tmap[d.warehouseName]?.geoName), tariff: tmap[d.warehouseName]||null, days: {} };
-    wmap[id].days[d.date.slice(0,10)+'_'+(d.boxTypeID||1)] = { date: d.date.slice(0,10), coef: d.coefficient, allow: d.allowUnload, btype: d.boxTypeID||1, storC: d.storageCoef, delC: d.deliveryCoef };
+    if (!amap[d.warehouseName]) amap[d.warehouseName] = [];
+    amap[d.warehouseName].push(d);
   }
+
+  // Строим список складов ПРЕЖДЕ ВСЕГО из box tariffs — там все склады с логистикой
+  const wmap = {};
+
+  // 1. Добавляем все склады из box tariffs API
+  for (const t of boxT) {
+    if (!t.warehouseName) continue;
+    const logPct  = parseFloat(t.boxDeliveryCoefExpr)  || null;
+    const storPct = parseFloat(t.boxStorageCoefExpr) || null;
+    const id = t.warehouseID || ('box_' + t.warehouseName);
+    wmap[t.warehouseName] = {
+      id,
+      name: t.warehouseName,
+      isSC: false,
+      geo: geoShort(t.geoName),
+      tariff: t,
+      logPct,   // % логистики напрямую из тарифов
+      storPct,
+      days: {}
+    };
+  }
+
+  // 2. Накладываем acceptance-данные (даты приёмки, коэффициенты)
+  for (const d of accept) {
+    const name = d.warehouseName;
+    const id = d.warehouseID;
+    if (!wmap[name]) {
+      // Склад есть в acceptance но не в tariffs — добавляем
+      wmap[name] = { id, name, isSC: !!d.isSortingCenter, geo: null, tariff: null, logPct: null, storPct: null, days: {} };
+    }
+    wmap[name].id = id; // обновляем реальный id
+    wmap[name].isSC = !!d.isSortingCenter;
+    // delC из acceptance часто null — используем только если есть
+    const key = d.date.slice(0,10) + '_' + (d.boxTypeID||1);
+    wmap[name].days[key] = {
+      date: d.date.slice(0,10),
+      coef: d.coefficient,
+      allow: d.allowUnload,
+      btype: d.boxTypeID||1,
+      storC: d.storageCoef,
+      delC: d.deliveryCoef
+    };
+    // Обновляем logPct из acceptance если тарифный был null
+    if (wmap[name].logPct === null && d.deliveryCoef != null && d.deliveryCoef > 0) {
+      wmap[name].logPct = Math.round(d.deliveryCoef * 100);
+    }
+  }
+
   const btypes = new Set();
   Object.values(wmap).forEach(w => Object.values(w.days).forEach(d => btypes.add(d.btype)));
+  // Добавляем btype=1 (Короб) если вообще есть данные tariffs — они всегда для коробов
+  if (boxT.length) btypes.add(1);
+
   return { warehouses: Object.values(wmap), today, btypes: [...btypes].sort() };
 }
 
@@ -252,24 +308,39 @@ function render() {
   const getBD = w => Object.values(w.days).filter(d=>d.btype===state.boxTypeID&&d.allow&&d.coef>=0);
   // Get logistics % for a warehouse
   function getLogPct(w) {
-    const t = w.tariff;
-    if (t) { const v = parseInt(t.boxDeliveryCoefExpr); if (!isNaN(v)) return v; }
-    const bd = getBD(w);
-    if (bd.length && bd[0].delC != null) return Math.round(bd[0].delC * 100);
+    // logPct уже вычислен в process() из box tariffs API (самый точный источник)
+    if (w.logPct != null) return w.logPct;
+    // Фолбек — deliveryCoef из acceptance API
+    const vals = Object.values(w.days).map(d => d.delC).filter(v => v != null && v > 0);
+    if (vals.length) return Math.round((vals.reduce((a,b)=>a+b,0)/vals.length) * 100);
     return null;
   }
 
   const rows = warehouses.filter(w => {
     if (state.tp==='wh'&&w.isSC) return false;
     if (state.tp==='sc'&&!w.isSC) return false;
-    const bd=getBD(w); if(!bd.length) return false;
-    if (Math.min(...bd.map(d=>d.coef))>state.mxc) return false;
+    // Фильтр по логистике — применяем всегда (данные из box tariffs надёжны)
     if (state.maxLog < 9999) {
       const logPct = getLogPct(w);
       if (logPct !== null && logPct > state.maxLog) return false;
     }
-    return true;
-  }).sort((a,b)=>{ const am=Math.min(...getBD(a).map(d=>d.coef)),bm=Math.min(...getBD(b).map(d=>d.coef)); return am!==bm?am-bm:a.name.localeCompare(b.name,'ru'); });
+    // Фильтр по коэфф. приёмки — только если есть acceptance-данные
+    const bd = getBD(w);
+    if (bd.length) {
+      if (Math.min(...bd.map(d=>d.coef)) > state.mxc) return false;
+    }
+    // Показываем склад если есть хоть какие-то данные
+    // Для коробов (btype=1): показываем если склад есть в box tariffs (даже без acceptance-данных)
+    // Для других типов: нужны acceptance-данные
+    return bd.length > 0 || (state.boxTypeID === 1 && w.tariff != null);
+  }).sort((a,b)=>{
+    const bda=getBD(a), bdb=getBD(b);
+    const am = bda.length ? Math.min(...bda.map(d=>d.coef)) : Infinity;
+    const bm = bdb.length ? Math.min(...bdb.map(d=>d.coef)) : Infinity;
+    // Склады с acceptance-данными — вверх, остальные по алфавиту
+    if (am !== bm) return am - bm;
+    return a.name.localeCompare(b.name, 'ru');
+  });
 
   const avlToday=rows.filter(w=>Object.values(w.days).some(d=>d.date===today&&d.btype===state.boxTypeID&&d.allow&&d.coef>=0)).length;
   const freeToday=rows.filter(w=>Object.values(w.days).some(d=>d.date===today&&d.btype===state.boxTypeID&&d.allow&&d.coef===0)).length;
@@ -301,9 +372,10 @@ function render() {
     let mnCls='c-off',mnLbl='—';
     if(mn!==null){if(mn===0){mnCls='c-free';mnLbl='Бесплатно';}else if(mn===1){mnCls='c-1';mnLbl='×1';}else if(mn<=3){mnCls='c-2';mnLbl='×'+mn;}else if(mn<=5){mnCls='c-4';mnLbl='×'+mn;}else{mnCls='c-high';mnLbl='×'+mn;}}
     let logV='—',stoV='—';
-    const t=w.tariff;
-    if(t){const lc=parseInt(t.boxDeliveryCoefExpr),sc=parseInt(t.boxStorageCoefExpr);if(!isNaN(lc))logV=`<span class="pct-badge ${lc>200?'pct-hi':lc>120?'pct-mid':'pct-ok'}">${lc}%</span>`;if(!isNaN(sc))stoV=`<span class="pct-badge ${sc>150?'pct-hi':sc>100?'pct-mid':'pct-ok'}">${sc}%</span>`;}
-    else if(bd.length){const d0=bd[0];if(d0.delC!=null){const v=Math.round(d0.delC*100);logV=`<span class="pct-badge ${v>200?'pct-hi':v>120?'pct-mid':'pct-ok'}">${v}%</span>`;}if(d0.storC!=null){const v=Math.round(d0.storC*100);stoV=`<span class="pct-badge ${v>150?'pct-hi':v>100?'pct-mid':'pct-ok'}">${v}%</span>`;}}
+    const lc = w.logPct;
+    const sc2 = w.storPct;
+    if (lc != null && !isNaN(lc)) logV = `<span class="pct-badge ${lc>150?'pct-hi':lc>125?'pct-mid':'pct-ok'}">${lc}%</span>`;
+    if (sc2 != null && !isNaN(sc2)) stoV = `<span class="pct-badge ${sc2>150?'pct-hi':sc2>100?'pct-mid':'pct-ok'}">${sc2}%</span>`;
     return`<tr><td class="td-name"><div class="wd-name">${w.name}${w.isSC?'<span class="badge-sc">СЦ</span>':''}</div>${w.geo?`<div class="wd-geo">${GEO_ABBR[w.geo]||w.geo}</div>`:''}</td>${dcells}<td class="td-stat"><span class="coef-pill ${mnCls}" style="width:auto;padding:0 8px">${mnLbl}</span><span class="min-coef-date">${mnStr}</span></td><td class="td-stat">${logV}</td><td class="td-stat">${stoV}</td></tr>`;
   }).join('');
 
@@ -322,7 +394,7 @@ function render() {
         <span class="legend-item"><span class="legend-pill c-4">×4–5</span></span>
         <span class="legend-item"><span class="legend-pill c-high">×N</span> Дорого</span>
         <span class="legend-item"><span class="legend-pill c-off">✗</span> Закрыто</span>
-        <span style="margin-left:auto"><span class="pct-badge pct-ok">≤120%</span>&nbsp;<span class="pct-badge pct-mid">121–200%</span>&nbsp;<span class="pct-badge pct-hi">&gt;200%</span>&nbsp;— логистика/хранение от базы</span>
+        <span style="margin-left:auto"><span class="pct-badge pct-ok">≤125%</span>&nbsp;<span class="pct-badge pct-mid">126–150%</span>&nbsp;<span class="pct-badge pct-hi">&gt;200%</span>&nbsp;— логистика/хранение от базы</span>
       </div>
     </div>`;
 }
