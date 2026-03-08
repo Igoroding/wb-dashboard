@@ -144,6 +144,15 @@
       <span class="filter-label">Поставка:</span>
       <div id="fBox" style="display:flex;gap:4px"></div>
     </div>
+    <div class="filter-group">
+      <span class="filter-label">Логистика:</span>
+      <div style="display:flex;gap:4px">
+        <button class="filter-btn"        data-log="9999" onclick="setLog(this,9999)">Все</button>
+        <button class="filter-btn active" data-log="120"  onclick="setLog(this,120)">≤ 120%</button>
+        <button class="filter-btn"        data-log="100"  onclick="setLog(this,100)">≤ 100%</button>
+        <button class="filter-btn"        data-log="80"   onclick="setLog(this,80)">≤ 80%</button>
+      </div>
+    </div>
   </div>
 
   <div class="summary" id="summary"></div>
@@ -167,7 +176,7 @@ const BOX_TYPE_NAMES = { 1:'Короб', 2:'Монопаллет', 3:'Супер
 const DOW = ['вс','пн','вт','ср','чт','пт','сб'];
 const GEO_ABBR = { 'Центральный':'ЦФО','Северо-Западный':'СЗФО','Приволжский':'ПФО','Южный':'ЮФО','Северо-Кавказский':'СКФО','Уральский':'УФО','Сибирский':'СФО','Дальневосточный':'ДВФО' };
 
-let state = { data: null, regions: new Set(['Центральный','Северо-Западный','Приволжский']), mxc: 5, tp: 'all', boxTypeID: 1 };
+let state = { data: null, regions: new Set(['Центральный','Северо-Западный','Приволжский','Южный']), mxc: 5, tp: 'all', boxTypeID: 1, maxLog: 120 };
 
 async function wbFetch(url) {
   const res = await fetch(url, { headers: { 'Authorization': WB_TOKEN } });
@@ -249,18 +258,33 @@ function togR(btn,r) { state.regions.has(r)?(state.regions.size>1&&state.regions
 function setMxc(btn,v) { state.mxc=v; document.querySelectorAll('[data-mxc]').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); if(state.data)render(); }
 function setTp(btn,v)  { state.tp=v;  document.querySelectorAll('[data-tp]').forEach(b=>b.classList.remove('active'));  btn.classList.add('active'); if(state.data)render(); }
 function setBox(btn,v) { state.boxTypeID=v; document.querySelectorAll('#fBox .filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); if(state.data)render(); }
+function setLog(btn,v) { state.maxLog=v; document.querySelectorAll('[data-log]').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); if(state.data)render(); }
 
 function render() {
   const { warehouses, today } = state.data;
   const dates = [];
   for (let i=0;i<14;i++) { const d=new Date(today+'T12:00:00'); d.setDate(d.getDate()+i); dates.push(d.toISOString().slice(0,10)); }
   const getBD = w => Object.values(w.days).filter(d=>d.btype===state.boxTypeID&&d.allow&&d.coef>=0);
+  // Get logistics % for a warehouse
+  function getLogPct(w) {
+    const t = w.tariff;
+    if (t) { const v = parseInt(t.boxDeliveryCoefExpr); if (!isNaN(v)) return v; }
+    const bd = getBD(w);
+    if (bd.length && bd[0].delC != null) return Math.round(bd[0].delC * 100);
+    return null;
+  }
+
   const rows = warehouses.filter(w => {
     if (w.geo && !state.regions.has(w.geo)) return false;
     if (state.tp==='wh'&&w.isSC) return false;
     if (state.tp==='sc'&&!w.isSC) return false;
     const bd=getBD(w); if(!bd.length) return false;
-    return Math.min(...bd.map(d=>d.coef))<=state.mxc;
+    if (Math.min(...bd.map(d=>d.coef))>state.mxc) return false;
+    if (state.maxLog < 9999) {
+      const logPct = getLogPct(w);
+      if (logPct !== null && logPct > state.maxLog) return false;
+    }
+    return true;
   }).sort((a,b)=>{ const am=Math.min(...getBD(a).map(d=>d.coef)),bm=Math.min(...getBD(b).map(d=>d.coef)); return am!==bm?am-bm:a.name.localeCompare(b.name,'ru'); });
 
   const avlToday=rows.filter(w=>Object.values(w.days).some(d=>d.date===today&&d.btype===state.boxTypeID&&d.allow&&d.coef>=0)).length;
@@ -294,8 +318,8 @@ function render() {
     if(mn!==null){if(mn===0){mnCls='c-free';mnLbl='Бесплатно';}else if(mn===1){mnCls='c-1';mnLbl='×1';}else if(mn<=3){mnCls='c-2';mnLbl='×'+mn;}else if(mn<=5){mnCls='c-4';mnLbl='×'+mn;}else{mnCls='c-high';mnLbl='×'+mn;}}
     let logV='—',stoV='—';
     const t=w.tariff;
-    if(t){const lc=parseInt(t.boxDeliveryCoefExpr),sc=parseInt(t.boxStorageCoefExpr);if(!isNaN(lc))logV=`<span class="pct-badge ${lc>200?'pct-hi':lc>130?'pct-mid':'pct-ok'}">${lc}%</span>`;if(!isNaN(sc))stoV=`<span class="pct-badge ${sc>150?'pct-hi':sc>100?'pct-mid':'pct-ok'}">${sc}%</span>`;}
-    else if(bd.length){const d0=bd[0];if(d0.delC!=null){const v=Math.round(d0.delC*100);logV=`<span class="pct-badge ${v>200?'pct-hi':v>130?'pct-mid':'pct-ok'}">${v}%</span>`;}if(d0.storC!=null){const v=Math.round(d0.storC*100);stoV=`<span class="pct-badge ${v>150?'pct-hi':v>100?'pct-mid':'pct-ok'}">${v}%</span>`;}}
+    if(t){const lc=parseInt(t.boxDeliveryCoefExpr),sc=parseInt(t.boxStorageCoefExpr);if(!isNaN(lc))logV=`<span class="pct-badge ${lc>200?'pct-hi':lc>120?'pct-mid':'pct-ok'}">${lc}%</span>`;if(!isNaN(sc))stoV=`<span class="pct-badge ${sc>150?'pct-hi':sc>100?'pct-mid':'pct-ok'}">${sc}%</span>`;}
+    else if(bd.length){const d0=bd[0];if(d0.delC!=null){const v=Math.round(d0.delC*100);logV=`<span class="pct-badge ${v>200?'pct-hi':v>120?'pct-mid':'pct-ok'}">${v}%</span>`;}if(d0.storC!=null){const v=Math.round(d0.storC*100);stoV=`<span class="pct-badge ${v>150?'pct-hi':v>100?'pct-mid':'pct-ok'}">${v}%</span>`;}}
     return`<tr><td class="td-name"><div class="wd-name">${w.name}${w.isSC?'<span class="badge-sc">СЦ</span>':''}</div>${w.geo?`<div class="wd-geo">${GEO_ABBR[w.geo]||w.geo}</div>`:''}</td>${dcells}<td class="td-stat"><span class="coef-pill ${mnCls}" style="width:auto;padding:0 8px">${mnLbl}</span><span class="min-coef-date">${mnStr}</span></td><td class="td-stat">${logV}</td><td class="td-stat">${stoV}</td></tr>`;
   }).join('');
 
@@ -314,7 +338,7 @@ function render() {
         <span class="legend-item"><span class="legend-pill c-4">×4–5</span></span>
         <span class="legend-item"><span class="legend-pill c-high">×N</span> Дорого</span>
         <span class="legend-item"><span class="legend-pill c-off">✗</span> Закрыто</span>
-        <span style="margin-left:auto"><span class="pct-badge pct-ok">≤130%</span>&nbsp;<span class="pct-badge pct-mid">131–200%</span>&nbsp;<span class="pct-badge pct-hi">&gt;200%</span>&nbsp;— логистика/хранение от базы</span>
+        <span style="margin-left:auto"><span class="pct-badge pct-ok">≤120%</span>&nbsp;<span class="pct-badge pct-mid">121–200%</span>&nbsp;<span class="pct-badge pct-hi">&gt;200%</span>&nbsp;— логистика/хранение от базы</span>
       </div>
     </div>`;
 }
