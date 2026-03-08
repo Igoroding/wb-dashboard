@@ -158,31 +158,45 @@
 </div>
 
 <script>
-const WEBHOOK = 'https://wbtrenz.app.n8n.cloud/webhook/wb-warehouses';
+// Прямые запросы к WB API (без n8n — нет CORS проблем с посредником)
+const WB_TOKEN = 'eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwOTA0djEiLCJ0eXAiOiJKV1QifQ.eyJhY2MiOjEsImVudCI6MSwiZXhwIjoxNzg3ODk1ODUzLCJpZCI6IjAxOWM5YjBkLTFhYzAtN2M2Ni04ZmE0LTAxYzgyOTU3ZTNjZSIsImlpZCI6MjMwOTk4ODYsIm9pZCI6NDAzODYyOCwicyI6MTA3Mzc0MTg3Miwic2lkIjoiMzY1N2IzMmMtMzQ1NC00MjFhLWE2OWItNmFmZGIxNDIzMTlmIiwidCI6ZmFsc2UsInVpZCI6MjMwOTk4ODZ9.rttnRBrfaovQHYfEx6a0w0QudsIZ2xRdu66JskIybwKvVxQLNMjXqaBlmFpKulC2RmoxuIlW2OgX6f8r1VSRnQ';
+const API_ACCEPT = 'https://common-api.wildberries.ru/api/tariffs/v1/acceptance/coefficients';
+const API_BOX    = 'https://common-api.wildberries.ru/api/v1/tariffs/box';
+
 const BOX_TYPE_NAMES = { 1:'Короб', 2:'Монопаллет', 3:'Суперсейф', 5:'Суперсейф QR', 6:'Монопаллет QR' };
 const DOW = ['вс','пн','вт','ср','чт','пт','сб'];
 const GEO_ABBR = { 'Центральный':'ЦФО','Северо-Западный':'СЗФО','Приволжский':'ПФО','Южный':'ЮФО','Северо-Кавказский':'СКФО','Уральский':'УФО','Сибирский':'СФО','Дальневосточный':'ДВФО' };
 
 let state = { data: null, regions: new Set(['Центральный','Северо-Западный','Приволжский']), mxc: 5, tp: 'all', boxTypeID: 1 };
 
+async function wbFetch(url) {
+  const res = await fetch(url, { headers: { 'Authorization': WB_TOKEN } });
+  if (!res.ok) {
+    const t = await res.text().catch(()=>'');
+    throw new Error('WB API ' + res.status + ': ' + t.slice(0,200));
+  }
+  return res.json();
+}
+
 async function loadData() {
   const btn = document.getElementById('btnRefresh');
   btn.classList.add('loading'); btn.disabled = true;
   hideErr();
   try {
-    const res = await fetch(WEBHOOK, { headers: { 'Accept': 'application/json' } });
-    const text = await res.text();
-    if (!text || !text.trim()) throw new Error('n8n вернул пустой ответ (HTTP '+res.status+'). Откройте n8n → Executions → проверьте узел Accept API.');
-    let raw;
-    try { raw = JSON.parse(text); } catch(e) { throw new Error('Невалидный JSON: '+text.slice(0,300)); }
-    if (!res.ok) throw new Error('HTTP '+res.status+': '+text.slice(0,200));
-    state.data = process(raw);
-    document.getElementById('lastUpdate').textContent = 'Обновлено: '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    const today = new Date().toISOString().slice(0,10);
+    const [acceptRaw, boxRaw] = await Promise.all([
+      wbFetch(API_ACCEPT),
+      wbFetch(API_BOX + '?date=' + today)
+    ]);
+    const acceptCoefs = Array.isArray(acceptRaw) ? acceptRaw : [];
+    const boxTariffs  = boxRaw?.response?.data?.warehouseList || [];
+    state.data = process({ acceptCoefs, boxTariffs });
+    document.getElementById('lastUpdate').textContent = 'Обновлено: ' + new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
     rebuildFilters();
     render();
   } catch(e) {
     showErr(e.message);
-    document.getElementById('content').innerHTML = `<div class="state-box"><div class="ico">🔍</div><h3>Диагностика ошибки</h3><p style="font-family:monospace;font-size:11px;text-align:left;background:#080c10;padding:12px;border-radius:8px;margin-top:12px;border:1px solid #1a2333;word-break:break-word">${e.message}</p><p style="margin-top:12px;font-size:12px">Откройте <b>n8n → Executions</b> и найдите последний запуск</p></div>`;
+    document.getElementById('content').innerHTML = `<div class="state-box"><div class="ico">🔍</div><h3>Ошибка загрузки</h3><p style="font-family:monospace;font-size:11px;text-align:left;background:#080c10;padding:12px;border-radius:8px;margin-top:12px;border:1px solid #1a2333;word-break:break-word">${e.message}</p></div>`;
   } finally {
     btn.classList.remove('loading'); btn.disabled = false;
   }
