@@ -141,7 +141,7 @@
       <div id="fBox" style="display:flex;gap:4px"></div>
     </div>
     <div class="filter-group">
-      <span class="filter-label">Логистика <span title="Данные WB API — могут отличаться от WB Partners" style="cursor:help;opacity:0.5;font-size:11px">ⓘ</span>:</span>
+      <span class="filter-label">Логистика:</span>
       <div style="display:flex;gap:4px">
         <button class="filter-btn active" data-log="9999" onclick="setLog(this,9999)">Все</button>
         <button class="filter-btn"        data-log="125"  onclick="setLog(this,125)">≤ 125%</button>
@@ -291,13 +291,16 @@ function process(raw) {
     // deliveryCoef из acceptance API НЕ соответствует логистике % в WB Partners
     // Поэтому для СЦ (нет box tariffs) оставляем logPct=null — не фильтруем по логистике
     // Отображаем logPct из acceptance только для информации
-    if (wmap[name].logPct === null && d.deliveryCoef != null && d.deliveryCoef > 0) {
+    // acceptance.deliveryCoef = доставка продавец→WB = именно то что WB Partners показывает
+    if (d.deliveryCoef != null && d.deliveryCoef > 0) {
       const _dv = d.deliveryCoef;
-      wmap[name].logPctApprox = _dv < 2 ? Math.round(_dv*100) : _dv > 1000 ? Math.round(_dv/100) : Math.round(_dv);
+      const normed = _dv < 2 ? Math.round(_dv*100) : _dv > 1000 ? Math.round(_dv/100) : Math.round(_dv);
+      if (wmap[name].logPct === null || normed < wmap[name].logPct) wmap[name].logPct = normed;
     }
-    if (!wmap[name].storPct && d.storageCoef != null && d.storageCoef > 0) {
+    if (d.storageCoef != null && d.storageCoef > 0) {
       const _sv = d.storageCoef;
-      wmap[name].storPct = _sv < 2 ? Math.round(_sv*100) : _sv > 1000 ? Math.round(_sv/100) : Math.round(_sv);
+      const normed = _sv < 2 ? Math.round(_sv*100) : _sv > 1000 ? Math.round(_sv/100) : Math.round(_sv);
+      if (!wmap[name].storPct || normed < wmap[name].storPct) wmap[name].storPct = normed;
     }
   }
 
@@ -340,9 +343,7 @@ function render() {
   const getBD = w => Object.values(w.days).filter(d=>d.open && d.coef>=0);
   // Get logistics % for a warehouse
   function getLogPct(w) {
-    // Только box tariffs API даёт точные значения логистики %
-    // deliveryCoef из acceptance API не соответствует WB Partners — не используем для фильтрации
-    return w.logPct != null ? w.logPct : null;
+    return w.logPct; // acceptance.deliveryCoef = доставка продавец→WB
   }
 
   const HIDDEN = ['цифровой склад', 'ташкент', 'ташкент 2'];
@@ -353,9 +354,8 @@ function render() {
     if (HIDDEN.some(h => wl === h)) return false;
     if (state.tp==='wh'&&w.isSC) return false;
     if (state.tp==='sc'&&!w.isSC) return false;
-    // Фильтр по логистике (точный для складов, приблизительный ~для СЦ)
     if (state.maxLog < 9999) {
-      const logPct = w.logPct ?? w.logPctApprox;
+      const logPct = getLogPct(w);
       if (logPct !== null && logPct > state.maxLog) return false;
     }
     // Для коробов: acceptance API не возвращает данные — используем box tariffs
@@ -418,11 +418,11 @@ function render() {
     let mnCls='c-off',mnLbl='—';
     if(mn!==null){if(mn===0){mnCls='c-free';mnLbl='Бесплатно';}else if(mn===1){mnCls='c-1';mnLbl='×1';}else if(mn<=3){mnCls='c-2';mnLbl='×'+mn;}else if(mn<=5){mnCls='c-4';mnLbl='×'+mn;}else{mnCls='c-high';mnLbl='×'+mn;}}
     let logV='—',stoV='—';
-    const lc = w.logPct ?? w.logPctApprox;
+    const lc = w.logPct;
     const sc2 = w.storPct;
     if (lc != null && !isNaN(lc)) {
       const badge = lc>150?'pct-hi':lc>125?'pct-mid':'pct-ok';
-      logV = `<span class="pct-badge ${badge}" title="Данные WB API (могут отличаться от WB Partners)">${lc}%</span>`;
+      logV = `<span class="pct-badge ${badge}">${lc}%</span>`;
     }
     if (sc2 != null && !isNaN(sc2)) stoV = `<span class="pct-badge ${sc2>150?'pct-hi':sc2>100?'pct-mid':'pct-ok'}">${sc2}%</span>`;
     return`<tr><td class="td-name"><div class="wd-name">${w.name}${w.isSC?'<span class="badge-sc">СЦ</span>':''}</div>${w.geo?`<div class="wd-geo">${GEO_ABBR[w.geo]||w.geo}</div>`:''}</td>${dcells}<td class="td-stat"><span class="coef-pill ${mnCls}" style="width:auto;padding:0 8px">${mnLbl}</span><span class="min-coef-date">${mnStr}</span></td><td class="td-stat">${logV}</td><td class="td-stat">${stoV}</td></tr>`;
