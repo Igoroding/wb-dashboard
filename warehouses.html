@@ -272,9 +272,11 @@ function process(raw) {
       else if (existing.coef >= 0 && newCoef >= 0 && newCoef < existing.coef) existing.coef = newCoef;
       if (d.deliveryCoef) existing.delC = d.deliveryCoef;
     }
-    // Обновляем logPct из acceptance если тарифный был null
+    // deliveryCoef из acceptance API НЕ соответствует логистике % в WB Partners
+    // Поэтому для СЦ (нет box tariffs) оставляем logPct=null — не фильтруем по логистике
+    // Отображаем logPct из acceptance только для информации с пометкой "~"
     if (wmap[name].logPct === null && d.deliveryCoef != null && d.deliveryCoef > 0) {
-      wmap[name].logPct = Math.round(d.deliveryCoef * 100);
+      wmap[name].logPctApprox = Math.round(d.deliveryCoef * 100); // приблизительное, не для фильтрации
     }
   }
 
@@ -283,29 +285,12 @@ function process(raw) {
   // Добавляем btype=1 (Короб) если вообще есть данные tariffs — они всегда для коробов
   if (boxT.length) btypes.add(1);
 
-  // Диагностика
-  const allNames = Object.keys(wmap).sort();
-  console.log('[WB] Total warehouses:', allNames.length);
 
-  // Показываем все склады с logPct и daysCount — ищем Невинномысск
-  const nevinWmap = Object.values(wmap).find(w => w.name.toLowerCase().includes('невин'));
-  if (nevinWmap) {
-    console.log('[WB] ✅ Невинномысск найден:', nevinWmap.name, 
-      '| logPct:', nevinWmap.logPct, '| tariff:', !!nevinWmap.tariff,
-      '| days:', Object.keys(nevinWmap.days).length,
-      '| coefs:', Object.values(nevinWmap.days).map(d=>d.date.slice(5)+':'+d.coef).join(' '));
-  } else {
-    console.log('[WB] ❌ Невинномысск НЕ найден');
-    // Ищем в сырых acceptance
-    const nevinRaw = accept.filter(d => d.warehouseName && d.warehouseName.toLowerCase().includes('невин'));
-    console.log('[WB] В acceptance:', nevinRaw.length, 'записей');
-    if (nevinRaw[0]) console.log('[WB] Первая:', JSON.stringify(nevinRaw[0]));
-  }
   
-  // Логируем все склады из acceptance с delC для отладки логистики
-  const scWithDelC = Object.values(wmap).filter(w=>!w.tariff && Object.values(w.days).some(d=>d.delC));
-  console.log('[WB] СЦ с delC (нет box tariff):', scWithDelC.map(w=>w.name+':'+w.logPct+'%').join(', '));
-  
+  // Котовск диагностика
+  const kot = Object.values(wmap).find(w=>w.name.toLowerCase().includes('котов'));
+  if(kot) console.log('[DBG] Котовск logPct='+kot.logPct+' tariff='+!!kot.tariff+' days='+Object.keys(kot.days).length+' coefs='+Object.values(kot.days).map(d=>d.date.slice(5)+':'+d.coef).slice(0,5).join(' '));
+  else console.log('[DBG] Котовск НЕ найден в wmap. Имена:', Object.keys(wmap).filter(n=>n.toLowerCase().includes('кот')));
   return { warehouses: Object.values(wmap), today, btypes: [...btypes].sort() };
 }
 
@@ -337,15 +322,9 @@ function render() {
   const getBD = w => Object.values(w.days).filter(d=>d.coef>=0);
   // Get logistics % for a warehouse
   function getLogPct(w) {
-    // Приоритет: box tariffs API (надёжнее для обычных складов)
-    if (w.logPct != null) return w.logPct;
-    // СЦ не имеют box tariffs — берём из acceptance API (deliveryCoef)
-    const vals = Object.values(w.days).map(d => d.delC).filter(v => v != null && v > 0);
-    if (vals.length) {
-      // Берём минимальное значение (наиболее выгодный тариф)
-      return Math.round(Math.min(...vals) * 100);
-    }
-    return null;
+    // Только box tariffs API даёт точные значения логистики %
+    // deliveryCoef из acceptance API не соответствует WB Partners — не используем для фильтрации
+    return w.logPct != null ? w.logPct : null;
   }
 
   const HIDDEN = ['цифровой склад', 'ташкент', 'ташкент 2'];
@@ -421,9 +400,13 @@ function render() {
     let mnCls='c-off',mnLbl='—';
     if(mn!==null){if(mn===0){mnCls='c-free';mnLbl='Бесплатно';}else if(mn===1){mnCls='c-1';mnLbl='×1';}else if(mn<=3){mnCls='c-2';mnLbl='×'+mn;}else if(mn<=5){mnCls='c-4';mnLbl='×'+mn;}else{mnCls='c-high';mnLbl='×'+mn;}}
     let logV='—',stoV='—';
-    const lc = w.logPct;
+    const lc = w.logPct ?? w.logPctApprox;
+    const lcExact = w.logPct != null;
     const sc2 = w.storPct;
-    if (lc != null && !isNaN(lc)) logV = `<span class="pct-badge ${lc>150?'pct-hi':lc>125?'pct-mid':'pct-ok'}">${lc}%</span>`;
+    if (lc != null && !isNaN(lc)) {
+      const badge = lc>150?'pct-hi':lc>125?'pct-mid':'pct-ok';
+      logV = `<span class="pct-badge ${badge}" title="${lcExact?'Точные данные':'Приблизительно (СЦ)'}">${lcExact?'':'~'}${lc}%</span>`;
+    }
     if (sc2 != null && !isNaN(sc2)) stoV = `<span class="pct-badge ${sc2>150?'pct-hi':sc2>100?'pct-mid':'pct-ok'}">${sc2}%</span>`;
     return`<tr><td class="td-name"><div class="wd-name">${w.name}${w.isSC?'<span class="badge-sc">СЦ</span>':''}</div>${w.geo?`<div class="wd-geo">${GEO_ABBR[w.geo]||w.geo}</div>`:''}</td>${dcells}<td class="td-stat"><span class="coef-pill ${mnCls}" style="width:auto;padding:0 8px">${mnLbl}</span><span class="min-coef-date">${mnStr}</span></td><td class="td-stat">${logV}</td><td class="td-stat">${stoV}</td></tr>`;
   }).join('');
