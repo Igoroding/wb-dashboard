@@ -250,6 +250,13 @@ function process(raw) {
     };
   }
 
+  // DEBUG: логируем первые 3 записи из box tariffs чтобы видеть реальные поля
+  console.log('[DBG] box tariffs sample (first 3):');
+  boxT.slice(0,3).forEach(t => console.log(t.warehouseName, '| delCoef:', t.boxDeliveryCoefExpr, '| storCoef:', t.boxStorageCoefExpr, '| geoName:', t.geoName));
+  // Логируем Волгоград отдельно (у него точные данные)
+  const volgT = boxT.find(t=>t.warehouseName&&t.warehouseName.includes('Волгоград'));
+  if(volgT) console.log('[DBG] Волгоград tariff:', JSON.stringify(volgT));
+  
   // 2. Накладываем acceptance-данные (даты приёмки, коэффициенты)
   for (const d of accept) {
     const name = d.warehouseName;
@@ -337,9 +344,9 @@ function render() {
     if (HIDDEN.some(h => wl === h)) return false;
     if (state.tp==='wh'&&w.isSC) return false;
     if (state.tp==='sc'&&!w.isSC) return false;
-    // Фильтр по логистике
+    // Фильтр по логистике (точный для складов, приблизительный ~для СЦ)
     if (state.maxLog < 9999) {
-      const logPct = getLogPct(w);
+      const logPct = w.logPct ?? w.logPctApprox;
       if (logPct !== null && logPct > state.maxLog) return false;
     }
     // Для коробов: acceptance API не возвращает данные — используем box tariffs
