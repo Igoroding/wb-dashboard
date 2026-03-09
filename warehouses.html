@@ -233,9 +233,10 @@ function process(raw) {
     if (!t.warehouseName) continue;
     const _lv = parseFloat(t.boxDeliveryCoefExpr);
     const _sv = parseFloat(t.boxStorageCoefExpr);
-    // API может отдавать коэффициент (1.15) или процент (115) — нормализуем
-    const logPct  = !isNaN(_lv) ? (_lv < 10 ? Math.round(_lv * 100) : Math.round(_lv)) : null;
-    const storPct = !isNaN(_sv) ? (_sv < 10 ? Math.round(_sv * 100) : Math.round(_sv)) : null;
+    // Нормализация: <2 → коэффициент (*100), >1000 → сотые доли (/100), иначе как есть
+    const norm = v => isNaN(v) ? null : v < 2 ? Math.round(v*100) : v > 1000 ? Math.round(v/100) : Math.round(v);
+    const logPct  = norm(_lv);
+    const storPct = norm(_sv);
     const id = t.warehouseID || ('box_' + t.warehouseName);
     wmap[t.warehouseName] = {
       id,
@@ -279,7 +280,8 @@ function process(raw) {
     // Поэтому для СЦ (нет box tariffs) оставляем logPct=null — не фильтруем по логистике
     // Отображаем logPct из acceptance только для информации с пометкой "~"
     if (wmap[name].logPct === null && d.deliveryCoef != null && d.deliveryCoef > 0) {
-      wmap[name].logPctApprox = Math.round(d.deliveryCoef * 100); // приблизительное, не для фильтрации
+      const _dv = d.deliveryCoef;
+      wmap[name].logPctApprox = _dv < 2 ? Math.round(_dv*100) : _dv > 1000 ? Math.round(_dv/100) : Math.round(_dv);
     }
   }
 
