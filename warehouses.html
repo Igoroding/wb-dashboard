@@ -256,16 +256,22 @@ function process(raw) {
     }
     wmap[name].id = id; // обновляем реальный id
     wmap[name].isSC = !!d.isSortingCenter;
-    // delC из acceptance часто null — используем только если есть
-    const key = d.date.slice(0,10) + '_' + (d.boxTypeID||1);
-    wmap[name].days[key] = {
-      date: d.date.slice(0,10),
-      coef: d.coefficient,
-      allow: d.allowUnload,
-      btype: d.boxTypeID||1,
-      storC: d.storageCoef,
-      delC: d.deliveryCoef
-    };
+    const dateKey = d.date.slice(0,10);
+    // Для каждой даты берём ЛУЧШИЙ coef по всем типам упаковки
+    // (WB не разделяет Коробы по boxTypeID в этом API)
+    const existing = wmap[name].days[dateKey];
+    const newCoef = d.coefficient;
+    if (!existing) {
+      wmap[name].days[dateKey] = {
+        date: dateKey, coef: newCoef,
+        btype: d.boxTypeID||1, storC: d.storageCoef, delC: d.deliveryCoef
+      };
+    } else {
+      // Берём лучший (наименьший неотрицательный) коэф, или -1 только если ВСЕ -1
+      if (existing.coef === -1 && newCoef >= 0) existing.coef = newCoef;
+      else if (existing.coef >= 0 && newCoef >= 0 && newCoef < existing.coef) existing.coef = newCoef;
+      if (d.deliveryCoef) existing.delC = d.deliveryCoef;
+    }
     // Обновляем logPct из acceptance если тарифный был null
     if (wmap[name].logPct === null && d.deliveryCoef != null && d.deliveryCoef > 0) {
       wmap[name].logPct = Math.round(d.deliveryCoef * 100);
@@ -332,13 +338,7 @@ function render() {
   const { warehouses, today } = state.data;
   const dates = [];
   for (let i=0;i<14;i++) { const d=new Date(today+'T12:00:00'); d.setDate(d.getDate()+i); dates.push(d.toISOString().slice(0,10)); }
-  const getBD = w => {
-    if (state.boxTypeID === 1) {
-      // Acceptance API не разделяет короба по boxTypeID=1 — берём все доступные слоты
-      return Object.values(w.days).filter(d=>d.coef>=0);
-    }
-    return Object.values(w.days).filter(d=>d.btype===state.boxTypeID&&d.coef>=0);
-  };
+  const getBD = w => Object.values(w.days).filter(d=>d.coef>=0);
   // Get logistics % for a warehouse
   function getLogPct(w) {
     // Приоритет: box tariffs API (надёжнее для обычных складов)
@@ -368,16 +368,11 @@ function render() {
     const hasAnySlots = allDays.some(d => d.coef >= 0);
     const bd = getBD(w); // слоты для текущего типа поставки
 
-    if (state.boxTypeID === 1) {
-      // Короб: показываем если есть тариф ИЛИ acceptance-данные (СЦ есть в acceptance, но не в tariffs)
-      const hasData = w.tariff != null || allDays.length > 0;
-      if (!hasData) return false;
-      // Скрываем если есть данные но все слоты закрыты (coef=-1)
-      if (allDays.length > 0 && !hasAnySlots) return false;
-    } else {
-      // Другие типы: нужны acceptance-слоты
-      if (!bd.length) return false;
-    }
+    // Показываем склад если есть тариф (box tariffs) ИЛИ acceptance-данные
+    const hasData = w.tariff != null || allDays.length > 0;
+    if (!hasData) return false;
+    // Скрываем если ЕСТЬ acceptance-данные но ВСЕ дни закрыты
+    if (allDays.length > 0 && !hasAnySlots) return false;
 
     // Фильтр по мин. коэффициенту приёмки
     if (bd.length && Math.min(...bd.map(d=>d.coef)) > state.mxc) return false;
@@ -392,20 +387,9 @@ function render() {
     return a.name.localeCompare(b.name, 'ru');
   });
 
-  const avlToday=rows.filter(w=>{
-    if(state.boxTypeID===1){
-      // Для коробов — если есть тариф или любой доступный слот сегодня
-      return w.tariff!=null || Object.values(w.days).some(d=>d.date===today&&d.coef>=0);
-    }
-    return Object.values(w.days).some(d=>d.date===today&&d.btype===state.boxTypeID&&d.coef>=0);
-  }).length;
-  const freeToday=rows.filter(w=>{
-    if(state.boxTypeID===1){
-      return Object.values(w.days).some(d=>d.date===today&&d.coef===0);
-    }
-    return Object.values(w.days).some(d=>d.date===today&&d.btype===state.boxTypeID&&d.coef===0);
-  }).length;
-  const freeAny=rows.filter(w=>getBD(w).some(d=>d.coef===0)).length;
+  const avlToday=rows.filter(w=>w.days[today]?w.days[today].coef>=0:w.tariff!=null).length;
+  const freeToday=rows.filter(w=>w.days[today]?w.days[today].coef===0:false).length;
+  const freeAny=rows.filter(w=>w.tariff!=null||Object.values(w.days).some(d=>d.coef===0)).length;
   const avgArr=rows.map(w=>{const bd=getBD(w);return bd.length?Math.min(...bd.map(d=>d.coef)):null;}).filter(x=>x!==null);
   const avg=avgArr.length?(avgArr.reduce((a,b)=>a+b,0)/avgArr.length).toFixed(1):'—';
 
@@ -423,11 +407,9 @@ function render() {
   const trows=rows.map(w=>{
     const bd=getBD(w);
     const dcells=dates.map(d=>{
-      // Для коробов acceptance не пишет boxTypeID=1 — ищем любой слот за эту дату
-      let day = w.days[d+'_'+state.boxTypeID];
-      if (!day && state.boxTypeID===1) {
-        day = Object.values(w.days).find(x=>x.date===d);
-      }
+      // Для складов из box tariffs без acceptance-записи на дату → бесплатно (0)
+      let day = w.days[d];
+      if (!day && w.tariff) day = { date: d, coef: 0 };
       const isT=d===today;
       let cls='c-off',lbl='—',tip='Нет данных';
       if(day){if(day.coef<0){cls='c-off';lbl='✗';tip='Недоступно';}else if(day.coef===0){cls='c-free';lbl='Б';tip='Бесплатно';}else if(day.coef===1){cls='c-1';lbl='×1';tip='×1 = 3,5 ₽/л';}else if(day.coef===2){cls='c-2';lbl='×2';tip='×2 = 7 ₽/л';}else if(day.coef===3){cls='c-3';lbl='×3';tip='×3 = 10,5 ₽/л';}else if(day.coef===4){cls='c-4';lbl='×4';tip='×4 = 14 ₽/л';}else if(day.coef===5){cls='c-5';lbl='×5';tip='×5 = 17,5 ₽/л';}else{cls='c-high';lbl='×'+day.coef;tip='×'+day.coef+' = '+(3.5*day.coef).toFixed(1)+' ₽/л';}}
