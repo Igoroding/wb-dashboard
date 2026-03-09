@@ -143,8 +143,8 @@
     <div class="filter-group">
       <span class="filter-label">Логистика:</span>
       <div style="display:flex;gap:4px">
-        <button class="filter-btn active" data-log="9999" onclick="setLog(this,9999)">Все</button>
-        <button class="filter-btn"        data-log="125"  onclick="setLog(this,125)">≤ 125%</button>
+        <button class="filter-btn"        data-log="9999" onclick="setLog(this,9999)">Все</button>
+        <button class="filter-btn active" data-log="125"  onclick="setLog(this,125)">≤ 125%</button>
         <button class="filter-btn"        data-log="110"  onclick="setLog(this,110)">≤ 110%</button>
         <button class="filter-btn"        data-log="100"  onclick="setLog(this,100)">≤ 100%</button>
       </div>
@@ -172,7 +172,7 @@ const BOX_TYPE_NAMES = { 1:'Короб', 2:'Монопаллет', 3:'Супер
 const DOW = ['вс','пн','вт','ср','чт','пт','сб'];
 const GEO_ABBR = { 'Центральный':'ЦФО','Северо-Западный':'СЗФО','Приволжский':'ПФО','Южный':'ЮФО','Северо-Кавказский':'СКФО','Уральский':'УФО','Сибирский':'СФО','Дальневосточный':'ДВФО' };
 
-let state = { data: null, mxc: 5, tp: 'all', boxTypeID: 1, maxLog: 9999 };
+let state = { data: null, mxc: 5, tp: 'all', boxTypeID: 1, maxLog: 125 };
 
 async function wbFetch(url) {
   const res = await fetch(url, { headers: { 'Authorization': WB_TOKEN } });
@@ -346,12 +346,14 @@ function render() {
     return w.logPct; // acceptance.deliveryCoef = доставка продавец→WB
   }
 
-  const HIDDEN = ['цифровой склад', 'ташкент', 'ташкент 2'];
+  // Скрываем: зарубежные склады + служебные + дубли с ": Питание"
+  const HIDDEN_EXACT = ['цифровой склад', 'ташкент', 'ташкент 2', 'алматы атакент', 'астана 2'];
+  const HIDDEN_CONTAINS = [': питание', ': питан', 'алматы', 'астана', 'шымкент', 'актобе', 'минск', 'алматинск'];
   const rows = warehouses.filter(w => {
     const wl = w.name.toLowerCase();
-    // Скрываем зарубежные и служебные склады
     if (wl.startsWith('маркетплейс')) return false;
-    if (HIDDEN.some(h => wl === h)) return false;
+    if (HIDDEN_EXACT.some(h => wl === h)) return false;
+    if (HIDDEN_CONTAINS.some(h => wl.includes(h))) return false;
     if (state.tp==='wh'&&w.isSC) return false;
     if (state.tp==='sc'&&!w.isSC) return false;
     if (state.maxLog < 9999) {
