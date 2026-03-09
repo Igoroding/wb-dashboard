@@ -312,14 +312,17 @@ function render() {
   const { warehouses, today } = state.data;
   const dates = [];
   for (let i=0;i<14;i++) { const d=new Date(today+'T12:00:00'); d.setDate(d.getDate()+i); dates.push(d.toISOString().slice(0,10)); }
-  const getBD = w => Object.values(w.days).filter(d=>d.btype===state.boxTypeID&&d.allow&&d.coef>=0);
+  const getBD = w => Object.values(w.days).filter(d=>d.btype===state.boxTypeID&&d.coef>=0);
   // Get logistics % for a warehouse
   function getLogPct(w) {
-    // logPct уже вычислен в process() из box tariffs API (самый точный источник)
+    // Приоритет: box tariffs API (надёжнее для обычных складов)
     if (w.logPct != null) return w.logPct;
-    // Фолбек — deliveryCoef из acceptance API
+    // СЦ не имеют box tariffs — берём из acceptance API (deliveryCoef)
     const vals = Object.values(w.days).map(d => d.delC).filter(v => v != null && v > 0);
-    if (vals.length) return Math.round((vals.reduce((a,b)=>a+b,0)/vals.length) * 100);
+    if (vals.length) {
+      // Берём минимальное значение (наиболее выгодный тариф)
+      return Math.round(Math.min(...vals) * 100);
+    }
     return null;
   }
 
@@ -336,18 +339,18 @@ function render() {
     // Для коробов: acceptance API не возвращает данные — используем box tariffs
     // Показываем только если у склада ЕСТЬ слоты приёмки (любой тип) ИЛИ это короб с тарифом
     const allDays = Object.values(w.days);
-    const hasAnySlots = allDays.some(d => d.allow && d.coef >= 0);
+    const hasAnySlots = allDays.some(d => d.coef >= 0);
     const bd = getBD(w); // слоты для текущего типа поставки
 
     if (state.boxTypeID === 1) {
-      // Короб: показываем если есть тариф И есть хоть какие-то слоты в acceptance (для любого типа)
-      // Если acceptance вообще нет данных по складу — тоже показываем (только тариф)
-      if (!w.tariff) return false;
-      if (allDays.length > 0 && !hasAnySlots) return false; // есть данные но все закрыты
+      // Короб: показываем если есть тариф ИЛИ acceptance-данные (СЦ есть в acceptance, но не в tariffs)
+      const hasData = w.tariff != null || allDays.length > 0;
+      if (!hasData) return false;
+      // Скрываем если есть данные но все слоты закрыты (coef=-1)
+      if (allDays.length > 0 && !hasAnySlots) return false;
     } else {
-      // Другие типы: нужны слоты
+      // Другие типы: нужны acceptance-слоты
       if (!bd.length) return false;
-      if (!bd.some(d => d.allow && d.coef >= 0)) return false;
     }
 
     // Фильтр по мин. коэффициенту приёмки
@@ -363,8 +366,8 @@ function render() {
     return a.name.localeCompare(b.name, 'ru');
   });
 
-  const avlToday=rows.filter(w=>Object.values(w.days).some(d=>d.date===today&&d.btype===state.boxTypeID&&d.allow&&d.coef>=0)).length;
-  const freeToday=rows.filter(w=>Object.values(w.days).some(d=>d.date===today&&d.btype===state.boxTypeID&&d.allow&&d.coef===0)).length;
+  const avlToday=rows.filter(w=>Object.values(w.days).some(d=>d.date===today&&d.btype===state.boxTypeID&&d.coef>=0)).length;
+  const freeToday=rows.filter(w=>Object.values(w.days).some(d=>d.date===today&&d.btype===state.boxTypeID&&d.coef===0)).length;
   const freeAny=rows.filter(w=>getBD(w).some(d=>d.coef===0)).length;
   const avgArr=rows.map(w=>{const bd=getBD(w);return bd.length?Math.min(...bd.map(d=>d.coef)):null;}).filter(x=>x!==null);
   const avg=avgArr.length?(avgArr.reduce((a,b)=>a+b,0)/avgArr.length).toFixed(1):'—';
