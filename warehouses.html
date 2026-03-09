@@ -277,13 +277,33 @@ function process(raw) {
   // Добавляем btype=1 (Короб) если вообще есть данные tariffs — они всегда для коробов
   if (boxT.length) btypes.add(1);
 
-  // Диагностика: логируем все имена складов
+  // Диагностика
   const allNames = Object.keys(wmap).sort();
-  console.log('[WB Warehouses] Total warehouses in wmap:', allNames.length);
-  const nevin = allNames.filter(n => n.toLowerCase().includes('невин') || n.toLowerCase().includes('nevin'));
-  console.log('[WB Warehouses] Невинномысск variants:', nevin);
-  const kotovsk = allNames.filter(n => n.toLowerCase().includes('котов'));
-  console.log('[WB Warehouses] Котовск variants:', kotovsk);
+  console.log('[WB] Total warehouses:', allNames.length, '| btypes:', [...btypes].sort());
+  
+  // Логируем сырые acceptance-записи для Невинномысска
+  const nevinRaw = accept.filter(d => d.warehouseName && d.warehouseName.toLowerCase().includes('невин'));
+  console.log('[WB] Невинномысск acceptance raw records:', nevinRaw.length);
+  if (nevinRaw.length) {
+    console.log('[WB] Невинномысск sample:', JSON.stringify(nevinRaw[0]));
+    console.log('[WB] Невинномысск all dates+coef+allow+boxTypeID:', nevinRaw.map(d=>d.date?.slice(0,10)+' coef='+d.coefficient+' allow='+d.allowUnload+' btype='+d.boxTypeID).join(' | '));
+  }
+  
+  // Логируем wmap запись для Невинномысска
+  const nevinWmap = Object.values(wmap).find(w => w.name.toLowerCase().includes('невин'));
+  if (nevinWmap) {
+    console.log('[WB] Невинномысск wmap:', JSON.stringify({
+      name: nevinWmap.name, isSC: nevinWmap.isSC, hasTariff: !!nevinWmap.tariff,
+      logPct: nevinWmap.logPct, daysCount: Object.keys(nevinWmap.days).length,
+      days: Object.values(nevinWmap.days).map(d=>d.date+' coef='+d.coef+' allow='+d.allow+' btype='+d.btype)
+    }));
+  } else {
+    console.log('[WB] Невинномысск НЕ НАЙДЕН в wmap!');
+    // Ищем похожие имена
+    const similar = allNames.filter(n => n.toLowerCase().includes('невин') || n.toLowerCase().includes('ставроп') || n.toLowerCase().includes('невинн'));
+    console.log('[WB] Похожие имена:', similar);
+  }
+  
   return { warehouses: Object.values(wmap), today, btypes: [...btypes].sort() };
 }
 
