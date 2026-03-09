@@ -285,30 +285,26 @@ function process(raw) {
 
   // Диагностика
   const allNames = Object.keys(wmap).sort();
-  console.log('[WB] Total warehouses:', allNames.length, '| btypes:', [...btypes].sort());
-  
-  // Логируем сырые acceptance-записи для Невинномысска
-  const nevinRaw = accept.filter(d => d.warehouseName && d.warehouseName.toLowerCase().includes('невин'));
-  console.log('[WB] Невинномысск acceptance raw records:', nevinRaw.length);
-  if (nevinRaw.length) {
-    console.log('[WB] Невинномысск sample:', JSON.stringify(nevinRaw[0]));
-    console.log('[WB] Невинномысск all dates+coef+allow+boxTypeID:', nevinRaw.map(d=>d.date?.slice(0,10)+' coef='+d.coefficient+' allow='+d.allowUnload+' btype='+d.boxTypeID).join(' | '));
-  }
-  
-  // Логируем wmap запись для Невинномысска
+  console.log('[WB] Total warehouses:', allNames.length);
+
+  // Показываем все склады с logPct и daysCount — ищем Невинномысск
   const nevinWmap = Object.values(wmap).find(w => w.name.toLowerCase().includes('невин'));
   if (nevinWmap) {
-    console.log('[WB] Невинномысск wmap:', JSON.stringify({
-      name: nevinWmap.name, isSC: nevinWmap.isSC, hasTariff: !!nevinWmap.tariff,
-      logPct: nevinWmap.logPct, daysCount: Object.keys(nevinWmap.days).length,
-      days: Object.values(nevinWmap.days).map(d=>d.date+' coef='+d.coef+' allow='+d.allow+' btype='+d.btype)
-    }));
+    console.log('[WB] ✅ Невинномысск найден:', nevinWmap.name, 
+      '| logPct:', nevinWmap.logPct, '| tariff:', !!nevinWmap.tariff,
+      '| days:', Object.keys(nevinWmap.days).length,
+      '| coefs:', Object.values(nevinWmap.days).map(d=>d.date.slice(5)+':'+d.coef).join(' '));
   } else {
-    console.log('[WB] Невинномысск НЕ НАЙДЕН в wmap!');
-    // Ищем похожие имена
-    const similar = allNames.filter(n => n.toLowerCase().includes('невин') || n.toLowerCase().includes('ставроп') || n.toLowerCase().includes('невинн'));
-    console.log('[WB] Похожие имена:', similar);
+    console.log('[WB] ❌ Невинномысск НЕ найден');
+    // Ищем в сырых acceptance
+    const nevinRaw = accept.filter(d => d.warehouseName && d.warehouseName.toLowerCase().includes('невин'));
+    console.log('[WB] В acceptance:', nevinRaw.length, 'записей');
+    if (nevinRaw[0]) console.log('[WB] Первая:', JSON.stringify(nevinRaw[0]));
   }
+  
+  // Логируем все склады из acceptance с delC для отладки логистики
+  const scWithDelC = Object.values(wmap).filter(w=>!w.tariff && Object.values(w.days).some(d=>d.delC));
+  console.log('[WB] СЦ с delC (нет box tariff):', scWithDelC.map(w=>w.name+':'+w.logPct+'%').join(', '));
   
   return { warehouses: Object.values(wmap), today, btypes: [...btypes].sort() };
 }
@@ -352,9 +348,12 @@ function render() {
     return null;
   }
 
+  const HIDDEN = ['цифровой склад', 'ташкент', 'ташкент 2'];
   const rows = warehouses.filter(w => {
-    // Скрываем Маркетплейс-склады (зарубежные, нерелевантны)
-    if (w.name.toLowerCase().startsWith('маркетплейс')) return false;
+    const wl = w.name.toLowerCase();
+    // Скрываем зарубежные и служебные склады
+    if (wl.startsWith('маркетплейс')) return false;
+    if (HIDDEN.some(h => wl === h)) return false;
     if (state.tp==='wh'&&w.isSC) return false;
     if (state.tp==='sc'&&!w.isSC) return false;
     // Фильтр по логистике
@@ -389,7 +388,7 @@ function render() {
 
   const avlToday=rows.filter(w=>w.days[today]?w.days[today].coef>=0:w.tariff!=null).length;
   const freeToday=rows.filter(w=>w.days[today]?w.days[today].coef===0:false).length;
-  const freeAny=rows.filter(w=>w.tariff!=null||Object.values(w.days).some(d=>d.coef===0)).length;
+  const freeAny=rows.filter(w=>Object.values(w.days).some(d=>d.coef===0)).length;
   const avgArr=rows.map(w=>{const bd=getBD(w);return bd.length?Math.min(...bd.map(d=>d.coef)):null;}).filter(x=>x!==null);
   const avg=avgArr.length?(avgArr.reduce((a,b)=>a+b,0)/avgArr.length).toFixed(1):'—';
 
@@ -407,9 +406,11 @@ function render() {
   const trows=rows.map(w=>{
     const bd=getBD(w);
     const dcells=dates.map(d=>{
-      // Для складов из box tariffs без acceptance-записи на дату → бесплатно (0)
       let day = w.days[d];
-      if (!day && w.tariff) day = { date: d, coef: 0 };
+      // Подставляем coef=0 только если склад имеет acceptance-данные (хоть за одну дату)
+      // Для складов только из box tariffs (нет acceptance) — показываем "—"
+      const hasAcceptData = Object.keys(w.days).length > 0;
+      if (!day && w.tariff && hasAcceptData) day = { date: d, coef: 0 };
       const isT=d===today;
       let cls='c-off',lbl='—',tip='Нет данных';
       if(day){if(day.coef<0){cls='c-off';lbl='✗';tip='Недоступно';}else if(day.coef===0){cls='c-free';lbl='Б';tip='Бесплатно';}else if(day.coef===1){cls='c-1';lbl='×1';tip='×1 = 3,5 ₽/л';}else if(day.coef===2){cls='c-2';lbl='×2';tip='×2 = 7 ₽/л';}else if(day.coef===3){cls='c-3';lbl='×3';tip='×3 = 10,5 ₽/л';}else if(day.coef===4){cls='c-4';lbl='×4';tip='×4 = 14 ₽/л';}else if(day.coef===5){cls='c-5';lbl='×5';tip='×5 = 17,5 ₽/л';}else{cls='c-high';lbl='×'+day.coef;tip='×'+day.coef+' = '+(3.5*day.coef).toFixed(1)+' ₽/л';}}
