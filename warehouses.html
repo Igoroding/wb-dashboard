@@ -250,12 +250,11 @@ function process(raw) {
     };
   }
 
-  // DEBUG: логируем первые 3 записи из box tariffs чтобы видеть реальные поля
-  console.log('[DBG] box tariffs sample (first 3):');
-  boxT.slice(0,3).forEach(t => console.log(t.warehouseName, '| delCoef:', t.boxDeliveryCoefExpr, '| storCoef:', t.boxStorageCoefExpr, '| geoName:', t.geoName));
-  // Логируем Волгоград отдельно (у него точные данные)
-  const volgT = boxT.find(t=>t.warehouseName&&t.warehouseName.includes('Волгоград'));
-  if(volgT) console.log('[DBG] Волгоград tariff:', JSON.stringify(volgT));
+  // Логируем Волгоград (точно известные данные) и Невинномысск для сравнения
+  const volgT = boxT.find(t=>t.warehouseName&&t.warehouseName.includes('Волгоград')&&!t.warehouseName.includes('Питание'));
+  const nevT  = boxT.find(t=>t.warehouseName&&t.warehouseName.toLowerCase().includes('невин'));
+  console.log('[DBG] Волгоград raw:', volgT ? JSON.stringify({del: volgT.boxDeliveryCoefExpr, stor: volgT.boxStorageCoefExpr}) : 'not found');
+  console.log('[DBG] Невинномысск raw:', nevT ? JSON.stringify({name: nevT.warehouseName, del: nevT.boxDeliveryCoefExpr, stor: nevT.boxStorageCoefExpr}) : 'not in box tariffs');
   
   // 2. Накладываем acceptance-данные (даты приёмки, коэффициенты)
   for (const d of accept) {
