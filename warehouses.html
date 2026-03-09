@@ -143,8 +143,8 @@
     <div class="filter-group">
       <span class="filter-label">Логистика:</span>
       <div style="display:flex;gap:4px">
-        <button class="filter-btn"        data-log="9999" onclick="setLog(this,9999)">Все</button>
-        <button class="filter-btn active" data-log="125"  onclick="setLog(this,125)">≤ 125%</button>
+        <button class="filter-btn active" data-log="9999" onclick="setLog(this,9999)">Все</button>
+        <button class="filter-btn"        data-log="125"  onclick="setLog(this,125)">≤ 125%</button>
         <button class="filter-btn"        data-log="110"  onclick="setLog(this,110)">≤ 110%</button>
         <button class="filter-btn"        data-log="100"  onclick="setLog(this,100)">≤ 100%</button>
       </div>
@@ -172,7 +172,7 @@ const BOX_TYPE_NAMES = { 1:'Короб', 2:'Монопаллет', 3:'Супер
 const DOW = ['вс','пн','вт','ср','чт','пт','сб'];
 const GEO_ABBR = { 'Центральный':'ЦФО','Северо-Западный':'СЗФО','Приволжский':'ПФО','Южный':'ЮФО','Северо-Кавказский':'СКФО','Уральский':'УФО','Сибирский':'СФО','Дальневосточный':'ДВФО' };
 
-let state = { data: null, mxc: 5, tp: 'all', boxTypeID: 1, maxLog: 125 };
+let state = { data: null, mxc: 5, tp: 'all', boxTypeID: 1, maxLog: 9999 };
 
 async function wbFetch(url) {
   const res = await fetch(url, { headers: { 'Authorization': WB_TOKEN } });
@@ -231,8 +231,11 @@ function process(raw) {
   // 1. Добавляем все склады из box tariffs API
   for (const t of boxT) {
     if (!t.warehouseName) continue;
-    const logPct  = parseFloat(t.boxDeliveryCoefExpr)  || null;
-    const storPct = parseFloat(t.boxStorageCoefExpr) || null;
+    const _lv = parseFloat(t.boxDeliveryCoefExpr);
+    const _sv = parseFloat(t.boxStorageCoefExpr);
+    // API может отдавать коэффициент (1.15) или процент (115) — нормализуем
+    const logPct  = !isNaN(_lv) ? (_lv < 10 ? Math.round(_lv * 100) : Math.round(_lv)) : null;
+    const storPct = !isNaN(_sv) ? (_sv < 10 ? Math.round(_sv * 100) : Math.round(_sv)) : null;
     const id = t.warehouseID || ('box_' + t.warehouseName);
     wmap[t.warehouseName] = {
       id,
@@ -287,10 +290,7 @@ function process(raw) {
 
 
   
-  // Котовск диагностика
-  const kot = Object.values(wmap).find(w=>w.name.toLowerCase().includes('котов'));
-  if(kot) console.log('[DBG] Котовск logPct='+kot.logPct+' tariff='+!!kot.tariff+' days='+Object.keys(kot.days).length+' coefs='+Object.values(kot.days).map(d=>d.date.slice(5)+':'+d.coef).slice(0,5).join(' '));
-  else console.log('[DBG] Котовск НЕ найден в wmap. Имена:', Object.keys(wmap).filter(n=>n.toLowerCase().includes('кот')));
+
   return { warehouses: Object.values(wmap), today, btypes: [...btypes].sort() };
 }
 
