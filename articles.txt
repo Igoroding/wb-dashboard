@@ -4,7 +4,6 @@ tykva-konfetka
 morkov-samson
 perec-ramiro
 fasol-vigna-grafinya
-sheffler
 lavanda-voznesenskaya
 hesperis-nochnayafialka
 timian-purpurniikover
@@ -44,7 +43,6 @@ morkov-samson-3
 perec-ramiro-3
 perec-fonbaron-smes-3
 fasol-vigna-grafinya-3
-sheffler-3
 lavanda-voznesenskaya-3
 lavanda-yjanka-3
 primula-erfurtskievelikany-3
@@ -124,7 +122,6 @@ morkov-samson-10
 perec-fonbaron-smes-10
 fasol-vigna-grafinya-10
 cinniya-karusel-10
-sheffler-10
 pepino-ramzes-10
 bigpack-100-lavandayjanka
 bigpack-50g-schavelchempion
