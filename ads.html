@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WB Реклама</title>
+<title>Реклама — WB Analytics</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Onest:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Geologica:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="/wb-dashboard/header.js"></script>
 <style>
 :root {
   --bg:#080b12;--bg2:#0e1220;--surface:#141828;--surface2:#1c2238;
@@ -16,10 +17,10 @@
   --yellow:#fbbf24;--yellow-bg:rgba(251,191,36,.1);--yellow-dark:#7c4f0a;
   --red:#ff5566;--red-bg:rgba(255,85,102,.1);--red-dark:#7a1220;
   --blue:#4d9fff;--blue-bg:rgba(77,159,255,.1);--blue-dark:#1a4a7a;
-  --mono:'JetBrains Mono',monospace;--sans:'Onest',sans-serif;--r:10px;
+  --mono:'JetBrains Mono',monospace;--sans:'Geologica',system-ui,sans-serif;--r:10px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;min-height:100vh}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;min-height:100vh} .site-header+.tabs-bar{margin-top:0}
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 
 header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:10px;height:52px;position:sticky;top:0;z-index:100}
@@ -117,26 +118,6 @@ tr.rc td{background:rgba(255,85,102,.03)}tr.rw td{background:rgba(251,191,36,.03
 </head>
 <body>
 
-<header>
-  <a href="rnp.html" class="logo">WB</a>
-  <span class="sep">/</span>
-  <nav class="nav" style="display:flex;gap:2px">
-    <a href="rnp.html">РнП</a>
-    <a href="stocks.html">Остатки</a>
-    <a href="ads.html" class="active">Реклама</a>
-  </nav>
-  <div class="shop-btns">
-    <button class="hbtn active" data-shop="oding"     onclick="setShop('oding')">Одинг</button>
-    <button class="hbtn"         data-shop="stolnikov" onclick="setShop('stolnikov')">Стольников</button>
-  </div>
-  <div class="date-btns">
-    <button class="hbtn ga active" data-days="7"  onclick="setDays(7)">7д</button>
-    <button class="hbtn ga"        data-days="14" onclick="setDays(14)">14д</button>
-    <button class="hbtn ga"        data-days="30" onclick="setDays(30)">30д</button>
-  </div>
-  <span id="balChip" class="balance-chip">баланс: —</span>
-  <button class="btn" style="margin-left:auto" id="loadBtn" onclick="loadAll()">⟳ Загрузить</button>
-</header>
 
 <div class="tabs-bar">
   <div class="tab active"  onclick="showTab('overview')">📊 Обзор</div>
