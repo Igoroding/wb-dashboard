@@ -783,30 +783,84 @@ function renderCampaigns() {
     const id=r.advertId||r.advert_id; if(!id) continue;
     spendById[id]=(spendById[id]||0)+(r.updSum||r.sum||0);
   }
+
+  // Per-campaign stats из fullstats
+  // sum_price = выручка с заказов через эту кампанию — используем для ДРР
   const byId={};
-  for (const c of S.fstats) byId[c.advertId]={spend:spendById[c.advertId]||c.sum||0,views:c.views||0,clicks:c.clicks||0,carts:c.atbs||0,ords:c.orders||0,cpc:c.cpc||0,ctr:c.ctr||0};
-  // Добавляем кампании которые есть в upd но не в fstats
-  for (const [id, sp] of Object.entries(spendById)) {
-    const numId=+id; if(!byId[numId]) byId[numId]={spend:sp,views:0,clicks:0,carts:0,ords:0,cpc:0,ctr:0};
+  for (const c of S.fstats) {
+    byId[c.advertId]={
+      spend:    spendById[c.advertId] || 0,
+      views:    c.views   || 0,
+      clicks:   c.clicks  || 0,
+      carts:    c.atbs    || 0,
+      ords:     c.orders  || 0,
+      sumPrice: 0,  // выручка — накопим из days
+      cpc:      c.cpc     || 0,
+      ctr:      c.ctr     || 0,
+      // имена артикулов из nms
+      nmNames:  [],
+    };
+    // Собираем выручку (sum_price) и имена артикулов из days→apps→nms
+    const nmSeen = new Set();
+    for (const day of (c.days||[])) {
+      for (const app of (day.apps||[])) {
+        for (const nm of (app.nms||[])) {
+          byId[c.advertId].sumPrice += nm.sum_price||0;
+          if (nm.name && !nmSeen.has(nm.nmId)) {
+            nmSeen.add(nm.nmId);
+            byId[c.advertId].nmNames.push(nm.name);
+          }
+        }
+      }
+    }
   }
-  const oAll=S.rnp.reduce((s,r)=>s+(+r.orders_sum||0),0);
-  const totSpend=Object.values(byId).reduce((s,v)=>s+v.spend,0);
+  // Кампании только из upd (нет в fstats)
+  for (const [id, sp] of Object.entries(spendById)) {
+    const numId=+id;
+    if (!byId[numId]) byId[numId]={spend:sp,views:0,clicks:0,carts:0,ords:0,sumPrice:0,cpc:0,ctr:0,nmNames:[]};
+    else byId[numId].spend = sp; // upd точнее
+  }
+
   const target=S.plan?.drr_plan||10;
   tbody.innerHTML=camps.map(c=>{
     const st=byId[c.advertId]||{};
-    const drr=oAll>0&&st.spend>0&&totSpend>0?(st.spend/oAll*100):null;
-    const drrSt=drr===null?'x':drr<=target?'ok':drr<=target+5?'warn':'bad';
-    const cpo=st.ords>0?Math.round(st.spend/st.ords):null;
-    const sSt=c.status===9?'bg':c.status===11?'by':'bx';
-    const dc={ok:'green',warn:'yellow',bad:'red',x:'muted'}[drrSt];
+    const spend = st.spend||0;
+
+    // ДРР кампании = расход / выручка_с_заказов_кампании × 100%
+    // sum_price — это сумма заказов, атрибутированных этой кампании (из fullstats)
+    const drr = st.sumPrice>0 ? spend/st.sumPrice*100 : null;
+    const drrSt = drr===null?'x': drr<=target?'ok': drr<=target+5?'warn':'bad';
+    const cpo = st.ords>0 ? Math.round(spend/st.ords) : null;
+    const sSt = c.status===9?'bg': c.status===11?'by':'bx';
+    const dc  = {ok:'green',warn:'yellow',bad:'red',x:'muted'}[drrSt];
+
+    // Название: артикулы из fullstats, иначе имя кампании
+    const nmLabel = st.nmNames&&st.nmNames.length
+      ? st.nmNames.slice(0,2).join(', ') + (st.nmNames.length>2 ? ` +${st.nmNames.length-2}` : '')
+      : c.name||'—';
+    const bidType = c.bid_type==='manual'?'Ручная':'Единая';
+
     return `<tr class="${drrSt==='bad'?'rc':drrSt==='warn'?'rw':''}">
-      <td class="txt"><div style="font-weight:500">${c.name||'—'}</div><div style="font-size:10px;color:var(--muted)">#${c.advertId}</div></td>
-      <td>${CTYPE[c.type]||c.type||'—'}</td>
+      <td class="txt">
+        <div style="font-weight:500">${nmLabel}</div>
+        <div style="font-size:10px;color:var(--muted)">#${c.advertId} · ${bidType}</div>
+      </td>
+      <td>${c.payment_type==='cpc'?'CPC':'CPM'}</td>
       <td><span class="b ${sSt}">${CSTATUS[c.status]||c.status}</span></td>
-      <td>${fmt(st.spend||0)}</td><td>${fmtM(st.views||0)}</td><td>${fmtM(st.clicks||0)}</td>
-      <td>${st.ctr?st.ctr.toFixed(1):'—'}</td><td>${st.carts||0}</td><td>${st.ords||0}</td>
-      <td>${st.cpc?fmt(st.cpc):'—'}</td><td>${cpo!==null?fmt(cpo):'—'}</td>
-      <td style="color:var(--${dc})">${drr!==null?drr.toFixed(1)+'%':'—'}</td>
+      <td>${fmt(spend)}</td>
+      <td>${fmtM(st.views||0)}</td>
+      <td>${fmtM(st.clicks||0)}</td>
+      <td>${st.views>0?(st.clicks/st.views*100).toFixed(1):'—'}</td>
+      <td>${st.carts||0}</td>
+      <td>${st.ords||0}</td>
+      <td>${st.cpc?fmt(st.cpc):'—'}</td>
+      <td>${cpo!==null?fmt(cpo):'—'}</td>
+      <td>
+        <div class="dbar">
+          <div class="dtrack"><div class="dfill ${drrSt}" style="width:${Math.min((drr||0)/(target*2)*100,100)}%"></div></div>
+          <span class="dnum" style="color:var(--${dc})">${drr!==null?drr.toFixed(1)+'%':'—'}</span>
+        </div>
+      </td>
       <td><input class="ie" value="${c.dailyBudget||0}"></td>
     </tr>`;
   }).join('');
