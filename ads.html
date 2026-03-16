@@ -452,30 +452,47 @@ async function loadAll() {
 async function loadWB() {
   const from=ago(S.days), to=today();
 
-  // 1. Кампании — новый API: count → adverts v2
-  const campData = await wb('campaigns');
-  // Ответ: { adverts: [{id, settings:{name}, status, bid_type, nm_settings, timestamps}], _count: {...} }
-  S.camps = (campData?.adverts || []).map(c => ({
-    advertId:    c.id,
-    name:        c.settings?.name || `#${c.id}`,
-    status:      c.status,
-    bid_type:    c.bid_type,
-    payment_type:c.settings?.payment_type,
-    dailyBudget: 0,
-    // список nm из nm_settings
-    nms: (c.nm_settings||[]).map(n => n.nm_id),
-  }));
-
-  // 2. IDs для stats (active=9, paused=11, ready=4, completed=7)
-  const ids = S.camps.map(c=>c.advertId);
-
-  // 3. Дневной расход
+  // 1. Дневной расход ПЕРВЫМ — содержит advertId для fallback
   S.upd = await wb('upd',{from,to});
   if (!Array.isArray(S.upd)) S.upd=[];
 
+  // 2. Кампании через новый API
+  let campIds = [];
+  try {
+    const campData = await wb('campaigns');
+    S.camps = (campData?.adverts || []).map(c => ({
+      advertId:    c.id,
+      name:        c.settings?.name || ('#'+c.id),
+      status:      c.status,
+      bid_type:    c.bid_type,
+      payment_type:c.settings?.payment_type,
+      dailyBudget: 0,
+      nms: (c.nm_settings||[]).map(n => n.nm_id),
+    }));
+    campIds = S.camps.map(c=>c.advertId);
+  } catch(e) {
+    console.warn('campaigns API:', e.message);
+    S.camps = [];
+  }
+
+  // Fallback: берём IDs прямо из upd (там всегда есть advertId)
+  if (!campIds.length && S.upd.length) {
+    const seen = new Set();
+    for (const r of S.upd) {
+      const id = r.advertId || r.advert_id;
+      if (id && !seen.has(id)) { seen.add(id); campIds.push(id); }
+    }
+    if (!S.camps.length) {
+      S.camps = campIds.map(id => {
+        const u = S.upd.find(r=>(r.advertId||r.advert_id)===id)||{};
+        return { advertId:id, name: u.campName||(('#'+id)), status:u.advertStatus||9, bid_type:'manual', nms:[] };
+      });
+    }
+  }
+
   // 4. Fullstats v3 (макс 50 кампаний за раз)
-  if (ids.length) {
-    const results = await Promise.all(chunk(ids,50).map(ch => wb('fullstats',{ids:ch,beginDate:from,endDate:to})));
+  if (campIds.length) {
+    const results = await Promise.all(chunk(campIds,50).map(ch => wb('fullstats',{ids:ch,beginDate:from,endDate:to})));
     S.fstats = results.flat().filter(Boolean);
   } else { S.fstats=[]; }
 
