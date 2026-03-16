@@ -49,5 +49,14 @@
       <a href="/wb-dashboard/"                 ${isIndex      ? 'class="active"' : ''}>📊 Сводка</a>
     </nav>`;
 
-  document.body.insertBefore(header, document.body.firstChild);
+  function doInsert() {
+    if (document.body) {
+      document.body.insertBefore(header, document.body.firstChild);
+    } else {
+      document.addEventListener('DOMContentLoaded', function() {
+        document.body.insertBefore(header, document.body.firstChild);
+      });
+    }
+  }
+  doInsert();
 })();

@@ -118,6 +118,20 @@ tr.rc td{background:rgba(255,85,102,.03)}tr.rw td{background:rgba(251,191,36,.03
 </head>
 <body>
 
+<!-- Controls bar: shop, period, load button -->
+<div id="adsControls" style="background:#0d1117;border-bottom:1px solid #1a2333;padding:8px 28px;display:flex;align-items:center;gap:8px;font-family:'Geologica',system-ui,sans-serif">
+  <div style="display:flex;gap:4px" id="shopBtnsBar">
+    <button class="hbtn active" data-shop="oding"     onclick="setShop('oding')">Одинг</button>
+    <button class="hbtn"         data-shop="stolnikov" onclick="setShop('stolnikov')">Стольников</button>
+  </div>
+  <div style="display:flex;gap:4px">
+    <button class="hbtn ga active" data-days="7"  onclick="setDays(7)">7д</button>
+    <button class="hbtn ga"        data-days="14" onclick="setDays(14)">14д</button>
+    <button class="hbtn ga"        data-days="30" onclick="setDays(30)">30д</button>
+  </div>
+  <span id="balChip" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#1aff88;background:rgba(26,255,136,.1);border:1px solid #0d7a42;padding:3px 9px;border-radius:5px;display:none;margin-left:auto">баланс: —</span>
+  <button onclick="loadAll()" id="loadBtn" style="margin-left:auto;background:rgba(26,255,136,.1);border:1px solid #0d7a42;color:#1aff88;font-family:'Geologica',sans-serif;font-size:13px;padding:6px 16px;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">⟳ Загрузить</button>
+</div>
 
 <div class="tabs-bar">
   <div class="tab active"  onclick="showTab('overview')">📊 Обзор</div>
@@ -380,7 +394,7 @@ function showTab(n) {
 function setShop(s) {
   if (S.shop === s) return; // уже выбран
   S.shop = s;
-  document.querySelectorAll('.shop-btns .hbtn').forEach(b=>b.classList.toggle('active',b.dataset.shop===s));
+  document.querySelectorAll('[data-shop]').forEach(b=>b.classList.toggle('active',b.dataset.shop===s));
   // Очищаем старые данные
   S.camps=[]; S.fstats=[]; S.kw=[]; S.upd=[]; S.rnp=[];
   clearDisplay();
@@ -389,7 +403,7 @@ function setShop(s) {
 function setDays(d) {
   if (S.days === d) return;
   S.days = d;
-  document.querySelectorAll('.date-btns .hbtn').forEach(b=>b.classList.toggle('active',+b.dataset.days===d));
+  document.querySelectorAll('[data-days]').forEach(b=>b.classList.toggle('active',+b.dataset.days===d));
   S.camps=[]; S.fstats=[]; S.kw=[]; S.upd=[]; S.rnp=[];
   clearDisplay();
   loadAll();
