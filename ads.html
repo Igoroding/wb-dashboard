@@ -477,15 +477,20 @@ async function loadAll() {
 async function loadWB() {
   const from=ago(S.days), to=today();
 
-  // 1. Дневной расход ПЕРВЫМ — содержит advertId для fallback
-  S.upd = await wb('upd',{from,to});
-  if (!Array.isArray(S.upd)) S.upd=[];
+  // ── Шаг 1: upd + кампании + баланс параллельно ───────────────────────────
+  const [updRaw, campRaw, balRaw] = await Promise.allSettled([
+    wb('upd', {from, to}),
+    wb('campaigns'),
+    wb('balance'),
+  ]);
 
-  // 2. Кампании через новый API
+  // upd
+  S.upd = (updRaw.status==='fulfilled' && Array.isArray(updRaw.value)) ? updRaw.value : [];
+
+  // кампании
   let campIds = [];
-  try {
-    const campData = await wb('campaigns');
-    S.camps = (campData?.adverts || []).map(c => ({
+  if (campRaw.status==='fulfilled' && campRaw.value?.adverts) {
+    S.camps = campRaw.value.adverts.map(c => ({
       advertId:    c.id,
       name:        c.settings?.name || ('#'+c.id),
       status:      c.status,
@@ -495,85 +500,69 @@ async function loadWB() {
       nms: (c.nm_settings||[]).map(n => n.nm_id),
     }));
     campIds = S.camps.map(c=>c.advertId);
-  } catch(e) {
-    console.warn('campaigns API:', e.message);
+  } else {
     S.camps = [];
+    console.warn('campaigns:', campRaw.reason?.message || 'failed');
   }
 
-  // Fallback: берём IDs прямо из upd (там всегда есть advertId)
+  // fallback IDs из upd
   if (!campIds.length && S.upd.length) {
     const seen = new Set();
     for (const r of S.upd) {
-      const id = r.advertId || r.advert_id;
-      if (id && !seen.has(id)) { seen.add(id); campIds.push(id); }
+      const id = r.advertId||r.advert_id; if(id && !seen.has(id)) { seen.add(id); campIds.push(id); }
     }
-    if (!S.camps.length) {
-      S.camps = campIds.map(id => {
-        const u = S.upd.find(r=>(r.advertId||r.advert_id)===id)||{};
-        return { advertId:id, name: u.campName||(('#'+id)), status:u.advertStatus||9, bid_type:'manual', nms:[] };
-      });
-    }
+    if (!S.camps.length) S.camps = campIds.map(id => {
+      const u = S.upd.find(r=>(r.advertId||r.advert_id)===id)||{};
+      return { advertId:id, name:u.campName||('#'+id), status:u.advertStatus||9, bid_type:'manual', nms:[] };
+    });
   }
 
-  // 4. Fullstats v3 — только статусы 7/9/11 (завершена/активна/пауза)
-  // Статус 4 (ready) не поддерживается fullstats
-  const statsIds = S.camps
-    .filter(c => [7, 9, 11].includes(c.status))
-    .map(c => c.advertId);
-  // Если статусы неизвестны (fallback из upd) — берём все campIds
+  // баланс
+  if (balRaw.status==='fulfilled' && balRaw.value?.balance !== undefined) {
+    const chip=document.getElementById('balChip');
+    chip.textContent='баланс: '+fmt(balRaw.value.balance)+' ₽';
+    chip.style.display='inline';
+  }
+
+  // ── Шаг 2: fullstats (нужны IDs кампаний) ────────────────────────────────
+  const statsIds = S.camps.filter(c=>[7,9,11].includes(c.status)).map(c=>c.advertId);
   const idsForStats = statsIds.length ? statsIds : campIds;
+
   if (idsForStats.length) {
-    // Прокси сам режет на чанки по 50, передаём всё сразу
     try {
       const r = await wb('fullstats', {ids: idsForStats, beginDate: from, endDate: to});
       S.fstats = Array.isArray(r) ? r : [];
-    } catch(e) {
-      console.warn('fullstats:', e.message);
-      S.fstats = [];
-    }
+    } catch(e) { console.warn('fullstats:', e.message); S.fstats=[]; }
   } else { S.fstats=[]; }
 
-  // 5. Фразы/кластеры — новый формат: items:[{advert_id, nm_id}]
+  // ── Шаг 3: фразы (нужны пары advert_id+nm_id из fullstats) ───────────────
   if (S.fstats.length) {
     try {
-      // Строим пары advert_id + nm_id из fullstats (макс 100 пар)
       const kwItems = [];
       const seen = new Set();
       for (const c of S.fstats) {
         for (const day of (c.days||[])) {
           for (const app of (day.apps||[])) {
             for (const nm of (app.nms||[])) {
-              const key = `${c.advertId}_${nm.nmId}`;
+              const key=`${c.advertId}_${nm.nmId}`;
               if (!seen.has(key)) {
                 seen.add(key);
-                kwItems.push({ advert_id: c.advertId, nm_id: nm.nmId });
-                if (kwItems.length >= 100) break;
+                kwItems.push({advert_id:c.advertId, nm_id:nm.nmId});
+                if (kwItems.length>=100) break;
               }
-              if (kwItems.length >= 100) break;
             }
-            if (kwItems.length >= 100) break;
+            if (kwItems.length>=100) break;
           }
-          if (kwItems.length >= 100) break;
+          if (kwItems.length>=100) break;
         }
-        if (kwItems.length >= 100) break;
+        if (kwItems.length>=100) break;
       }
       if (kwItems.length) {
-        const kd = await wb('keywords',{items: kwItems, from, to});
-        // Ответ: { stats: [{advert_id, nm_id, stats:[{norm_query, views, clicks, atbs, orders, avg_pos, ctr, cpc, spend}]}] }
+        const kd = await wb('keywords',{items:kwItems, from, to});
         S.kw = kd?.stats || [];
       } else { S.kw=[]; }
-    } catch(e) { console.warn('kw:',e.message); S.kw=[]; }
+    } catch(e) { console.warn('kw:', e.message); S.kw=[]; }
   }
-
-  // 6. Баланс
-  try {
-    const bal = await wb('balance');
-    if (bal?.balance !== undefined) {
-      const chip=document.getElementById('balChip');
-      chip.textContent='баланс: '+fmt(bal.balance)+' ₽';
-      chip.style.display='inline';
-    }
-  } catch(e) { console.warn('bal:',e.message); }
 }
 
 async function loadSB() {
