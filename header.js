@@ -3,7 +3,8 @@
   const isStocks     = path.includes('stocks');
   const isRnP        = path.includes('rnp');
   const isWarehouses = path.includes('warehouses');
-  const isIndex      = !isStocks && !isRnP && !isWarehouses;
+  const isAds        = path.includes('ads');
+  const isIndex      = !isStocks && !isRnP && !isWarehouses && !isAds;
 
   const css = `
     .site-header { background: #0d1117; border-bottom: 1px solid #1a2333; padding: 14px 28px 0; font-family: 'Geologica', system-ui, sans-serif; }
@@ -44,6 +45,7 @@
       <a href="/wb-dashboard/rnp.html"         ${isRnP        ? 'class="active"' : ''}>📈 РнП</a>
       <a href="/wb-dashboard/stocks.html"      ${isStocks     ? 'class="active"' : ''}>📦 Остатки</a>
       <a href="/wb-dashboard/warehouses.html"  ${isWarehouses ? 'class="active"' : ''}>🏭 Склады</a>
+      <a href="/wb-dashboard/ads.html"         ${isAds        ? 'class="active"' : ''}>📣 Реклама</a>
       <a href="/wb-dashboard/"                 ${isIndex      ? 'class="active"' : ''}>📊 Сводка</a>
     </nav>`;
 
