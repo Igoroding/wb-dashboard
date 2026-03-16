@@ -189,7 +189,13 @@ tr.rc td{background:rgba(255,85,102,.03)}tr.rw td{background:rgba(251,191,36,.03
 <!-- ══ КАМПАНИИ ═══════════════════════════════════════════════════════════════ -->
 <div id="tab-campaigns" class="tc">
   <div class="sec">
-    <div class="sec-head"><span class="sec-title">Кампании</span><span id="campCount" style="font-size:12px;color:var(--muted)"></span></div>
+    <div class="sec-head">
+      <span class="sec-title">Кампании</span>
+      <span id="campCount" style="font-size:12px;color:var(--muted)"></span>
+      <button id="showCompletedBtn" onclick="toggleCompleted()" style="margin-left:auto;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:var(--sans);font-size:12px;padding:4px 12px;border-radius:6px;cursor:pointer;transition:all .15s">
+        👁 Показать завершённые
+      </button>
+    </div>
     <div class="sec-body" style="padding:0">
       <div class="tw"><table id="tCamp">
         <thead><tr>
@@ -744,10 +750,33 @@ function renderCharts(target) {
 const CSTATUS={'-1':'Все',4:'Готова',7:'Завершена',8:'Отклонена',9:'Активна',11:'На паузе'};
 const CTYPE={8:'Авто',9:'Поиск/Ручная'};
 
+let showCompleted = false;
+
+function toggleCompleted() {
+  showCompleted = !showCompleted;
+  const btn = document.getElementById('showCompletedBtn');
+  if (showCompleted) {
+    btn.textContent = '🙈 Скрыть завершённые';
+    btn.style.color = 'var(--text)';
+    btn.style.borderColor = 'var(--border2)';
+  } else {
+    btn.textContent = '👁 Показать завершённые';
+    btn.style.color = 'var(--muted)';
+    btn.style.borderColor = 'var(--border)';
+  }
+  renderCampaigns();
+}
+
 function renderCampaigns() {
-  document.getElementById('campCount').textContent=S.camps.length+' кампаний';
+  // Статус 7 = завершена, -1 = удалена
+  const camps = showCompleted
+    ? S.camps
+    : S.camps.filter(c => c.status !== 7 && c.status !== -1);
+  const hiddenCount = S.camps.length - camps.length;
+  document.getElementById('campCount').textContent =
+    camps.length + ' кампаний' + (hiddenCount > 0 ? ` (+ ${hiddenCount} завершённых скрыто)` : '');
   const tbody=document.getElementById('bCamp');
-  if (!S.camps.length) { tbody.innerHTML=`<tr><td colspan="13"><div class="empty"><div class="ei">📁</div><div class="et">Нет данных</div></div></td></tr>`; return; }
+  if (!camps.length) { tbody.innerHTML=`<tr><td colspan="13"><div class="empty"><div class="ei">📁</div><div class="et">Нет активных кампаний</div></div></td></tr>`; return; }
   // Per-campaign spend из upd (суммируем по advertId)
   const spendById={};
   for (const r of S.upd) {
@@ -763,7 +792,7 @@ function renderCampaigns() {
   const oAll=S.rnp.reduce((s,r)=>s+(+r.orders_sum||0),0);
   const totSpend=Object.values(byId).reduce((s,v)=>s+v.spend,0);
   const target=S.plan?.drr_plan||10;
-  tbody.innerHTML=S.camps.map(c=>{
+  tbody.innerHTML=camps.map(c=>{
     const st=byId[c.advertId]||{};
     const drr=oAll>0&&st.spend>0&&totSpend>0?(st.spend/oAll*100):null;
     const drrSt=drr===null?'x':drr<=target?'ok':drr<=target+5?'warn':'bad';
