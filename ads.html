@@ -10,534 +10,109 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 :root {
-  --bg: #080b12;
-  --bg2: #0e1220;
-  --surface: #141828;
-  --surface2: #1c2238;
-  --border: #252d48;
-  --border2: #2e3858;
-  --text: #dce4f5;
-  --muted: #6b7a9e;
-  --green: #1aff88;
-  --green-bg: rgba(26,255,136,.1);
-  --green-dark: #0d7a42;
-  --yellow: #fbbf24;
-  --yellow-bg: rgba(251,191,36,.1);
-  --yellow-dark: #7c4f0a;
-  --red: #ff5566;
-  --red-bg: rgba(255,85,102,.1);
-  --red-dark: #7a1220;
-  --blue: #4d9fff;
-  --blue-bg: rgba(77,159,255,.1);
-  --mono: 'JetBrains Mono', monospace;
-  --sans: 'Onest', sans-serif;
-  --radius: 10px;
+  --bg:#080b12;--bg2:#0e1220;--surface:#141828;--surface2:#1c2238;
+  --border:#252d48;--border2:#2e3858;--text:#dce4f5;--muted:#6b7a9e;
+  --green:#1aff88;--green-bg:rgba(26,255,136,.1);--green-dark:#0d7a42;
+  --yellow:#fbbf24;--yellow-bg:rgba(251,191,36,.1);--yellow-dark:#7c4f0a;
+  --red:#ff5566;--red-bg:rgba(255,85,102,.1);--red-dark:#7a1220;
+  --blue:#4d9fff;--blue-bg:rgba(77,159,255,.1);--blue-dark:#1a4a7a;
+  --mono:'JetBrains Mono',monospace;--sans:'Onest',sans-serif;--r:10px;
 }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;min-height:100vh}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:10px;height:52px;position:sticky;top:0;z-index:100}
+.logo{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--green);letter-spacing:1px;text-decoration:none}
+.sep{color:var(--border2)}
+.nav a{color:var(--muted);text-decoration:none;font-size:13px;padding:5px 10px;border-radius:6px;transition:all .15s}
+.nav a:hover{color:var(--text);background:var(--surface)}.nav a.active{color:var(--green);background:var(--green-bg)}
+.shop-btns,.date-btns{display:flex;gap:3px}
+.hbtn{background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:var(--sans);font-size:12px;padding:4px 11px;border-radius:6px;cursor:pointer;transition:all .15s}
+.hbtn:hover{background:var(--surface2);color:var(--text)}.hbtn.active{color:var(--blue);border-color:var(--blue-dark);background:var(--blue-bg)}
+.hbtn.ga.active{color:var(--green);border-color:var(--green-dark);background:var(--green-bg)}
+.balance-chip{font-family:var(--mono);font-size:11px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-dark);padding:3px 9px;border-radius:5px;display:none;margin-left:auto}
+.btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--sans);font-size:13px;padding:6px 13px;border-radius:7px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--border)}.btn.p{background:var(--green-bg);border-color:var(--green-dark);color:var(--green)}
+.btn.p:hover{background:var(--green-dark);color:var(--text)}.btn:disabled{opacity:.5;cursor:not-allowed}
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 14px;
-  line-height: 1.5;
-  min-height: 100vh;
-}
+.tabs-bar{display:flex;gap:2px;padding:12px 20px 0;border-bottom:1px solid var(--border);background:var(--bg2);overflow-x:auto}
+.tab{padding:8px 16px;color:var(--muted);font-size:13px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;white-space:nowrap;user-select:none}
+.tab:hover{color:var(--text)}.tab.active{color:var(--green);border-bottom-color:var(--green)}
 
-/* ─── HEADER ─── */
-header {
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  height: 52px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
+main{padding:20px;max-width:1440px}
+.tc{display:none}.tc.active{display:block}
 
-.logo {
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--green);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  text-decoration: none;
-}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px}
+.card-lbl{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.card-val{font-family:var(--mono);font-size:20px;font-weight:700;line-height:1}
+.card-sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+.card.green{border-color:var(--green-dark);background:var(--green-bg)}.card.green .card-val{color:var(--green)}
+.card.yellow{border-color:var(--yellow-dark);background:var(--yellow-bg)}.card.yellow .card-val{color:var(--yellow)}
+.card.red{border-color:var(--red-dark);background:var(--red-bg)}.card.red .card-val{color:var(--red)}
+.card.blue{border-color:var(--blue-dark);background:var(--blue-bg)}.card.blue .card-val{color:var(--blue)}
 
-.sep { color: var(--border2); font-size: 18px; }
+.sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+.sec-head{display:flex;align-items:center;gap:8px;padding:11px 15px;border-bottom:1px solid var(--border);background:var(--bg2)}
+.sec-title{font-size:13px;font-weight:600;flex:1}
+.sec-body{padding:14px}
 
-.nav-links { display: flex; gap: 4px; margin-right: auto; }
-.nav-links a {
-  color: var(--muted);
-  text-decoration: none;
-  font-size: 13px;
-  padding: 5px 10px;
-  border-radius: 6px;
-  transition: all .15s;
-}
-.nav-links a:hover { color: var(--text); background: var(--surface); }
-.nav-links a.active { color: var(--green); background: var(--green-bg); }
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:1000px){.g2{grid-template-columns:1fr}}
+@media(max-width:700px){.cards{grid-template-columns:repeat(2,1fr)}}
 
-.shop-btn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 13px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all .15s;
-}
-.shop-btn.active { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); }
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{text-align:left;padding:7px 9px;color:var(--muted);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--text)}thead th.sa::after{content:' ↑';color:var(--green)}thead th.sd::after{content:' ↓';color:var(--green)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}tbody tr:last-child{border-bottom:none}tbody tr:hover{background:var(--surface2)}
+td{padding:8px 9px;font-family:var(--mono);font-size:12px;white-space:nowrap}
+td.txt{font-family:var(--sans);white-space:normal;max-width:220px;font-size:13px}
 
-.date-ctrl {
-  display: flex;
-  gap: 4px;
-}
-.date-btn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 11px;
-  padding: 4px 9px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all .15s;
-}
-.date-btn.active { background: var(--surface2); border-color: var(--border2); color: var(--text); }
+.b{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;font-family:var(--sans);white-space:nowrap}
+.bg{background:var(--green-bg);color:var(--green)}.by{background:var(--yellow-bg);color:var(--yellow)}
+.br{background:var(--red-bg);color:var(--red)}.bb{background:var(--blue-bg);color:var(--blue)}
+.bx{background:var(--surface2);color:var(--muted)}
 
-.refresh-btn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  padding: 5px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all .15s;
-}
-.refresh-btn:hover { background: var(--surface2); color: var(--text); }
+.dbar{display:flex;align-items:center;gap:6px}
+.dtrack{flex:1;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;min-width:55px}
+.dfill{height:100%;border-radius:2px}.dfill.ok{background:var(--green)}.dfill.warn{background:var(--yellow)}.dfill.bad{background:var(--red)}
+.dnum{font-family:var(--mono);font-size:12px;min-width:40px;text-align:right}
 
-/* ─── TABS ─── */
-.tabs-bar {
-  display: flex;
-  gap: 2px;
-  padding: 12px 20px 0;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg2);
-}
-.tab {
-  padding: 8px 16px;
-  color: var(--muted);
-  font-size: 13px;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: all .15s;
-  user-select: none;
-}
-.tab:hover { color: var(--text); }
-.tab.active { color: var(--green); border-bottom-color: var(--green); }
+.pos{display:inline-flex;align-items:center;justify-content:center;width:26px;height:18px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700}
+.pt{background:var(--green-bg);color:var(--green)}.pw{background:var(--yellow-bg);color:var(--yellow)}
+.pl{background:var(--red-bg);color:var(--red)}.po{background:var(--surface2);color:var(--muted)}
 
-/* ─── MAIN ─── */
-main { padding: 20px; max-width: 1400px; }
+.sp{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{display:flex;align-items:center;gap:8px;color:var(--muted);padding:24px;justify-content:center}
 
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+.empty{text-align:center;padding:32px;color:var(--muted)}
+.empty .ei{font-size:28px;margin-bottom:6px}.empty .et{font-size:14px;font-weight:500;margin-bottom:3px}.empty .ed{font-size:12px}
 
-/* ─── CARDS ─── */
-.cards-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
-}
+.ch{position:relative;height:200px}
 
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-}
-.card-label {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  margin-bottom: 6px;
-}
-.card-value {
-  font-family: var(--mono);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--text);
-}
-.card-sub {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 4px;
-  font-family: var(--mono);
-}
-.card.green { border-color: var(--green-dark); background: var(--green-bg); }
-.card.green .card-value { color: var(--green); }
-.card.yellow { border-color: var(--yellow-dark); background: var(--yellow-bg); }
-.card.yellow .card-value { color: var(--yellow); }
-.card.red { border-color: var(--red-dark); background: var(--red-bg); }
-.card.red .card-value { color: var(--red); }
+.recs{display:flex;flex-direction:column;gap:7px}
+.rec{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px 13px}
+.rec.crit{border-left:3px solid var(--red)}.rec.warn{border-left:3px solid var(--yellow)}.rec.ok{border-left:3px solid var(--green)}
+.rec-body{flex:1}.rec-title{font-size:13px;font-weight:600;margin-bottom:2px}.rec-desc{font-size:12px;color:var(--muted)}
+.pp{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--surface2);padding:1px 5px;border-radius:3px;margin-left:5px}
 
-/* ─── SECTION ─── */
-.section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 16px;
-  overflow: hidden;
-}
-.section-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg2);
-}
-.section-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  flex: 1;
-}
-.section-body { padding: 16px; }
+.ai-res{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;line-height:1.7;min-height:80px}
 
-/* ─── TABLES ─── */
-.tbl-wrap { overflow-x: auto; }
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-thead th {
-  text-align: left;
-  padding: 8px 10px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: .4px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-  cursor: pointer;
-  user-select: none;
-}
-thead th:hover { color: var(--text); }
-thead th.sort-asc::after { content: ' ↑'; color: var(--green); }
-thead th.sort-desc::after { content: ' ↓'; color: var(--green); }
-tbody tr {
-  border-bottom: 1px solid var(--border);
-  transition: background .1s;
-}
-tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: var(--surface2); }
-td {
-  padding: 9px 10px;
-  font-family: var(--mono);
-  font-size: 12px;
-  white-space: nowrap;
-}
-td.name-col {
-  font-family: var(--sans);
-  font-size: 13px;
-  white-space: normal;
-  max-width: 200px;
-}
+.notice{background:var(--blue-bg);border:1px solid rgba(77,159,255,.25);border-radius:8px;padding:11px 14px;font-size:12px;color:var(--muted);margin-bottom:14px}
+.notice b{color:var(--blue)}
 
-/* ─── BADGES ─── */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 7px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  font-family: var(--sans);
-  white-space: nowrap;
-}
-.badge-green { background: var(--green-bg); color: var(--green); }
-.badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
-.badge-red { background: var(--red-bg); color: var(--red); }
-.badge-blue { background: var(--blue-bg); color: var(--blue); }
-.badge-gray { background: var(--surface2); color: var(--muted); }
+.setup-step{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px}
+.step-n{width:28px;height:28px;background:var(--blue-bg);border:1px solid var(--blue-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;color:var(--blue);flex-shrink:0}
+.step-body{flex:1}.step-title{font-size:13px;font-weight:600;margin-bottom:4px}.step-desc{font-size:12px;color:var(--muted);line-height:1.6}
+code{background:var(--surface2);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue)}
 
-/* ─── DRR BAR ─── */
-.drr-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 120px;
-}
-.drr-track {
-  flex: 1;
-  height: 4px;
-  background: var(--surface2);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.drr-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width .3s;
-}
-.drr-fill.ok { background: var(--green); }
-.drr-fill.warn { background: var(--yellow); }
-.drr-fill.bad { background: var(--red); }
-.drr-num {
-  font-family: var(--mono);
-  font-size: 12px;
-  min-width: 40px;
-  text-align: right;
-}
+.ie{background:transparent;border:1px solid transparent;color:var(--text);font-family:var(--mono);font-size:12px;width:65px;padding:2px 4px;border-radius:4px;outline:none;transition:border .15s}
+.ie:focus{border-color:var(--border2);background:var(--surface2)}
 
-/* ─── POSITION INDICATOR ─── */
-.pos {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 20px;
-  border-radius: 4px;
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-}
-.pos.top3 { background: var(--green-bg); color: var(--green); }
-.pos.top6 { background: var(--yellow-bg); color: var(--yellow); }
-.pos.low { background: var(--red-bg); color: var(--red); }
-.pos.off { background: var(--surface2); color: var(--muted); }
-
-/* ─── RECOMMENDATIONS ─── */
-.rec-list { display: flex; flex-direction: column; gap: 8px; }
-.rec-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 14px;
-}
-.rec-item.critical { border-left: 3px solid var(--red); }
-.rec-item.warning { border-left: 3px solid var(--yellow); }
-.rec-item.ok { border-left: 3px solid var(--green); }
-.rec-icon { font-size: 18px; }
-.rec-body { flex: 1; }
-.rec-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-.rec-desc { font-size: 12px; color: var(--muted); }
-.rec-principle {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  background: var(--surface2);
-  padding: 1px 5px;
-  border-radius: 3px;
-  margin-left: 8px;
-}
-.rec-action {
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all .15s;
-  white-space: nowrap;
-}
-.rec-action:hover { background: var(--border2); }
-
-/* ─── CHART CANVAS ─── */
-.chart-wrap {
-  position: relative;
-  height: 220px;
-}
-
-/* ─── FORM ELEMENTS ─── */
-.btn {
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 13px;
-  padding: 7px 14px;
-  border-radius: 7px;
-  cursor: pointer;
-  transition: all .15s;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.btn:hover { background: var(--border); }
-.btn.primary { background: var(--green-bg); border-color: var(--green-dark); color: var(--green); }
-.btn.primary:hover { background: var(--green-dark); color: var(--text); }
-.btn.danger { background: var(--red-bg); border-color: var(--red-dark); color: var(--red); }
-
-select, input {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 12px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  outline: none;
-  transition: border .15s;
-}
-select:focus, input:focus { border-color: var(--border2); }
-
-/* ─── AI BLOCK ─── */
-.ai-result {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
-  font-size: 13px;
-  line-height: 1.7;
-  min-height: 100px;
-}
-
-/* ─── EMPTY STATE ─── */
-.empty {
-  text-align: center;
-  padding: 40px;
-  color: var(--muted);
-}
-.empty .icon { font-size: 32px; margin-bottom: 8px; }
-.empty .title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
-.empty .desc { font-size: 12px; }
-
-/* ─── LOADING ─── */
-.loading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted);
-  font-size: 13px;
-  padding: 20px;
-  justify-content: center;
-}
-.spinner {
-  width: 16px; height: 16px;
-  border: 2px solid var(--border2);
-  border-top-color: var(--green);
-  border-radius: 50%;
-  animation: spin .6s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ─── FILTER BAR ─── */
-.filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-/* ─── SPLIT ─── */
-.grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-@media (max-width: 900px) {
-  .grid-2 { grid-template-columns: 1fr; }
-  .cards-row { grid-template-columns: repeat(2, 1fr); }
-}
-
-/* ─── TOOLTIP ─── */
-[data-tip] { position: relative; cursor: help; }
-[data-tip]:hover::after {
-  content: attr(data-tip);
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  color: var(--text);
-  font-size: 11px;
-  font-family: var(--sans);
-  padding: 4px 8px;
-  border-radius: 5px;
-  white-space: nowrap;
-  z-index: 999;
-  pointer-events: none;
-}
-
-/* ─── SEARCH INPUT ─── */
-.search-input {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 13px;
-  padding: 6px 12px;
-  border-radius: 7px;
-  outline: none;
-  width: 220px;
-  transition: border .15s;
-}
-.search-input:focus { border-color: var(--green-dark); }
-
-/* ─── ROW COLORS ─── */
-tr.row-critical td { background: rgba(255,85,102,.04); }
-tr.row-warning td { background: rgba(251,191,36,.04); }
-
-/* ─── INLINE EDIT ─── */
-.editable {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 12px;
-  width: 70px;
-  padding: 2px 5px;
-  border-radius: 4px;
-  outline: none;
-  transition: border .15s;
-}
-.editable:focus {
-  border-color: var(--border2);
-  background: var(--surface2);
-}
-
-/* ─── SCROLLBAR ─── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-
-/* ─── NOTICE ─── */
-.notice {
-  background: var(--blue-bg);
-  border: 1px solid rgba(77,159,255,.25);
-  border-radius: 8px;
-  padding: 12px 16px;
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 16px;
-}
-.notice b { color: var(--blue); }
+tr.rc td{background:rgba(255,85,102,.03)}tr.rw td{background:rgba(251,191,36,.03)}
 </style>
 </head>
 <body>
@@ -545,1025 +120,832 @@ tr.row-warning td { background: rgba(251,191,36,.04); }
 <header>
   <a href="rnp.html" class="logo">WB</a>
   <span class="sep">/</span>
-  <nav class="nav-links">
+  <nav class="nav" style="display:flex;gap:2px">
     <a href="rnp.html">РнП</a>
     <a href="stocks.html">Остатки</a>
     <a href="ads.html" class="active">Реклама</a>
   </nav>
-  <div id="shopBtns" style="display:flex;gap:4px">
-    <button class="shop-btn active" data-shop="oding" onclick="setShop('oding')">Одинг</button>
-    <button class="shop-btn" data-shop="stolnikov" onclick="setShop('stolnikov')">Стольников</button>
-    <button class="shop-btn" data-shop="all" onclick="setShop('all')">Оба</button>
+  <div class="shop-btns">
+    <button class="hbtn active" data-shop="oding"     onclick="setShop('oding')">Одинг</button>
+    <button class="hbtn"         data-shop="stolnikov" onclick="setShop('stolnikov')">Стольников</button>
   </div>
-  <div class="date-ctrl">
-    <button class="date-btn active" data-days="7" onclick="setDays(7)">7д</button>
-    <button class="date-btn" data-days="14" onclick="setDays(14)">14д</button>
-    <button class="date-btn" data-days="30" onclick="setDays(30)">30д</button>
+  <div class="date-btns">
+    <button class="hbtn ga active" data-days="7"  onclick="setDays(7)">7д</button>
+    <button class="hbtn ga"        data-days="14" onclick="setDays(14)">14д</button>
+    <button class="hbtn ga"        data-days="30" onclick="setDays(30)">30д</button>
   </div>
-  <button class="refresh-btn" onclick="loadAll()" title="Обновить">⟳</button>
+  <span id="balChip" class="balance-chip">баланс: —</span>
+  <button class="btn" style="margin-left:auto" id="loadBtn" onclick="loadAll()">⟳ Загрузить</button>
 </header>
 
 <div class="tabs-bar">
-  <div class="tab active" onclick="showTab('overview')">📊 Обзор</div>
-  <div class="tab" onclick="showTab('phrases')">🔑 Фразы</div>
-  <div class="tab" onclick="showTab('campaigns')">📁 Кампании</div>
-  <div class="tab" onclick="showTab('decisions')">✅ Решения</div>
-  <div class="tab" onclick="showTab('ai')">✨ AI-анализ</div>
+  <div class="tab active"  onclick="showTab('overview')">📊 Обзор</div>
+  <div class="tab"         onclick="showTab('campaigns')">📁 Кампании</div>
+  <div class="tab"         onclick="showTab('keywords')">🔑 Фразы</div>
+  <div class="tab"         onclick="showTab('articles')">📦 Артикулы / ДРР</div>
+  <div class="tab"         onclick="showTab('decisions')">✅ Решения</div>
+  <div class="tab"         onclick="showTab('ai')">✨ AI</div>
+  <div class="tab"         onclick="showTab('setup')">⚙️ Настройка</div>
 </div>
 
 <main>
 
-<!-- ══════════════════ TAB: ОБЗОР ══════════════════ -->
-<div id="tab-overview" class="tab-content active">
-
-  <div id="overviewCards" class="cards-row">
-    <div class="card"><div class="card-label">ДРР (расход/заказы)</div><div class="card-value" id="kpi-drr">—</div><div class="card-sub" id="kpi-drr-sub">загрузка...</div></div>
-    <div class="card"><div class="card-label">Расход на рекламу</div><div class="card-value" id="kpi-spend">—</div><div class="card-sub" id="kpi-spend-sub">за период</div></div>
-    <div class="card"><div class="card-label">Заказы (сумма)</div><div class="card-value" id="kpi-orders">—</div><div class="card-sub" id="kpi-orders-sub">за период</div></div>
-    <div class="card"><div class="card-label">Продажи (сумма)</div><div class="card-value" id="kpi-sales">—</div><div class="card-sub" id="kpi-sales-sub">за период</div></div>
-    <div class="card"><div class="card-label">Заказов, шт</div><div class="card-value" id="kpi-cnt">—</div><div class="card-sub" id="kpi-cnt-sub">за период</div></div>
-    <div class="card"><div class="card-label">Цель ДРР</div><div class="card-value" id="kpi-target">—</div><div class="card-sub">из wb_plan</div></div>
+<!-- ══ ОБЗОР ══════════════════════════════════════════════════════════════════ -->
+<div id="tab-overview" class="tc active">
+  <div class="cards">
+    <div class="card blue"><div class="card-lbl">Кампаний активно</div><div class="card-val" id="kpi-camps">—</div><div class="card-sub" id="kpi-camps-s">загрузка</div></div>
+    <div class="card"><div class="card-lbl">Расход рекламы ₽</div><div class="card-val" id="kpi-spend">—</div><div class="card-sub" id="kpi-spend-s">за период</div></div>
+    <div class="card"><div class="card-lbl">Показы</div><div class="card-val" id="kpi-views">—</div><div class="card-sub" id="kpi-views-s"></div></div>
+    <div class="card"><div class="card-lbl">Клики</div><div class="card-val" id="kpi-clicks">—</div><div class="card-sub" id="kpi-clicks-s">CTR —</div></div>
+    <div class="card"><div class="card-lbl">Корзины</div><div class="card-val" id="kpi-carts">—</div><div class="card-sub" id="kpi-carts-s">CR —</div></div>
+    <div class="card"><div class="card-lbl">Заказы рекл шт</div><div class="card-val" id="kpi-oads">—</div><div class="card-sub" id="kpi-oads-s">CPO —</div></div>
+    <div class="card"><div class="card-lbl">Заказы все ₽</div><div class="card-val" id="kpi-oall">—</div><div class="card-sub">из Supabase</div></div>
+    <div class="card"><div class="card-lbl">ДРР факт</div><div class="card-val" id="kpi-drr">—</div><div class="card-sub" id="kpi-drr-s">цель из плана</div></div>
   </div>
 
-  <div class="grid-2">
-    <div class="section">
-      <div class="section-head">
-        <span class="section-title">ДРР по дням</span>
-        <span style="font-size:11px;color:var(--muted)">расход / заказы × 100%</span>
-      </div>
-      <div class="section-body">
-        <div class="chart-wrap"><canvas id="chartDrr"></canvas></div>
-      </div>
+  <div class="g2">
+    <div class="sec">
+      <div class="sec-head"><span class="sec-title">Расход и заказы по дням</span></div>
+      <div class="sec-body"><div class="ch"><canvas id="cMain"></canvas></div></div>
     </div>
-    <div class="section">
-      <div class="section-head">
-        <span class="section-title">Заказы и расход</span>
-      </div>
-      <div class="section-body">
-        <div class="chart-wrap"><canvas id="chartOrders"></canvas></div>
-      </div>
+    <div class="sec">
+      <div class="sec-head"><span class="sec-title">ДРР по дням</span><span style="font-size:11px;color:var(--muted)">расход / заказы × 100%</span></div>
+      <div class="sec-body"><div class="ch"><canvas id="cDrr"></canvas></div></div>
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-head">
-      <span class="section-title">Таблица по дням</span>
-    </div>
-    <div class="section-body" style="padding:0">
-      <div class="tbl-wrap">
-        <table id="dailyTable">
-          <thead>
-            <tr>
-              <th>Дата</th>
-              <th>Заказы ₽</th>
-              <th>Заказы шт</th>
-              <th>Продажи ₽</th>
-              <th>Реклама ₽</th>
-              <th>ДРР %</th>
-              <th>Статус</th>
-            </tr>
-          </thead>
-          <tbody id="dailyBody"><tr><td colspan="7" class="loading"><div class="spinner"></div> загрузка...</td></tr></tbody>
-        </table>
-      </div>
+  <div class="sec">
+    <div class="sec-head"><span class="sec-title">Дневная разбивка</span></div>
+    <div class="sec-body" style="padding:0">
+      <div class="tw"><table id="tDaily">
+        <thead><tr>
+          <th>Дата</th><th onclick="sortT('tDaily',1)">Расход ₽</th>
+          <th>Показы</th><th>Клики</th><th>CTR%</th><th>Корзины</th>
+          <th onclick="sortT('tDaily',6)">Заказы рекл</th>
+          <th onclick="sortT('tDaily',7)">Заказы все ₽</th>
+          <th onclick="sortT('tDaily',8)">ДРР%</th><th>Статус</th>
+        </tr></thead>
+        <tbody id="bDaily"><tr><td colspan="10"><div class="empty"><div class="ei">📊</div><div class="et">Нажмите «Загрузить»</div></div></td></tr></tbody>
+      </table></div>
     </div>
   </div>
-
 </div>
 
-<!-- ══════════════════ TAB: ФРАЗЫ ══════════════════ -->
-<div id="tab-phrases" class="tab-content">
-
-  <div class="notice">
-    <b>Как загрузить данные:</b> Вставьте JSON с данными по фразам из WB API (через n8n)
-    или заполните вручную. Формат: массив объектов с полями phrase, article, position, ctr, views, clicks, carts, orders, spend, campaignId.
-  </div>
-
-  <div class="section">
-    <div class="section-head">
-      <span class="section-title">Загрузка данных по фразам</span>
-      <button class="btn primary" onclick="showJsonModal()">📋 Вставить JSON</button>
-      <button class="btn" onclick="addManualPhrase()">+ Добавить вручную</button>
-      <button class="btn danger" onclick="clearPhrases()">✕ Очистить</button>
+<!-- ══ КАМПАНИИ ═══════════════════════════════════════════════════════════════ -->
+<div id="tab-campaigns" class="tc">
+  <div class="sec">
+    <div class="sec-head"><span class="sec-title">Кампании</span><span id="campCount" style="font-size:12px;color:var(--muted)"></span></div>
+    <div class="sec-body" style="padding:0">
+      <div class="tw"><table id="tCamp">
+        <thead><tr>
+          <th>Название / ID</th><th>Тип</th><th>Статус</th>
+          <th onclick="sortT('tCamp',3)">Расход ₽</th>
+          <th onclick="sortT('tCamp',4)">Показы</th>
+          <th onclick="sortT('tCamp',5)">Клики</th>
+          <th>CTR%</th>
+          <th onclick="sortT('tCamp',7)">Корзины</th>
+          <th onclick="sortT('tCamp',8)">Заказы</th>
+          <th>CPC ₽</th>
+          <th onclick="sortT('tCamp',10)">CPO ₽</th>
+          <th>ДРР%</th>
+          <th>Дн. бюджет</th>
+        </tr></thead>
+        <tbody id="bCamp"><tr><td colspan="13"><div class="loading"><div class="sp"></div>Загрузите данные</div></td></tr></tbody>
+      </table></div>
     </div>
   </div>
+</div>
 
-  <div class="section">
-    <div class="section-head">
-      <span class="section-title">Анализ фраз</span>
-      <div class="filter-bar" style="flex:1;justify-content:flex-end">
-        <input class="search-input" placeholder="Поиск по фразе / артикулу…" oninput="filterPhrases(this.value)">
-        <select onchange="filterByStatus(this.value)">
+<!-- ══ ФРАЗЫ ══════════════════════════════════════════════════════════════════ -->
+<div id="tab-keywords" class="tc">
+  <div class="notice">
+    <b>Принцип 7:</b> WB API показывает только фразы с ≥100 показами. Остальные крутятся на общей ставке и невидимы — это «налог WB». Чтобы их увидеть — поднимите ставку кампании.
+  </div>
+  <div class="sec">
+    <div class="sec-head">
+      <span class="sec-title">Фразы / поисковые кластеры</span>
+      <span id="kwCount" style="font-size:12px;color:var(--muted)"></span>
+      <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap">
+        <input id="kwSearch" placeholder="Поиск…" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--sans);font-size:12px;padding:5px 10px;border-radius:6px;outline:none;width:170px" oninput="filterKw()">
+        <select id="kwFilter" onchange="filterKw()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:12px;padding:5px 8px;border-radius:6px;outline:none">
           <option value="">Все фразы</option>
-          <option value="critical">🔴 Критические</option>
-          <option value="warning">🟡 Предупреждения</option>
-          <option value="ok">✅ Всё ок</option>
+          <option value="crit">🔴 Отключить</option>
+          <option value="warn">🟡 Наблюдение</option>
+          <option value="ok">✅ Ок</option>
         </select>
       </div>
     </div>
-    <div class="section-body" style="padding:0">
-      <div class="tbl-wrap">
-        <table id="phrasesTable">
-          <thead>
-            <tr>
-              <th onclick="sortTable('phrasesTable',0)">Фраза</th>
-              <th onclick="sortTable('phrasesTable',1)">Артикул</th>
-              <th>Тип</th>
-              <th onclick="sortTable('phrasesTable',3)">Поз.</th>
-              <th onclick="sortTable('phrasesTable',4)">CTR%</th>
-              <th onclick="sortTable('phrasesTable',5)">Показы</th>
-              <th onclick="sortTable('phrasesTable',6)">Клики</th>
-              <th>Корзины</th>
-              <th onclick="sortTable('phrasesTable',8)">Заказы</th>
-              <th onclick="sortTable('phrasesTable',9)">Расход ₽</th>
-              <th onclick="sortTable('phrasesTable',10)">CPO ₽</th>
-              <th onclick="sortTable('phrasesTable',11)">ДРР%</th>
-              <th>Лимит</th>
-              <th>Вердикт</th>
-              <th>Принцип</th>
-            </tr>
-          </thead>
-          <tbody id="phrasesBody">
-            <tr><td colspan="15">
-              <div class="empty">
-                <div class="icon">🔍</div>
-                <div class="title">Нет данных по фразам</div>
-                <div class="desc">Вставьте JSON или добавьте фразы вручную</div>
-              </div>
-            </td></tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="sec-body" style="padding:0">
+      <div class="tw"><table id="tKw">
+        <thead><tr>
+          <th onclick="sortT('tKw',0)">Фраза</th>
+          <th>Арт. / nm</th>
+          <th>Пачек</th>
+          <th onclick="sortT('tKw',3)">Поз.</th>
+          <th onclick="sortT('tKw',4)">CTR%</th>
+          <th onclick="sortT('tKw',5)">Показы</th>
+          <th onclick="sortT('tKw',6)">Клики</th>
+          <th onclick="sortT('tKw',7)">Корзины</th>
+          <th onclick="sortT('tKw',8)">Заказы</th>
+          <th onclick="sortT('tKw',9)">Расход ₽</th>
+          <th onclick="sortT('tKw',10)">CPO ₽</th>
+          <th>ДРР лимит</th>
+          <th>Вердикт</th>
+          <th>Принцип</th>
+        </tr></thead>
+        <tbody id="bKw"><tr><td colspan="14"><div class="loading"><div class="sp"></div>Загрузите данные</div></td></tr></tbody>
+      </table></div>
     </div>
   </div>
-
-  <!-- Modal for JSON paste -->
-  <div id="jsonModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center">
-    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:24px;width:600px;max-height:80vh;display:flex;flex-direction:column;gap:12px">
-      <div style="font-size:14px;font-weight:600">Вставить JSON с данными по фразам</div>
-      <div style="font-size:12px;color:var(--muted)">Ожидаемый формат: <code>[{"phrase":"лаванда семена","article":"lavanda-3","position":2,"ctr":12.5,"views":1000,"clicks":125,"carts":30,"orders":8,"spend":840,"campaignId":12345}]</code></div>
-      <textarea id="jsonInput" style="background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:11px;border-radius:8px;padding:12px;resize:vertical;min-height:200px;outline:none" placeholder="Вставьте JSON здесь..."></textarea>
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button class="btn" onclick="closeJsonModal()">Отмена</button>
-        <button class="btn primary" onclick="loadFromJson()">✓ Загрузить</button>
-      </div>
-    </div>
-  </div>
-
 </div>
 
-<!-- ══════════════════ TAB: КАМПАНИИ ══════════════════ -->
-<div id="tab-campaigns" class="tab-content">
-
-  <div class="section">
-    <div class="section-head">
-      <span class="section-title">Кампании</span>
-      <button class="btn" onclick="showCampaignJsonModal()">📋 Загрузить JSON</button>
-      <button class="btn primary" onclick="addManualCampaign()">+ Добавить</button>
-    </div>
-    <div class="section-body" style="padding:0">
-      <div class="tbl-wrap">
-        <table id="campaignsTable">
-          <thead>
-            <tr>
-              <th>Название / ID</th>
-              <th>Тип</th>
-              <th>Статус</th>
-              <th onclick="sortTable('campaignsTable',3)">Расход ₽</th>
-              <th>CTR%</th>
-              <th>Клики</th>
-              <th>Заказы</th>
-              <th onclick="sortTable('campaignsTable',7)">ДРР%</th>
-              <th>Фраз</th>
-              <th>Проблем</th>
-              <th>Ставка ₽</th>
-            </tr>
-          </thead>
-          <tbody id="campaignsBody">
-            <tr><td colspan="11">
-              <div class="empty">
-                <div class="icon">📁</div>
-                <div class="title">Нет данных по кампаниям</div>
-                <div class="desc">Загрузите JSON или введите вручную</div>
-              </div>
-            </td></tr>
-          </tbody>
-        </table>
-      </div>
+<!-- ══ АРТИКУЛЫ / ДРР ═════════════════════════════════════════════════════════ -->
+<div id="tab-articles" class="tc">
+  <div class="notice">
+    <b>ДРР по товару</b> = расход рекламы ÷ все заказы товара (рекл + органика) × 100%.<br>
+    Единички лимит ≤12% (макс CPM 1200–1300₽). Комплекты ≤20% (макс CPM до 2000₽).
+    Органика оценивается из Supabase wb_rnp пропорционально доле расхода.
+  </div>
+  <div class="sec">
+    <div class="sec-head"><span class="sec-title">ДРР по артикулам</span></div>
+    <div class="sec-body" style="padding:0">
+      <div class="tw"><table id="tArt">
+        <thead><tr>
+          <th onclick="sortT('tArt',0)">Артикул / nm</th>
+          <th>Тип</th><th>Лимит</th>
+          <th onclick="sortT('tArt',3)">Расход рекл ₽</th>
+          <th onclick="sortT('tArt',4)">Заказы ~всего ₽</th>
+          <th onclick="sortT('tArt',5)">ДРР%</th>
+          <th>Макс CPM ₽</th><th>Статус</th>
+          <th>Показы</th>
+          <th onclick="sortT('tArt',9)">Заказы рекл шт</th>
+        </tr></thead>
+        <tbody id="bArt"><tr><td colspan="10"><div class="loading"><div class="sp"></div>Загрузите данные</div></td></tr></tbody>
+      </table></div>
     </div>
   </div>
-
-  <!-- Per-article DRR section -->
-  <div class="section">
-    <div class="section-head">
-      <span class="section-title">ДРР по артикулам <span style="font-size:11px;color:var(--muted)">(расход_реклама / все_заказы × 100%, вкл. органику)</span></span>
-      <button class="btn" onclick="showArticleJsonModal()">📋 Загрузить JSON</button>
-      <button class="btn primary" onclick="addManualArticle()">+ Добавить</button>
-    </div>
-    <div class="section-body" style="padding:0">
-      <div class="tbl-wrap">
-        <table id="articlesTable">
-          <thead>
-            <tr>
-              <th>Артикул</th>
-              <th>Тип</th>
-              <th>Лимит ДРР</th>
-              <th>Расход рекл. ₽</th>
-              <th>Заказы орг. ₽</th>
-              <th>Заказы рекл. ₽</th>
-              <th>Все заказы ₽</th>
-              <th>ДРР%</th>
-              <th>Макс. ставка</th>
-              <th>Статус</th>
-            </tr>
-          </thead>
-          <tbody id="articlesBody">
-            <tr><td colspan="10">
-              <div class="empty">
-                <div class="icon">📦</div>
-                <div class="title">Нет данных по артикулам</div>
-                <div class="desc">Загрузите JSON с данными WB API</div>
-              </div>
-            </td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
 </div>
 
-<!-- ══════════════════ TAB: РЕШЕНИЯ ══════════════════ -->
-<div id="tab-decisions" class="tab-content">
-
+<!-- ══ РЕШЕНИЯ ════════════════════════════════════════════════════════════════ -->
+<div id="tab-decisions" class="tc">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-    <div style="font-size:13px;color:var(--muted)">Рекомендации генерируются автоматически на основе принципов управления рекламой WB</div>
-    <button class="btn primary" onclick="buildDecisions()">⚡ Пересчитать</button>
+    <div style="font-size:12px;color:var(--muted)">Автоматически по принципам 1–8 из загруженных данных</div>
+    <button class="btn p" onclick="buildDecisions()">⚡ Пересчитать</button>
   </div>
-
-  <div class="grid-2">
-    <div class="section">
-      <div class="section-head"><span class="section-title">🔴 Срочно — требует действий</span></div>
-      <div class="section-body"><div id="dec-critical" class="rec-list"><div class="empty"><div class="icon">🎉</div><div class="title">Критических проблем нет</div></div></div></div>
-    </div>
-    <div class="section">
-      <div class="section-head"><span class="section-title">🟡 Наблюдение / оптимизация</span></div>
-      <div class="section-body"><div id="dec-warning" class="rec-list"><div class="empty"><div class="icon">👀</div><div class="title">Всё в норме</div></div></div></div>
-    </div>
+  <div class="g2">
+    <div class="sec"><div class="sec-head"><span class="sec-title">🔴 Срочно — требует действий</span></div><div class="sec-body"><div id="decCrit" class="recs"></div></div></div>
+    <div class="sec"><div class="sec-head"><span class="sec-title">🟡 Наблюдение / оптимизация</span></div><div class="sec-body"><div id="decWarn" class="recs"></div></div></div>
   </div>
-
-  <div class="section">
-    <div class="section-head"><span class="section-title">📋 Справочник принципов</span></div>
-    <div class="section-body">
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px" id="principlesGrid"></div>
-    </div>
+  <div class="sec">
+    <div class="sec-head"><span class="sec-title">📋 Принципы управления рекламой WB</span></div>
+    <div class="sec-body"><div id="principles" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:8px"></div></div>
   </div>
-
 </div>
 
-<!-- ══════════════════ TAB: AI ══════════════════ -->
-<div id="tab-ai" class="tab-content">
-
-  <div class="section">
-    <div class="section-head">
-      <span class="section-title">✨ AI-анализ рекламы</span>
-      <button class="btn primary" id="aiAdsBtn" onclick="runAdsAI()">Запустить анализ</button>
+<!-- ══ AI ═════════════════════════════════════════════════════════════════════ -->
+<div id="tab-ai" class="tc">
+  <div class="sec">
+    <div class="sec-head">
+      <span class="sec-title">✨ AI-анализ рекламы (GPT-4o)</span>
+      <button class="btn p" id="aiBtn" onclick="runAI()">Запустить</button>
     </div>
-    <div class="section-body">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
-        Передаёт в GPT-4o: данные из обзора, фразы, кампании, артикулы — и получает рекомендации по принципам 1–8.
-      </div>
-      <div id="aiAdsResult" class="ai-result">
-        Нажмите «Запустить анализ» для получения рекомендаций.
-      </div>
+    <div class="sec-body">
+      <div id="aiResult" class="ai-res">Нажмите «Запустить» — AI получит все загруженные данные и выдаст рекомендации по принципам 1–8.</div>
     </div>
   </div>
+</div>
 
+<!-- ══ НАСТРОЙКА ══════════════════════════════════════════════════════════════ -->
+<div id="tab-setup" class="tc">
+  <div class="sec">
+    <div class="sec-head"><span class="sec-title">⚙️ Настройка прокси n8n → WB API</span></div>
+    <div class="sec-body">
+
+      <div class="setup-step">
+        <div class="step-n">1</div>
+        <div class="step-body">
+          <div class="step-title">Импортировать workflow в n8n</div>
+          <div class="step-desc">
+            Скачайте <b>wb-ads-proxy-workflow.json</b> и импортируйте:<br>
+            <b>n8n → Workflows → ⋮ → Import from file</b><br>
+            Воркфлоу создаёт: <code>POST https://wbtrenz.app.n8n.cloud/webhook/wb-ads-proxy</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-n">2</div>
+        <div class="step-body">
+          <div class="step-title">Добавить токены WB в узел «WB API Router»</div>
+          <div class="step-desc">
+            Откройте узел <b>WB API Router</b> (Code node) в воркфлоу и заполните 4 строки:<br><br>
+            <code>TOKENS.oding</code> = токен Одинг, категория <b>Продвижение</b> (read)<br>
+            <code>TOKENS.stolnikov</code> = токен Стольников, категория <b>Продвижение</b> (read)<br>
+            <code>STATS_TOKENS.oding</code> = токен Одинг, категория <b>Статистика</b> (read)<br>
+            <code>STATS_TOKENS.stolnikov</code> = токен Стольников, категория <b>Статистика</b> (read)<br><br>
+            Если у вас один токен с двумя категориями — подставьте его в обе переменные.
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-n">3</div>
+        <div class="step-body">
+          <div class="step-title">Активировать воркфлоу</div>
+          <div class="step-desc">
+            Toggle <b>Active</b> в правом верхнем углу воркфлоу.<br>
+            Затем нажмите «🔌 Тест соединения» ниже.
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn p" onclick="testConn()">🔌 Тест соединения</button>
+        <span id="connSt" style="font-size:13px;color:var(--muted)"></span>
+      </div>
+      <div id="connLog" style="display:none;margin-top:12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:11px;color:var(--muted);white-space:pre-wrap"></div>
+
+    </div>
+  </div>
 </div>
 
 </main>
 
 <script>
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
 // CONFIG
-// ══════════════════════════════════════════════
-const SUPABASE_URL = 'https://rkxezsfrmjvriokhzaxk.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGV6c2ZybWp2cmlva2h6YXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTM5MTIsImV4cCI6MjA4ODEyOTkxMn0.IOMsGZh7ZGn1LTs2UCxdBWoIWH1LGiprkgR6pwpfabw';
-const WEBHOOK = 'https://wbtrenz.app.n8n.cloud/webhook/wb-ai-v7';
-const SB_HEADERS = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+// ══════════════════════════════════════════════════════════════════════════════
+const PROXY   = 'https://wbtrenz.app.n8n.cloud/webhook/wb-ads-proxy';
+const AI_HOOK = 'https://wbtrenz.app.n8n.cloud/webhook/wb-ai-v7';
+const SB_URL  = 'https://rkxezsfrmjvriokhzaxk.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGV6c2ZybWp2cmlva2h6YXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTM5MTIsImV4cCI6MjA4ODEyOTkxMn0.IOMsGZh7ZGn1LTs2UCxdBWoIWH1LGiprkgR6pwpfabw';
 
 // ── State ──
-let state = {
-  shop: 'oding',
-  days: 7,
-  rnpData: [],
-  plan: null,
-  phrases: JSON.parse(localStorage.getItem('wb_phrases') || '[]'),
-  campaigns: JSON.parse(localStorage.getItem('wb_campaigns') || '[]'),
-  articles: JSON.parse(localStorage.getItem('wb_articles') || '[]'),
-};
+const S = { shop:'oding', days:7, camps:[], fstats:[], kw:[], upd:[], rnp:[], plan:null };
+const CH = {};
+let kwAll = [];
 
-let chartDrr = null, chartOrders = null;
-
-// ══════════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════════
-function showTab(name) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  const idx = ['overview','phrases','campaigns','decisions','ai'].indexOf(name);
-  document.querySelectorAll('.tab')[idx].classList.add('active');
-  if (name === 'decisions') buildDecisions();
+// ══════════════════════════════════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════════════════════════════════
+function showTab(n) {
+  document.querySelectorAll('.tc').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+  const tabs = ['overview','campaigns','keywords','articles','decisions','ai','setup'];
+  document.getElementById('tab-'+n).classList.add('active');
+  document.querySelectorAll('.tab')[tabs.indexOf(n)].classList.add('active');
+  if (n==='decisions') buildDecisions();
 }
-
 function setShop(s) {
-  state.shop = s;
-  document.querySelectorAll('.shop-btn').forEach(b => b.classList.toggle('active', b.dataset.shop === s));
-  loadAll();
+  S.shop = s;
+  document.querySelectorAll('.shop-btns .hbtn').forEach(b=>b.classList.toggle('active',b.dataset.shop===s));
 }
-
 function setDays(d) {
-  state.days = d;
-  document.querySelectorAll('.date-btn').forEach(b => b.classList.toggle('active', +b.dataset.days === d));
-  loadAll();
+  S.days = d;
+  document.querySelectorAll('.date-btns .hbtn').forEach(b=>b.classList.toggle('active',+b.dataset.days===d));
 }
 
-// ══════════════════════════════════════════════
-// SUPABASE HELPERS
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+// DATES
+// ══════════════════════════════════════════════════════════════════════════════
+const today = () => new Date().toISOString().slice(0,10);
+function ago(n) { const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PROXY
+// ══════════════════════════════════════════════════════════════════════════════
+async function wb(action, params={}) {
+  const r = await fetch(PROXY, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ action, shop:S.shop, params })
+  });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error||'proxy error');
+  return j.data;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SUPABASE
+// ══════════════════════════════════════════════════════════════════════════════
 async function sbGet(path) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: SB_HEADERS });
+  const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    headers:{apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}`}
+  });
   return r.json();
 }
 
-function dateFrom(daysBack) {
-  const d = new Date();
-  d.setDate(d.getDate() - daysBack);
-  return d.toISOString().slice(0, 10);
-}
-
-function today() { return new Date().toISOString().slice(0, 10); }
-
-// ══════════════════════════════════════════════
-// ARTICLE TYPE DETECTION (Принцип 4)
-// ══════════════════════════════════════════════
-function getArticleType(art) {
-  if (!art) return { count: 1, label: '1 пач.', drrLimit: 12, maxCPM: 1300 };
-  const s = String(art).toLowerCase();
-  // Кураж: число ПЕРЕД названием
-  const kurazh = s.match(/^(\d+)kurazh/i);
-  if (kurazh) {
-    const n = parseInt(kurazh[1]);
-    return makeType(n);
-  }
-  // Обычный: число в конце
-  const suffix = s.match(/(\d+)$/);
-  if (suffix) {
-    const n = parseInt(suffix[1]);
-    if (n > 1) return makeType(n);
-  }
-  return { count: 1, label: '1 пач.', drrLimit: 12, maxCPM: 1300 };
-}
-
-function makeType(n) {
-  let maxCPM = 1300;
-  if (n >= 2 && n <= 3) maxCPM = 1700;
-  else if (n >= 5) maxCPM = 2000;
-  return { count: n, label: `${n} пач.`, drrLimit: n > 1 ? 20 : 12, maxCPM };
-}
-
-// ══════════════════════════════════════════════
-// LOAD ALL DATA
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+// LOAD ALL
+// ══════════════════════════════════════════════════════════════════════════════
 async function loadAll() {
-  await Promise.all([loadRnP(), loadPlan()]);
-}
-
-async function loadRnP() {
-  const from = dateFrom(state.days + 1);
-  let url = `wb_rnp?date=gte.${from}&date=lt.${today()}&order=date.asc`;
-  if (state.shop !== 'all') url += `&shop=eq.${state.shop}`;
-  const data = await sbGet(url);
-
-  // If "all", merge both shops per date
-  const byDate = {};
-  for (const row of data) {
-    if (!byDate[row.date]) byDate[row.date] = { date: row.date, orders_sum: 0, orders_count: 0, sales_sum: 0, sales_count: 0, ads_spend: 0 };
-    byDate[row.date].orders_sum += +row.orders_sum || 0;
-    byDate[row.date].orders_count += +row.orders_count || 0;
-    byDate[row.date].sales_sum += +row.sales_sum || 0;
-    byDate[row.date].sales_count += +row.sales_count || 0;
-    byDate[row.date].ads_spend += +row.ads_spend || 0;
-  }
-  state.rnpData = Object.values(byDate).sort((a, b) => a.date > b.date ? 1 : -1);
-  renderOverview();
-}
-
-async function loadPlan() {
-  const month = new Date().toISOString().slice(0, 7);
-  const data = await sbGet(`wb_plan?month=eq.${month}`);
-  state.plan = data[0] || { orders_plan: 0, sales_plan: 0, drr_plan: 10 };
-  document.getElementById('kpi-target').textContent = `${state.plan.drr_plan}%`;
-}
-
-// ══════════════════════════════════════════════
-// RENDER OVERVIEW
-// ══════════════════════════════════════════════
-function renderOverview() {
-  const rows = state.rnpData;
-  if (!rows.length) return;
-
-  const totSpend = rows.reduce((s, r) => s + r.ads_spend, 0);
-  const totOrders = rows.reduce((s, r) => s + r.orders_sum, 0);
-  const totOrdersCnt = rows.reduce((s, r) => s + r.orders_count, 0);
-  const totSales = rows.reduce((s, r) => s + r.sales_sum, 0);
-  const drr = totOrders > 0 ? totSpend / totOrders * 100 : 0;
-  const drrTarget = state.plan?.drr_plan || 10;
-  const drrStatus = drr <= drrTarget ? 'green' : drr <= drrTarget + 5 ? 'yellow' : 'red';
-
-  // Cards
-  setCard('kpi-drr', `${drr.toFixed(1)}%`, `цель ${drrTarget}%`, drrStatus);
-  setCard('kpi-spend', fmtM(totSpend), `${rows.length} дней`, '');
-  setCard('kpi-orders', fmtM(totOrders), `${totOrdersCnt} шт`, '');
-  setCard('kpi-sales', fmtM(totSales), '', '');
-  setCard('kpi-cnt', totOrdersCnt, `≈${Math.round(totOrdersCnt / rows.length)}/день`, '');
-
-  // Daily table
-  renderDailyTable(rows, drrTarget);
-  // Charts
-  renderCharts(rows, drrTarget);
-}
-
-function setCard(id, value, sub, status) {
-  const card = document.getElementById(id)?.closest('.card');
-  if (card) {
-    card.className = 'card' + (status ? ' ' + status : '');
-  }
-  const el = document.getElementById(id);
-  if (el) el.textContent = value;
-  const subEl = document.getElementById(id + '-sub');
-  if (subEl && sub !== undefined) subEl.textContent = sub;
-}
-
-function renderDailyTable(rows, target) {
-  const tbody = document.getElementById('dailyBody');
-  tbody.innerHTML = rows.slice().reverse().map(r => {
-    const drr = r.orders_sum > 0 ? r.ads_spend / r.orders_sum * 100 : 0;
-    const st = drr === 0 ? 'gray' : drr <= target ? 'green' : drr <= target + 5 ? 'yellow' : 'red';
-    const labels = { green: '✅ Норма', yellow: '🟡 Желтая зона', red: '🔴 Превышение', gray: '—' };
-    const pct = Math.min(drr / (target * 2) * 100, 100);
-    return `<tr>
-      <td>${r.date}</td>
-      <td>${fmtK(r.orders_sum)}</td>
-      <td>${r.orders_count}</td>
-      <td>${fmtK(r.sales_sum)}</td>
-      <td>${fmtK(r.ads_spend)}</td>
-      <td>
-        <div class="drr-bar">
-          <div class="drr-track"><div class="drr-fill ${st}" style="width:${pct}%"></div></div>
-          <span class="drr-num" style="color:var(--${st === 'gray' ? 'muted' : st})">${drr.toFixed(1)}%</span>
-        </div>
-      </td>
-      <td><span class="badge badge-${st === 'gray' ? 'gray' : st}">${labels[st]}</span></td>
-    </tr>`;
-  }).join('');
-}
-
-function renderCharts(rows, target) {
-  const labels = rows.map(r => r.date.slice(5));
-  const drrData = rows.map(r => r.orders_sum > 0 ? +(r.ads_spend / r.orders_sum * 100).toFixed(1) : 0);
-  const targetLine = rows.map(() => target);
-  const ordersData = rows.map(r => Math.round(r.orders_sum));
-  const spendData = rows.map(r => Math.round(r.ads_spend));
-
-  const cfg = {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { labels: { color: '#6b7a9e', font: { size: 11 } } } },
-    scales: {
-      x: { ticks: { color: '#6b7a9e', font: { size: 10 } }, grid: { color: '#252d48' } },
-      y: { ticks: { color: '#6b7a9e', font: { size: 10 } }, grid: { color: '#252d48' } }
-    }
-  };
-
-  if (chartDrr) chartDrr.destroy();
-  chartDrr = new Chart(document.getElementById('chartDrr'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'ДРР%', data: drrData, borderColor: '#1aff88', tension: .4, fill: false, pointRadius: 3 },
-        { label: 'Цель', data: targetLine, borderColor: '#ff5566', borderDash: [4, 4], tension: 0, pointRadius: 0 }
-      ]
-    },
-    options: { ...cfg }
-  });
-
-  if (chartOrders) chartOrders.destroy();
-  chartOrders = new Chart(document.getElementById('chartOrders'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Заказы ₽', data: ordersData, backgroundColor: 'rgba(26,255,136,.2)', borderColor: '#1aff88', borderWidth: 1 },
-        { label: 'Реклама ₽', data: spendData, backgroundColor: 'rgba(255,85,102,.2)', borderColor: '#ff5566', borderWidth: 1 }
-      ]
-    },
-    options: { ...cfg }
-  });
-}
-
-// ══════════════════════════════════════════════
-// PHRASES
-// ══════════════════════════════════════════════
-function showJsonModal() {
-  const m = document.getElementById('jsonModal');
-  m.style.display = 'flex';
-}
-function closeJsonModal() {
-  document.getElementById('jsonModal').style.display = 'none';
-}
-
-function loadFromJson() {
+  const btn = document.getElementById('loadBtn');
+  btn.innerHTML='<div class="sp"></div> Загрузка…'; btn.disabled=true;
   try {
-    const raw = document.getElementById('jsonInput').value.trim();
-    const data = JSON.parse(raw);
-    if (!Array.isArray(data)) throw new Error('Ожидается массив');
-    state.phrases = data;
-    localStorage.setItem('wb_phrases', JSON.stringify(data));
-    closeJsonModal();
-    renderPhrases();
-  } catch (e) {
-    alert('Ошибка разбора JSON: ' + e.message);
-  }
+    await Promise.all([loadWB(), loadSB()]);
+    renderAll();
+  } catch(e) {
+    alert('Ошибка: '+e.message+'\n\nНастройте прокси (вкладка ⚙️)');
+    console.error(e);
+  } finally { btn.innerHTML='⟳ Загрузить'; btn.disabled=false; }
 }
 
-function clearPhrases() {
-  if (!confirm('Удалить все фразы?')) return;
-  state.phrases = [];
-  localStorage.removeItem('wb_phrases');
-  renderPhrases();
-}
+async function loadWB() {
+  const from=ago(S.days), to=today();
 
-function addManualPhrase() {
-  const p = {
-    phrase: 'новая фраза',
-    article: '',
-    position: 0,
-    ctr: 0,
-    views: 0,
-    clicks: 0,
-    carts: 0,
-    orders: 0,
-    spend: 0,
-    campaignId: ''
-  };
-  state.phrases.push(p);
-  localStorage.setItem('wb_phrases', JSON.stringify(state.phrases));
-  renderPhrases();
-}
+  // 1. Кампании (все)
+  S.camps = await wb('campaigns',{status:-1});
+  if (!Array.isArray(S.camps)) S.camps=[];
 
-let phraseFilterText = '';
-let phraseFilterStatus = '';
+  // 2. Активные IDs для stats
+  const ids = S.camps.filter(c=>[9,11,4,7].includes(c.status)).map(c=>c.advertId);
 
-function filterPhrases(text) {
-  phraseFilterText = text.toLowerCase();
-  renderPhrases();
-}
+  // 3. Дневной расход
+  S.upd = await wb('upd',{from,to});
+  if (!Array.isArray(S.upd)) S.upd=[];
 
-function filterByStatus(status) {
-  phraseFilterStatus = status;
-  renderPhrases();
-}
+  // 4. Fullstats v3 (по 100 кампаний)
+  if (ids.length) {
+    const results = await Promise.all(chunk(ids,100).map(ch => wb('fullstats',{ids:ch,beginDate:from,endDate:to})));
+    S.fstats = results.flat().filter(Boolean);
+  } else { S.fstats=[]; }
 
-function renderPhrases() {
-  const tbody = document.getElementById('phrasesBody');
-  let phrases = state.phrases;
-  if (!phrases.length) {
-    tbody.innerHTML = `<tr><td colspan="15"><div class="empty"><div class="icon">🔍</div><div class="title">Нет данных по фразам</div><div class="desc">Вставьте JSON или добавьте фразы вручную</div></div></td></tr>`;
-    return;
+  // 5. Фразы/кластеры
+  if (ids.length) {
+    try {
+      const kd = await wb('keywords',{ids,from,to});
+      S.kw = Array.isArray(kd) ? kd : (kd?.clusters||[]);
+    } catch(e) { console.warn('kw:',e.message); S.kw=[]; }
   }
 
-  // Apply filters
-  if (phraseFilterText) phrases = phrases.filter(p => (p.phrase + p.article).toLowerCase().includes(phraseFilterText));
-  if (phraseFilterStatus) phrases = phrases.filter(p => analyzePhrase(p).status === phraseFilterStatus);
-
-  tbody.innerHTML = phrases.map((p, i) => {
-    const analysis = analyzePhrase(p);
-    const at = getArticleType(p.article);
-    const cpo = p.orders > 0 ? Math.round(p.spend / p.orders) : null;
-    const orgRow = state.articles.find(a => a.article === p.article);
-    const totalOrders = orgRow ? (orgRow.orders_sum || p.spend / 0.15) : null;
-    const drr = totalOrders ? (p.spend / totalOrders * 100) : null;
-    const drrStr = drr !== null ? `${drr.toFixed(1)}%` : '—';
-    const drrColor = drr !== null ? (drr <= at.drrLimit ? 'green' : drr <= at.drrLimit + 5 ? 'yellow' : 'red') : 'muted';
-
-    const posEl = p.position > 0
-      ? `<span class="pos ${p.position <= 3 ? 'top3' : p.position <= 6 ? 'top6' : 'low'}">${p.position}</span>`
-      : `<span class="pos off">—</span>`;
-
-    return `<tr class="row-${analysis.status}">
-      <td class="name-col">${p.phrase}</td>
-      <td>${p.article || '—'}</td>
-      <td><span class="badge badge-${at.count > 1 ? 'blue' : 'gray'}">${at.label}</span></td>
-      <td>${posEl}</td>
-      <td>${p.ctr ? p.ctr.toFixed(1) : '—'}</td>
-      <td>${fmtK(p.views)}</td>
-      <td>${fmtK(p.clicks)}</td>
-      <td>${p.carts || '—'}</td>
-      <td>${p.orders}</td>
-      <td>${fmtK(p.spend)}</td>
-      <td>${cpo !== null ? fmtK(cpo) : '—'}</td>
-      <td style="color:var(--${drrColor})">${drrStr}</td>
-      <td style="color:var(--muted)">${at.drrLimit}%</td>
-      <td><span class="badge badge-${analysis.status === 'ok' ? 'green' : analysis.status === 'warning' ? 'yellow' : 'red'}">${analysis.verdict}</span></td>
-      <td style="color:var(--muted);font-size:11px">${analysis.principles.join(', ')}</td>
-    </tr>`;
-  }).join('');
-}
-
-// ══════════════════════════════════════════════
-// PHRASE ANALYSIS — PRINCIPLES 1-8
-// ══════════════════════════════════════════════
-function analyzePhrase(p) {
-  const reasons = [];
-  const principles = [];
-  let status = 'ok';
-
-  // П3: Ставки не хватает на топ-6
-  if (p.position > 6 && p.spend > 0) {
-    reasons.push('Позиция > 6, не хватает ставки на топ');
-    principles.push('П3');
-    status = 'warning';
-  }
-
-  // П3: Позиция отсутствует = отключена или не показывается
-  if (!p.position && p.ctr > 0 && p.views > 100) {
-    reasons.push('Фраза активна, но позиция не определена');
-    principles.push('П3');
-    status = 'warning';
-  }
-
-  // П2: Низкий CTR при хорошей позиции (< 5% при позиции ≤ 6)
-  if (p.position > 0 && p.position <= 6 && p.ctr < 5 && p.views > 500) {
-    reasons.push(`CTR ${p.ctr}% при позиции ${p.position} — карточка не цепляет`);
-    principles.push('П1', 'П2');
-    if (status === 'ok') status = 'warning';
-  }
-
-  // П6: Хорошая позиция, расход ≥ 300, но нет заказов и корзин мало
-  if (p.position > 0 && p.position <= 6 && p.spend >= 300 && p.orders === 0) {
-    const cartRate = p.views > 0 ? p.carts / p.views * 100 : 0;
-    if (p.carts < 3) {
-      reasons.push(`Позиция ${p.position}, расход ${fmtK(p.spend)}₽, 0 заказов, мало корзин — не соответствует запросу`);
-      principles.push('П6');
-      status = 'critical';
-    } else {
-      reasons.push(`0 заказов, но есть ${p.carts} корзин — подождать конверсию`);
-      principles.push('П6');
-      if (status === 'ok') status = 'warning';
-    }
-  }
-
-  // П4: ДРР по артикулу превышает лимит
-  const at = getArticleType(p.article);
-  const orgRow = state.articles.find(a => a.article === p.article);
-  if (orgRow && orgRow.orders_sum > 0) {
-    const drr = p.spend / orgRow.orders_sum * 100;
-    if (drr > at.drrLimit + 5) {
-      reasons.push(`ДРР ${drr.toFixed(1)}% >> лимит ${at.drrLimit}%`);
-      principles.push('П4', 'П5');
-      status = 'critical';
-    } else if (drr > at.drrLimit) {
-      reasons.push(`ДРР ${drr.toFixed(1)}% > лимит ${at.drrLimit}%`);
-      principles.push('П4');
-      if (status !== 'critical') status = 'warning';
-    }
-  }
-
-  // Хорошая фраза
-  if (reasons.length === 0) {
-    if (p.orders > 0) reasons.push('Работает, есть заказы');
-    else if (p.carts > 0) reasons.push('Есть корзины, ждать заказов');
-    else if (p.spend === 0) reasons.push('Нет активности');
-  }
-
-  let verdict = status === 'critical' ? '🔴 Отключить' : status === 'warning' ? '🟡 Наблюдение' : '✅ Ок';
-  if (status === 'ok' && p.orders > 0) verdict = '✅ Работает';
-  if (reasons.some(r => r.includes('ждать'))) verdict = '⏳ Ждать';
-
-  return { status, verdict, reasons, principles: [...new Set(principles)] };
-}
-
-// ══════════════════════════════════════════════
-// CAMPAIGNS
-// ══════════════════════════════════════════════
-function showCampaignJsonModal() {
-  const input = prompt('Вставьте JSON массив кампаний:\n[{"id":123,"name":"Лаванда","type":"manual_cpm","status":"active","spend":5000,"ctr":8.5,"clicks":200,"orders":15,"drr":18.5,"phrasesCount":12,"bid":1200}]');
-  if (!input) return;
+  // 6. Баланс
   try {
-    const data = JSON.parse(input);
-    if (!Array.isArray(data)) throw new Error('Массив');
-    state.campaigns = data;
-    localStorage.setItem('wb_campaigns', JSON.stringify(data));
-    renderCampaigns();
-  } catch(e) { alert('Ошибка: ' + e.message); }
+    const bal = await wb('balance');
+    if (bal?.balance !== undefined) {
+      const chip=document.getElementById('balChip');
+      chip.textContent='баланс: '+fmt(bal.balance)+' ₽';
+      chip.style.display='inline';
+    }
+  } catch(e) { console.warn('bal:',e.message); }
 }
 
-function addManualCampaign() {
-  const name = prompt('Название кампании:');
-  if (!name) return;
-  const spend = +prompt('Расход ₽:', '0');
-  const bid = +prompt('Ставка CPM ₽:', '310');
-  state.campaigns.push({ id: Date.now(), name, type: 'manual_cpm', status: 'active', spend, ctr: 0, clicks: 0, orders: 0, drr: 0, phrasesCount: 0, bid });
-  localStorage.setItem('wb_campaigns', JSON.stringify(state.campaigns));
+async function loadSB() {
+  const from=ago(S.days+1);
+  const data = await sbGet(`wb_rnp?date=gte.${from}&date=lt.${today()}&shop=eq.${S.shop}&order=date.asc`);
+  S.rnp = Array.isArray(data)?data:[];
+  const month=new Date().toISOString().slice(0,7);
+  const plan = await sbGet(`wb_plan?month=eq.${month}`);
+  S.plan = plan[0]||{orders_plan:0,sales_plan:0,drr_plan:10};
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════════════════════════════════════════════
+function renderAll() {
+  const artDrr = buildArtDrr();
+  renderOverview(artDrr);
   renderCampaigns();
+  renderKeywords(artDrr);
+  renderArticles(artDrr);
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BUILD ART DRR (per-nm aggregation from fullstats)
+// ══════════════════════════════════════════════════════════════════════════════
+function buildArtDrr() {
+  const byNm={};
+  for (const c of S.fstats) {
+    for (const day of (c.days||[])) {
+      for (const app of (day.apps||[])) {
+        for (const nm of (app.nms||[])) {
+          if (!byNm[nm.nmId]) byNm[nm.nmId]={nmId:nm.nmId,name:nm.name||'',spend:0,views:0,clicks:0,carts:0,ordsCnt:0,sumPrice:0};
+          byNm[nm.nmId].spend    += nm.sum      ||0;
+          byNm[nm.nmId].views    += nm.views    ||0;
+          byNm[nm.nmId].clicks   += nm.clicks   ||0;
+          byNm[nm.nmId].carts    += nm.atbs     ||0;
+          byNm[nm.nmId].ordsCnt  += nm.orders   ||0;
+          byNm[nm.nmId].sumPrice += nm.sum_price||0;
+        }
+      }
+    }
+  }
+  // Органические заказы из wb_rnp — распределяем пропорционально расходу
+  const totAllRnp = S.rnp.reduce((s,r)=>s+(+r.orders_sum||0),0);
+  const totSpendAll = Object.values(byNm).reduce((s,n)=>s+n.spend,0);
+  return Object.values(byNm).map(nm=>{
+    const share = totSpendAll>0 ? nm.spend/totSpendAll : 0;
+    // ~organic revenue assigned proportionally + ad-attributed revenue
+    const ordersAllEst = totAllRnp*share + nm.sumPrice;
+    return {...nm, ordersAllEst};
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// OVERVIEW
+// ══════════════════════════════════════════════════════════════════════════════
+function renderOverview(artDrr) {
+  let spend=0,views=0,clicks=0,carts=0,oAds=0;
+  for (const c of S.fstats) { spend+=c.sum||0; views+=c.views||0; clicks+=c.clicks||0; carts+=c.atbs||0; oAds+=c.orders||0; }
+  const oAll = S.rnp.reduce((s,r)=>s+(+r.orders_sum||0),0);
+  const drr = oAll>0 ? spend/oAll*100 : 0;
+  const ctr = views>0 ? clicks/views*100 : 0;
+  const crCart = clicks>0 ? carts/clicks*100 : 0;
+  const cpo = oAds>0 ? spend/oAds : 0;
+  const target = S.plan?.drr_plan||10;
+  const drrSt = drr===0?'':drr<=target?'green':drr<=target+5?'yellow':'red';
+
+  setK('kpi-camps', S.camps.filter(c=>c.status===9).length, `всего ${S.camps.length}`);
+  setK('kpi-spend', fmtM(spend), `${ago(S.days)} → ${today()}`);
+  setK('kpi-views', fmtM(views));
+  setK('kpi-clicks', fmtM(clicks), `CTR ${ctr.toFixed(1)}%`);
+  setK('kpi-carts', fmtM(carts), `CR ${crCart.toFixed(1)}%`);
+  setK('kpi-oads', fmtM(oAds), `CPO ${fmt(cpo)} ₽`);
+  setK('kpi-oall', fmtM(oAll));
+  setK('kpi-drr', `${drr.toFixed(1)}%`, `цель ${target}%`, drrSt);
+
+  renderDailyTable(target);
+  renderCharts(target);
+}
+function setK(id, val, sub, st) {
+  const c=document.getElementById(id)?.closest('.card');
+  if (c&&st!==undefined) c.className='card'+(st?' '+st:'');
+  const el=document.getElementById(id); if(el) el.textContent=val;
+  const se=document.getElementById(id+'-s'); if(se&&sub!==undefined) se.textContent=sub;
+}
+
+function renderDailyTable(target) {
+  // Build per-day from upd + rnp + fstats.days
+  const D={};
+  for (const r of S.upd) {
+    const d=(r.updDate||r.date||'').slice(0,10); if(!d) continue;
+    if (!D[d]) D[d]={spend:0}; D[d].spend+=r.updSum||r.sum||0;
+  }
+  for (const r of S.rnp) {
+    if (!D[r.date]) D[r.date]={spend:0};
+    D[r.date].oAll=+r.orders_sum||0; D[r.date].oCnt=+r.orders_count||0;
+  }
+  for (const c of S.fstats) {
+    for (const day of (c.days||[])) {
+      const d=(day.date||'').slice(0,10); if(!d) continue;
+      if(!D[d]) D[d]={spend:0};
+      D[d].views =(D[d].views ||0)+(day.views ||0);
+      D[d].clicks=(D[d].clicks||0)+(day.clicks||0);
+      D[d].carts =(D[d].carts ||0)+(day.atbs  ||0);
+      D[d].oAds  =(D[d].oAds  ||0)+(day.orders||0);
+    }
+  }
+  const dates=Object.keys(D).sort().reverse();
+  const tbody=document.getElementById('bDaily');
+  if (!dates.length) { tbody.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="ei">📋</div><div class="et">Нет данных</div></div></td></tr>`; return; }
+  tbody.innerHTML=dates.map(d=>{
+    const r=D[d];
+    const drr=(r.oAll||0)>0?r.spend/(r.oAll)*100:0;
+    const st=drr===0?'x':drr<=target?'ok':drr<=target+5?'warn':'bad';
+    const pct=Math.min(drr/(target*2)*100,100);
+    const ctr=(r.views||0)>0?((r.clicks||0)/(r.views)*100).toFixed(1):'—';
+    const bc={ok:'bg',warn:'by',bad:'br',x:'bx'}[st];
+    const lbl={ok:'✅ Норма',warn:'🟡 Жёлтая',bad:'🔴 Превышение',x:'—'}[st];
+    const dc={ok:'green',warn:'yellow',bad:'red',x:'muted'}[st];
+    return `<tr>
+      <td>${d}</td><td>${fmt(r.spend)}</td><td>${fmtM(r.views||0)}</td>
+      <td>${fmtM(r.clicks||0)}</td><td>${ctr}</td><td>${r.carts||0}</td>
+      <td>${r.oAds||0}</td><td>${fmt(r.oAll||0)}</td>
+      <td><div class="dbar"><div class="dtrack"><div class="dfill ${st}" style="width:${pct}%"></div></div><span class="dnum" style="color:var(--${dc})">${drr.toFixed(1)}%</span></div></td>
+      <td><span class="b ${bc}">${lbl}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCharts(target) {
+  const DM={};
+  for (const c of S.fstats) for (const day of (c.days||[])) {
+    const d=(day.date||'').slice(0,10); if(!d) continue;
+    if(!DM[d]) DM[d]={spend:0,oAds:0};
+    DM[d].spend+=day.sum||0; DM[d].oAds+=day.orders||0;
+  }
+  for (const r of S.rnp) { if(!DM[r.date]) DM[r.date]={spend:0,oAds:0}; DM[r.date].oAll=+r.orders_sum||0; }
+  const dates=Object.keys(DM).sort();
+  const labels=dates.map(d=>d.slice(5));
+  const spends=dates.map(d=>Math.round(DM[d].spend));
+  const oalls =dates.map(d=>Math.round(DM[d].oAll||DM[d].oAds));
+  const drrs  =dates.map(d=>(DM[d].oAll||0)>0?+(DM[d].spend/(DM[d].oAll)*100).toFixed(1):0);
+  const tline =dates.map(()=>target);
+  const C={responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#6b7a9e',font:{size:11}}}},
+    scales:{x:{ticks:{color:'#6b7a9e',font:{size:10}},grid:{color:'#252d48'}},
+            y:{ticks:{color:'#6b7a9e',font:{size:10}},grid:{color:'#252d48'}}}};
+  if(CH.m) CH.m.destroy();
+  CH.m=new Chart(document.getElementById('cMain'),{type:'bar',data:{labels,datasets:[
+    {label:'Расход ₽',data:spends,backgroundColor:'rgba(255,85,102,.3)',borderColor:'#ff5566',borderWidth:1},
+    {label:'Заказы ₽',data:oalls,backgroundColor:'rgba(26,255,136,.2)',borderColor:'#1aff88',borderWidth:1,type:'line',fill:false,tension:.4}
+  ]},options:C});
+  if(CH.d) CH.d.destroy();
+  CH.d=new Chart(document.getElementById('cDrr'),{type:'line',data:{labels,datasets:[
+    {label:'ДРР%',data:drrs,borderColor:'#1aff88',tension:.4,fill:false,pointRadius:3},
+    {label:`Цель ${target}%`,data:tline,borderColor:'#ff5566',borderDash:[4,4],tension:0,pointRadius:0}
+  ]},options:C});
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CAMPAIGNS TABLE
+// ══════════════════════════════════════════════════════════════════════════════
+const CSTATUS={'-1':'Все',4:'Готова',7:'Завершена',8:'Отклонена',9:'Активна',11:'На паузе'};
+const CTYPE={8:'Авто',9:'Поиск/Ручная'};
 
 function renderCampaigns() {
-  const tbody = document.getElementById('campaignsBody');
-  if (!state.campaigns.length) {
-    tbody.innerHTML = `<tr><td colspan="11"><div class="empty"><div class="icon">📁</div><div class="title">Нет данных по кампаниям</div></div></td></tr>`;
-    return;
-  }
-  const target = state.plan?.drr_plan || 10;
-  tbody.innerHTML = state.campaigns.map(c => {
-    const drrSt = c.drr === 0 ? 'gray' : c.drr <= target ? 'green' : c.drr <= target + 5 ? 'yellow' : 'red';
-    const typeLabel = { manual_cpm: 'Руч. CPM', auto_cpm: 'Авто CPM', cpc: 'CPC' }[c.type] || c.type || '—';
-    const statusBadge = c.status === 'active' ? 'badge-green' : c.status === 'paused' ? 'badge-yellow' : 'badge-gray';
-    const problems = state.phrases.filter(p => p.campaignId == c.id && analyzePhrase(p).status !== 'ok').length;
-    return `<tr>
-      <td class="name-col"><div style="font-weight:500">${c.name}</div><div style="font-size:10px;color:var(--muted)">#${c.id}</div></td>
-      <td>${typeLabel}</td>
-      <td><span class="badge ${statusBadge}">${c.status || '—'}</span></td>
-      <td>${fmtK(c.spend)}</td>
-      <td>${c.ctr ? c.ctr.toFixed(1) : '—'}</td>
-      <td>${fmtK(c.clicks)}</td>
-      <td>${c.orders}</td>
-      <td style="color:var(--${drrSt})">${c.drr ? c.drr.toFixed(1) + '%' : '—'}</td>
-      <td>${c.phrasesCount || '—'}</td>
-      <td>${problems > 0 ? `<span class="badge badge-red">${problems}</span>` : '<span class="badge badge-green">0</span>'}</td>
-      <td><input class="editable" value="${c.bid || 310}" onchange="updateBid(${c.id}, this.value)"></td>
+  document.getElementById('campCount').textContent=S.camps.length+' кампаний';
+  const tbody=document.getElementById('bCamp');
+  if (!S.camps.length) { tbody.innerHTML=`<tr><td colspan="13"><div class="empty"><div class="ei">📁</div><div class="et">Нет данных</div></div></td></tr>`; return; }
+  const byId={};
+  for (const c of S.fstats) byId[c.advertId]={spend:c.sum||0,views:c.views||0,clicks:c.clicks||0,carts:c.atbs||0,ords:c.orders||0,cpc:c.cpc||0,ctr:c.ctr||0};
+  const oAll=S.rnp.reduce((s,r)=>s+(+r.orders_sum||0),0);
+  const totSpend=Object.values(byId).reduce((s,v)=>s+v.spend,0);
+  const target=S.plan?.drr_plan||10;
+  tbody.innerHTML=S.camps.map(c=>{
+    const st=byId[c.advertId]||{};
+    const drr=oAll>0&&st.spend>0&&totSpend>0?(st.spend/oAll*100):null;
+    const drrSt=drr===null?'x':drr<=target?'ok':drr<=target+5?'warn':'bad';
+    const cpo=st.ords>0?Math.round(st.spend/st.ords):null;
+    const sSt=c.status===9?'bg':c.status===11?'by':'bx';
+    const dc={ok:'green',warn:'yellow',bad:'red',x:'muted'}[drrSt];
+    return `<tr class="${drrSt==='bad'?'rc':drrSt==='warn'?'rw':''}">
+      <td class="txt"><div style="font-weight:500">${c.name||'—'}</div><div style="font-size:10px;color:var(--muted)">#${c.advertId}</div></td>
+      <td>${CTYPE[c.type]||c.type||'—'}</td>
+      <td><span class="b ${sSt}">${CSTATUS[c.status]||c.status}</span></td>
+      <td>${fmt(st.spend||0)}</td><td>${fmtM(st.views||0)}</td><td>${fmtM(st.clicks||0)}</td>
+      <td>${st.ctr?st.ctr.toFixed(1):'—'}</td><td>${st.carts||0}</td><td>${st.ords||0}</td>
+      <td>${st.cpc?fmt(st.cpc):'—'}</td><td>${cpo!==null?fmt(cpo):'—'}</td>
+      <td style="color:var(--${dc})">${drr!==null?drr.toFixed(1)+'%':'—'}</td>
+      <td><input class="ie" value="${c.dailyBudget||0}"></td>
     </tr>`;
   }).join('');
 }
 
-function updateBid(id, value) {
-  const c = state.campaigns.find(c => c.id === id);
-  if (c) { c.bid = +value; localStorage.setItem('wb_campaigns', JSON.stringify(state.campaigns)); }
+// ══════════════════════════════════════════════════════════════════════════════
+// KEYWORDS TABLE
+// ══════════════════════════════════════════════════════════════════════════════
+function renderKeywords(artDrr) {
+  kwAll=(S.kw||[]).map(k=>{
+    const phrase=k.cluster||k.phrase||k.keyword||'—';
+    const views=k.views||k.count||0,clicks=k.clicks||0,carts=k.atbs||0,orders=k.orders||0,spend=k.sum||0;
+    const ctr=views>0?clicks/views*100:0;
+    const pos=k.avgPosition||k.position||0;
+    const nmId=(k.nms&&k.nms[0])||k.nmId||null;
+    const nmName=resolveNmName(nmId);
+    const at=getAT(nmName||String(nmId||''));
+    const cpo=orders>0?Math.round(spend/orders):null;
+    const artEnt=artDrr.find(a=>a.nmId===nmId)||null;
+    const analysis=analyzeKw({phrase,views,clicks,carts,orders,spend,ctr,pos,nmId,at,artEnt});
+    return {phrase,views,clicks,carts,orders,spend,ctr,pos,nmId,nmName,at,cpo,analysis};
+  });
+  document.getElementById('kwCount').textContent=kwAll.length+' фраз';
+  filterKw();
 }
 
-// Articles DRR table
-function showArticleJsonModal() {
-  const input = prompt('Вставьте JSON массив артикулов:\n[{"article":"lavanda-3","spend":5000,"orders_ads":500,"orders_organic":3000}]');
-  if (!input) return;
-  try {
-    const data = JSON.parse(input);
-    state.articles = data.map(a => ({ ...a, orders_sum: (a.orders_ads || 0) + (a.orders_organic || 0) }));
-    localStorage.setItem('wb_articles', JSON.stringify(state.articles));
-    renderArticles();
-  } catch(e) { alert('Ошибка: ' + e.message); }
+function resolveNmName(nmId) {
+  if (!nmId) return '';
+  for (const c of S.fstats) for (const d of (c.days||[])) for (const a of (d.apps||[])) for (const n of (a.nms||[])) if (n.nmId===nmId) return n.name||'';
+  return '';
 }
 
-function addManualArticle() {
-  const article = prompt('Артикул:');
-  if (!article) return;
-  const spend = +prompt('Расход рекламы ₽:', '0');
-  const orders_ads = +prompt('Заказы с рекламы ₽:', '0');
-  const orders_organic = +prompt('Заказы органика ₽:', '0');
-  const row = { article, spend, orders_ads, orders_organic, orders_sum: orders_ads + orders_organic };
-  state.articles.push(row);
-  localStorage.setItem('wb_articles', JSON.stringify(state.articles));
-  renderArticles();
+function filterKw() {
+  const srch=(document.getElementById('kwSearch').value||'').toLowerCase();
+  const flt=document.getElementById('kwFilter').value;
+  const tbody=document.getElementById('bKw');
+  let rows=kwAll;
+  if (srch) rows=rows.filter(r=>(r.phrase+r.nmName+String(r.nmId||'')).toLowerCase().includes(srch));
+  if (flt) rows=rows.filter(r=>r.analysis.status===flt);
+  if (!rows.length) { tbody.innerHTML=`<tr><td colspan="14"><div class="empty"><div class="ei">🔍</div><div class="et">Нет фраз по фильтру</div></div></td></tr>`; return; }
+  const bc={crit:'br',warn:'by',ok:'bg'};
+  tbody.innerHTML=rows.map(r=>{
+    const pos=r.pos>0?`<span class="pos ${r.pos<=3?'pt':r.pos<=6?'pw':'pl'}">${Math.round(r.pos)}</span>`:`<span class="pos po">—</span>`;
+    return `<tr class="${r.analysis.status==='crit'?'rc':r.analysis.status==='warn'?'rw':''}">
+      <td class="txt">${r.phrase}</td>
+      <td style="color:var(--muted);font-size:11px">${r.nmName||r.nmId||'—'}</td>
+      <td><span class="b ${r.at.count>1?'bb':'bx'}">${r.at.label}</span></td>
+      <td>${pos}</td><td>${r.ctr.toFixed(1)}</td><td>${fmtM(r.views)}</td>
+      <td>${fmtM(r.clicks)}</td><td>${r.carts}</td><td>${r.orders}</td>
+      <td>${fmt(r.spend)}</td><td>${r.cpo!==null?fmt(r.cpo):'—'}</td>
+      <td style="color:var(--muted)">${r.at.drrLimit}%</td>
+      <td><span class="b ${bc[r.analysis.status]||'bx'}">${r.analysis.verdict}</span></td>
+      <td style="color:var(--muted);font-size:10px">${r.analysis.principles.join(' ')}</td>
+    </tr>`;
+  }).join('');
 }
 
-function renderArticles() {
-  const tbody = document.getElementById('articlesBody');
-  if (!state.articles.length) {
-    tbody.innerHTML = `<tr><td colspan="10"><div class="empty"><div class="icon">📦</div><div class="title">Нет данных по артикулам</div></div></td></tr>`;
-    return;
-  }
-  tbody.innerHTML = state.articles.map(a => {
-    const at = getArticleType(a.article);
-    const drr = a.orders_sum > 0 ? a.spend / a.orders_sum * 100 : 0;
-    const st = drr === 0 ? 'gray' : drr <= at.drrLimit ? 'green' : drr <= at.drrLimit + 5 ? 'yellow' : 'red';
-    const pct = Math.min(drr / (at.drrLimit * 2.5) * 100, 100);
-    return `<tr>
-      <td class="name-col">${a.article}</td>
-      <td><span class="badge badge-${at.count > 1 ? 'blue' : 'gray'}">${at.label}</span></td>
+// ══════════════════════════════════════════════════════════════════════════════
+// ARTICLES DRR TABLE
+// ══════════════════════════════════════════════════════════════════════════════
+function renderArticles(artDrr) {
+  const tbody=document.getElementById('bArt');
+  if (!artDrr.length) { tbody.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="ei">📦</div><div class="et">Нет данных</div></div></td></tr>`; return; }
+  tbody.innerHTML=artDrr.map(a=>{
+    const at=getAT(a.name||String(a.nmId));
+    const drr=a.ordersAllEst>0?a.spend/a.ordersAllEst*100:0;
+    const st=drr===0?'x':drr<=at.drrLimit?'ok':drr<=at.drrLimit+5?'warn':'bad';
+    const pct=Math.min(drr/(at.drrLimit*2.5)*100,100);
+    const bc={ok:'bg',warn:'by',bad:'br',x:'bx'}[st];
+    const lbl={ok:'✅ Норма',warn:'🟡 Жёлтая',bad:'🔴 Превышение',x:'—'}[st];
+    const dc={ok:'green',warn:'yellow',bad:'red',x:'muted'}[st];
+    return `<tr class="${st==='bad'?'rc':st==='warn'?'rw':''}">
+      <td class="txt"><div>${a.name||'—'}</div><div style="font-size:10px;color:var(--muted)">#${a.nmId}</div></td>
+      <td><span class="b ${at.count>1?'bb':'bx'}">${at.label}</span></td>
       <td style="color:var(--muted)">${at.drrLimit}%</td>
-      <td>${fmtK(a.spend)}</td>
-      <td>${fmtK(a.orders_organic || 0)}</td>
-      <td>${fmtK(a.orders_ads || 0)}</td>
-      <td>${fmtK(a.orders_sum)}</td>
-      <td>
-        <div class="drr-bar">
-          <div class="drr-track"><div class="drr-fill ${st}" style="width:${pct}%"></div></div>
-          <span class="drr-num" style="color:var(--${st === 'gray' ? 'muted' : st})">${drr.toFixed(1)}%</span>
-        </div>
-      </td>
-      <td style="color:var(--muted)">${fmtK(at.maxCPM)} ₽</td>
-      <td><span class="badge badge-${st}">${st === 'green' ? '✅ Норма' : st === 'yellow' ? '🟡 Желтая зона' : st === 'red' ? '🔴 Превышение' : '—'}</span></td>
+      <td>${fmt(a.spend)}</td><td>${fmt(a.ordersAllEst)}</td>
+      <td><div class="dbar"><div class="dtrack"><div class="dfill ${st}" style="width:${pct}%"></div></div><span class="dnum" style="color:var(--${dc})">${drr.toFixed(1)}%</span></div></td>
+      <td style="color:var(--muted)">${fmt(at.maxCPM)} ₽</td>
+      <td><span class="b ${bc}">${lbl}</span></td>
+      <td>${fmtM(a.views)}</td><td>${a.ordsCnt}</td>
     </tr>`;
   }).join('');
 }
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+// ARTICLE TYPE (Принцип 4)
+// ══════════════════════════════════════════════════════════════════════════════
+function getAT(art) {
+  const s=String(art||'').toLowerCase();
+  const kz=s.match(/^(\d+)kurazh/i); if(kz) return mkT(+kz[1]);
+  const sf=s.match(/(\d+)$/); if(sf&&+sf[1]>1) return mkT(+sf[1]);
+  return {count:1,label:'1 пач.',drrLimit:12,maxCPM:1300};
+}
+function mkT(n) {
+  return {count:n,label:`${n} пач.`,drrLimit:n>1?20:12,maxCPM:n>=5?2000:n>=2?1700:1300};
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// KEYWORD ANALYSIS (Принципы 1–8)
+// ══════════════════════════════════════════════════════════════════════════════
+function analyzeKw({phrase,views,clicks,carts,orders,spend,ctr,pos,nmId,at,artEnt}) {
+  const R=[],P=[];let status='ok';
+  // П3
+  if (pos>6&&spend>0) { R.push(`Поз. ${Math.round(pos)} > 6, не хватает ставки на топ`); P.push('П3'); status='warn'; }
+  // П2
+  if (pos>0&&pos<=6&&ctr<5&&views>500) { R.push(`CTR ${ctr.toFixed(1)}% при поз. ${Math.round(pos)}`); P.push('П1','П2'); if(status==='ok') status='warn'; }
+  // П6
+  if (pos>0&&pos<=6&&spend>=300&&orders===0) {
+    if (carts<3) { R.push(`Поз. ${Math.round(pos)}, ${fmt(spend)}₽, 0 заказов, ${carts} корзин — нерелевантна`); P.push('П6'); status='crit'; }
+    else { R.push(`0 заказов, ${carts} корзин — ждать конверсию`); P.push('П6'); if(status==='ok') status='warn'; }
+  }
+  // П4+П5
+  if (artEnt&&artEnt.ordersAllEst>0) {
+    const d=artEnt.spend/artEnt.ordersAllEst*100;
+    if (d>at.drrLimit+5) { R.push(`ДРР арт. ${d.toFixed(1)}% >> лимит ${at.drrLimit}%`); P.push('П4','П5'); status='crit'; }
+    else if (d>at.drrLimit) { R.push(`ДРР арт. ${d.toFixed(1)}% > лимит ${at.drrLimit}%`); P.push('П4'); if(status!=='crit') status='warn'; }
+  }
+  if (!R.length) R.push(orders>0?'Есть заказы, работает':carts>0?'Есть корзины, ждать':'Нет активности');
+  const verdict=status==='crit'?'🔴 Отключить':status==='warn'?'🟡 Наблюдение':'✅ Ок';
+  return {status,verdict,reasons:R,principles:[...new Set(P)]};
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // DECISIONS
-// ══════════════════════════════════════════════
-const PRINCIPLES = [
-  { n: 1, emoji: '🔄', title: 'Виртуозный круг', desc: 'Хорошие показатели → WB поднимает карточку → больше показов → ещё лучше показатели. Плохие показатели тянут вниз.' },
-  { n: 2, emoji: '📍', title: 'Позиция влияет на CTR', desc: 'CTR зависит не только от карточки, но и от позиции. Карточка на 1–3 месте будет иметь CTR выше.' },
-  { n: 3, emoji: '✂️', title: 'Отключай фразы без ставки на топ-6', desc: 'Если ставки не хватает на топ-6 — фраза портит CTR карточки. Сначала доминируй на узком фронте, потом расширяй.' },
-  { n: 4, emoji: '💰', title: 'ДРР как потолок ставки', desc: 'Единички ≤ 12%, Комплекты ≤ 20%. Макс. CPM: единички 1200–1300₽, комплекты 2-3шт 1500–1700₽, 5-10шт до 2000₽.' },
-  { n: 5, emoji: '📊', title: 'ДРР считать по товару, не кампании', desc: 'Расход ÷ (все заказы товара вкл. органику) × 100%. Реклама и органика — связанная система.' },
-  { n: 6, emoji: '🎯', title: 'Отсечка по CPO при хорошей позиции', desc: 'Хорошая позиция + расход ≥ 300-500₽ + CPO высокий + мало корзин → товар не соответствует запросу. Отключить.' },
-  { n: 7, emoji: '👻', title: 'Скрытые фразы = "налог WB"', desc: 'Фразы < 100 показов не видны в интерфейсе, но тратят бюджет. Поднять ставку → ускорить показ. Опустить до 310₽ → заморозить.' },
-  { n: 8, emoji: '⚔️', title: 'Не конкурируй сам с собой', desc: 'Два своих товара на одном месте разгоняют аукцион. Разведи по разным позициям или выбери лучшего.' },
+// ══════════════════════════════════════════════════════════════════════════════
+const PRINC=[
+  {n:1,e:'🔄',t:'Виртуозный круг',d:'Хорошие показатели → WB поднимает → больше показов → ещё лучше. Плохие тянут вниз.'},
+  {n:2,e:'📍',t:'Позиция влияет на CTR',d:'Позиция 1–3 даёт CTR выше, чем та же карточка на 20-м месте.'},
+  {n:3,e:'✂️',t:'Отключай фразы без ставки на топ-6',d:'Позиция > 6 → плохой CTR → портит всю карточку. Доминируй на узком фронте.'},
+  {n:4,e:'💰',t:'ДРР как потолок ставки',d:'Единички ≤12% (CPM 1200–1300₽). Комплекты ≤20% (CPM до 2000₽ для 5+шт).'},
+  {n:5,e:'📊',t:'ДРР по товару, не кампании',d:'Расход ÷ (все заказы вкл. органику) × 100%. Органика зависит от рекламы.'},
+  {n:6,e:'🎯',t:'Отсечка по CPO при хорошей позиции',d:'Поз. ≤6, расход ≥300₽, 0 заказов, мало корзин → фраза нерелевантна.'},
+  {n:7,e:'👻',t:'Скрытые фразы — налог WB',d:'< 100 показов = не видна, но тратит бюджет. Поднять ставку = ускорить показ. 310₽ = заморозить.'},
+  {n:8,e:'⚔️',t:'Не конкурируй сам с собой',d:'Два своих товара на одном месте разгоняют аукцион. Разведи по разным позициям.'},
 ];
 
 function buildDecisions() {
-  // Render principles
-  const grid = document.getElementById('principlesGrid');
-  grid.innerHTML = PRINCIPLES.map(p => `
-    <div class="rec-item ok" style="border-left-color:var(--border2)">
-      <div class="rec-icon">${p.emoji}</div>
-      <div class="rec-body">
-        <div class="rec-title">Принцип ${p.n}: ${p.title}</div>
-        <div class="rec-desc">${p.desc}</div>
-      </div>
-    </div>
-  `).join('');
+  document.getElementById('principles').innerHTML=PRINC.map(p=>
+    `<div class="rec ok" style="border-left-color:var(--border2)">
+      <div style="font-size:16px;margin-top:1px">${p.e}</div>
+      <div class="rec-body"><div class="rec-title">П${p.n}: ${p.t}</div><div class="rec-desc">${p.d}</div></div>
+    </div>`
+  ).join('');
 
-  // Generate decisions from phrase data
-  const critical = [];
-  const warnings = [];
+  const artDrr=buildArtDrr();
+  const crits=[],warns=[];
 
-  for (const p of state.phrases) {
-    const a = analyzePhrase(p);
-    if (a.status === 'critical') {
-      critical.push({ phrase: p, analysis: a });
-    } else if (a.status === 'warning') {
-      warnings.push({ phrase: p, analysis: a });
-    }
+  for (const kw of kwAll) {
+    if (kw.analysis.status==='crit') crits.push({label:kw.phrase,a:kw.analysis});
+    else if (kw.analysis.status==='warn') warns.push({label:kw.phrase,a:kw.analysis});
+  }
+  for (const a of artDrr) {
+    const at=getAT(a.name||String(a.nmId));
+    const drr=a.ordersAllEst>0?a.spend/a.ordersAllEst*100:0;
+    if (drr>at.drrLimit+5) crits.push({label:a.name||`nm#${a.nmId}`,a:{verdict:'🔴 Снизить расход',reasons:[`ДРР ${drr.toFixed(1)}% >> лимит ${at.drrLimit}%`],principles:['П4','П5']}});
   }
 
-  // Articles over DRR limit
-  for (const a of state.articles) {
-    const at = getArticleType(a.article);
-    const drr = a.orders_sum > 0 ? a.spend / a.orders_sum * 100 : 0;
-    if (drr > at.drrLimit + 5) {
-      critical.push({
-        phrase: { phrase: a.article, spend: a.spend },
-        analysis: { reasons: [`ДРР ${drr.toFixed(1)}% >> лимит ${at.drrLimit}%`], principles: ['П4', 'П5'], verdict: '🔴 Снизить ставки' }
-      });
-    }
-  }
-
-  const renderDec = (items) => {
-    if (!items.length) return `<div class="empty"><div class="icon">🎉</div><div class="title">Нет проблем</div></div>`;
-    return items.map(({ phrase, analysis }) => `
-      <div class="rec-item ${analysis.status}">
+  const rend=items=>{
+    if (!items.length) return `<div class="empty"><div class="ei">🎉</div><div class="et">Нет проблем</div></div>`;
+    return items.map(({label,a})=>`
+      <div class="rec ${a.verdict.includes('🔴')?'crit':'warn'}">
         <div class="rec-body">
-          <div class="rec-title">${analysis.verdict} <span class="rec-principle">${analysis.principles.join(' ')}</span></div>
-          <div style="font-weight:600;font-size:13px;margin-bottom:4px">${phrase.phrase || phrase.article || '—'}</div>
-          ${analysis.reasons.map(r => `<div class="rec-desc">· ${r}</div>`).join('')}
+          <div class="rec-title">${a.verdict} ${a.principles.map(p=>`<span class="pp">${p}</span>`).join('')}</div>
+          <div style="font-weight:600;font-size:13px;margin:3px 0">${label}</div>
+          ${a.reasons.map(r=>`<div class="rec-desc">· ${r}</div>`).join('')}
         </div>
-      </div>
-    `).join('');
+      </div>`).join('');
   };
-
-  document.getElementById('dec-critical').innerHTML = renderDec(critical);
-  document.getElementById('dec-warning').innerHTML = renderDec(warnings);
+  document.getElementById('decCrit').innerHTML=rend(crits);
+  document.getElementById('decWarn').innerHTML=rend(warns);
 }
 
-// ══════════════════════════════════════════════
-// AI ANALYSIS
-// ══════════════════════════════════════════════
-async function runAdsAI() {
-  const btn = document.getElementById('aiAdsBtn');
-  const result = document.getElementById('aiAdsResult');
-  btn.textContent = '⏳ Анализирую...';
-  btn.disabled = true;
-  result.innerHTML = '<div class="loading"><div class="spinner"></div> Отправляю данные в AI...</div>';
+// ══════════════════════════════════════════════════════════════════════════════
+// AI
+// ══════════════════════════════════════════════════════════════════════════════
+async function runAI() {
+  const btn=document.getElementById('aiBtn'),res=document.getElementById('aiResult');
+  btn.disabled=true; btn.innerHTML='<div class="sp"></div> Анализирую…';
+  res.innerHTML='<div class="loading"><div class="sp"></div> Отправляю данные…</div>';
 
-  // Build context
-  const rows = state.rnpData;
-  const totSpend = rows.reduce((s, r) => s + r.ads_spend, 0);
-  const totOrders = rows.reduce((s, r) => s + r.orders_sum, 0);
-  const drr = totOrders > 0 ? (totSpend / totOrders * 100).toFixed(1) : '—';
-  const drrTarget = state.plan?.drr_plan || 10;
+  const artDrr=buildArtDrr();
+  const target=S.plan?.drr_plan||10;
+  let spend=0,views=0,clicks=0,carts=0,oAds=0;
+  for (const c of S.fstats) { spend+=c.sum||0; views+=c.views||0; clicks+=c.clicks||0; carts+=c.atbs||0; oAds+=c.orders||0; }
+  const oAll=S.rnp.reduce((s,r)=>s+(+r.orders_sum||0),0);
+  const drr=oAll>0?(spend/oAll*100).toFixed(1):'—';
+  const ctr=views>0?(clicks/views*100).toFixed(1):'—';
 
-  const dailySummary = rows.slice(-7).map(r => {
-    const d = r.orders_sum > 0 ? (r.ads_spend / r.orders_sum * 100).toFixed(1) : 0;
-    return `${r.date}: заказы ${fmtK(r.orders_sum)}₽ (${r.orders_count}шт), реклама ${fmtK(r.ads_spend)}₽, ДРР ${d}%`;
+  const topKw=[...kwAll].sort((a,b)=>b.spend-a.spend).slice(0,20)
+    .map(k=>`"${k.phrase}" поз.${Math.round(k.pos||0)} CTR${k.ctr.toFixed(1)}% расх.${fmt(k.spend)}₽ зак.${k.orders} корз.${k.carts} → ${k.analysis.verdict}`)
+    .join('\n');
+
+  const topArt=artDrr.slice(0,10).map(a=>{
+    const at=getAT(a.name||String(a.nmId));
+    const d=a.ordersAllEst>0?a.spend/a.ordersAllEst*100:0;
+    return `${a.name||a.nmId} (${at.label}): расх.${fmt(a.spend)}₽ ~всего ${fmt(a.ordersAllEst)}₽ ДРР ${d.toFixed(1)}% лимит${at.drrLimit}%`;
   }).join('\n');
 
-  const phraseSummary = state.phrases.length > 0
-    ? state.phrases.map(p => {
-        const a = analyzePhrase(p);
-        return `"${p.phrase}" (${p.article}): поз ${p.position}, CTR ${p.ctr}%, расход ${fmtK(p.spend)}₽, заказы ${p.orders}, статус: ${a.verdict}`;
-      }).join('\n')
-    : 'Данные по фразам не загружены';
+  const prompt=`АНАЛИЗ РЕКЛАМЫ WILDBERRIES
+Магазин: ${S.shop==='oding'?'ИП Одинг':'ИП Стольников'} | Период: ${S.days} дней | Цель ДРР: ${target}%
 
-  const prompt = `АНАЛИЗ РЕКЛАМЫ WILDBERRIES
+ИТОГО:
+Расход ${fmt(spend)}₽ | Показы ${fmtM(views)} | Клики ${fmtM(clicks)} | CTR ${ctr}%
+Корзины ${carts} | Заказы рекл ${oAds} | Заказы все ${fmt(oAll)}₽ | ДРР ${drr}%
 
-Магазин: ${state.shop === 'all' ? 'Оба (Одинг + Стольников)' : state.shop === 'oding' ? 'ИП Одинг' : 'ИП Стольников'}
-Период: последние ${state.days} дней
+КАМПАНИЙ: ${S.camps.filter(c=>c.status===9).length} активных из ${S.camps.length}
 
-СВОДКА:
-- Общий расход: ${fmtK(totSpend)} ₽
-- Общие заказы: ${fmtK(totOrders)} ₽
-- ДРР факт: ${drr}% (цель: ${drrTarget}%)
+ТОП-20 ФРАЗ (по расходу):
+${topKw||'нет данных'}
 
-ДАННЫЕ ПО ДНЯМ:
-${dailySummary}
+ДРР ПО АРТИКУЛАМ:
+${topArt||'нет данных'}
 
-ФРАЗЫ:
-${phraseSummary}
-
-АРТИКУЛЫ (ДРР):
-${state.articles.map(a => {
-  const at = getArticleType(a.article);
-  const drr = a.orders_sum > 0 ? (a.spend/a.orders_sum*100).toFixed(1) : 0;
-  return `${a.article} (${at.label}): расход ${fmtK(a.spend)}₽, все заказы ${fmtK(a.orders_sum)}₽, ДРР ${drr}% (лимит ${at.drrLimit}%)`;
-}).join('\n') || 'Не загружены'}
-
-Дай анализ рекламной ситуации по принципам управления рекламой WB. Акцент на: что конкретно отключить/снизить ставку, где ДРР критический, где есть потенциал роста.`;
+Дай анализ по принципам 1–8. Что отключить, где снизить ставку, где потенциал, где проблема с ДРР.`;
 
   try {
-    const resp = await fetch(WEBHOOK, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    });
-    const text = await resp.text();
-    let html = text;
-    try { const j = JSON.parse(text); html = j.response || j.result || j.text || text; } catch {}
-    result.innerHTML = html;
-  } catch (e) {
-    result.innerHTML = `<span style="color:var(--red)">Ошибка: ${e.message}</span>`;
-  } finally {
-    btn.textContent = '✨ AI-анализ';
-    btn.disabled = false;
-  }
+    const r=await fetch(AI_HOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+    const text=await r.text();
+    let html=text;
+    try { const j=JSON.parse(text); html=j.response||j.result||j.text||text; } catch{}
+    res.innerHTML=html;
+  } catch(e) { res.innerHTML=`<span style="color:var(--red)">Ошибка: ${e.message}</span>`; }
+  finally { btn.disabled=false; btn.innerHTML='✨ Запустить'; }
 }
 
-// ══════════════════════════════════════════════
-// TABLE SORTING
-// ══════════════════════════════════════════════
-let sortState = {};
-function sortTable(tableId, colIdx) {
-  const key = `${tableId}_${colIdx}`;
-  const asc = sortState[key] !== true;
-  sortState[key] = asc;
+// ══════════════════════════════════════════════════════════════════════════════
+// TEST CONNECTION
+// ══════════════════════════════════════════════════════════════════════════════
+async function testConn() {
+  const st=document.getElementById('connSt'),log=document.getElementById('connLog');
+  log.style.display='block'; st.innerHTML='<div class="sp" style="display:inline-block"></div> Проверка…';
+  log.textContent='POST '+PROXY+'\n{ action:"balance", shop:"'+S.shop+'" }\n\n';
+  try {
+    const r=await fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'balance',shop:S.shop})});
+    const j=await r.json();
+    log.textContent+='Ответ:\n'+JSON.stringify(j,null,2);
+    if (j.ok) st.innerHTML='<span style="color:var(--green)">✅ Соединение OK</span>';
+    else st.innerHTML='<span style="color:var(--red)">❌ '+( j.error||'ошибка')+'</span>';
+  } catch(e) { log.textContent+='Ошибка: '+e.message; st.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>'; }
+}
 
-  const table = document.getElementById(tableId);
-  const ths = table.querySelectorAll('th');
-  ths.forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
-  ths[colIdx].classList.add(asc ? 'sort-asc' : 'sort-desc');
-
-  const tbody = table.querySelector('tbody');
-  const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => r.querySelectorAll('td').length > 1);
-  rows.sort((a, b) => {
-    const va = a.querySelectorAll('td')[colIdx]?.textContent.trim() || '';
-    const vb = b.querySelectorAll('td')[colIdx]?.textContent.trim() || '';
-    const na = parseFloat(va.replace(/[^\d.-]/g, ''));
-    const nb = parseFloat(vb.replace(/[^\d.-]/g, ''));
-    if (!isNaN(na) && !isNaN(nb)) return asc ? na - nb : nb - na;
-    return asc ? va.localeCompare(vb, 'ru') : vb.localeCompare(va, 'ru');
+// ══════════════════════════════════════════════════════════════════════════════
+// SORT
+// ══════════════════════════════════════════════════════════════════════════════
+const SS={};
+function sortT(tid,col) {
+  const k=tid+'_'+col,asc=SS[k]!==true; SS[k]=asc;
+  const tbl=document.getElementById(tid);
+  tbl.querySelectorAll('th').forEach(t=>t.classList.remove('sa','sd'));
+  tbl.querySelectorAll('th')[col].classList.add(asc?'sa':'sd');
+  const tb=tbl.querySelector('tbody');
+  const rows=[...tb.querySelectorAll('tr')].filter(r=>r.querySelectorAll('td').length>1);
+  rows.sort((a,b)=>{
+    const va=a.querySelectorAll('td')[col]?.textContent.trim()||'';
+    const vb=b.querySelectorAll('td')[col]?.textContent.trim()||'';
+    const na=parseFloat(va.replace(/[^\d.-]/g,'')),nb=parseFloat(vb.replace(/[^\d.-]/g,''));
+    if (!isNaN(na)&&!isNaN(nb)) return asc?na-nb:nb-na;
+    return asc?va.localeCompare(vb,'ru'):vb.localeCompare(va,'ru');
   });
-  rows.forEach(r => tbody.appendChild(r));
+  rows.forEach(r=>tb.appendChild(r));
 }
 
-// ══════════════════════════════════════════════
-// FORMAT HELPERS
-// ══════════════════════════════════════════════
-function fmtK(n) {
-  if (!n && n !== 0) return '—';
-  n = Math.round(n);
-  if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-  if (Math.abs(n) >= 1_000) return (n / 1_000).toFixed(0) + 'K';
-  return String(n);
-}
+// ══════════════════════════════════════════════════════════════════════════════
+// FORMAT
+// ══════════════════════════════════════════════════════════════════════════════
+const fmt  = n => n==null?'—':Math.round(+n).toLocaleString('ru-RU');
+const fmtM = n => { if (!n) return '0'; n=+n; if(Math.abs(n)>=1e6) return (n/1e6).toFixed(1)+'M'; if(Math.abs(n)>=1e3) return (n/1e3).toFixed(0)+'K'; return String(Math.round(n)); };
+const chunk = (arr,n) => { const o=[]; for(let i=0;i<arr.length;i+=n) o.push(arr.slice(i,i+n)); return o; };
 
-function fmtM(n) {
-  if (!n && n !== 0) return '—';
-  n = Math.round(n);
-  if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-  if (Math.abs(n) >= 1_000) return (n / 1_000).toFixed(0) + 'K';
-  return String(n);
-}
-
-// ══════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  renderPhrases();
-  renderCampaigns();
-  renderArticles();
-  loadAll();
-});
+// ── Init ──
+document.addEventListener('DOMContentLoaded', () => buildDecisions());
 </script>
 </body>
 </html>
