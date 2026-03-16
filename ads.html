@@ -399,10 +399,12 @@ function showTab(n) {
 function setShop(s) {
   S.shop = s;
   document.querySelectorAll('.shop-btns .hbtn').forEach(b=>b.classList.toggle('active',b.dataset.shop===s));
+  loadAll();
 }
 function setDays(d) {
   S.days = d;
   document.querySelectorAll('.date-btns .hbtn').forEach(b=>b.classList.toggle('active',+b.dataset.days===d));
+  loadAll();
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
