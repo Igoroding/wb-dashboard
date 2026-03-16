@@ -526,7 +526,7 @@ async function loadWB() {
   }
 
   // ── Шаг 2: fullstats (нужны IDs кампаний) ────────────────────────────────
-  const statsIds = S.camps.filter(c=>[7,9,11].includes(c.status)).map(c=>c.advertId);
+  const statsIds = S.camps.filter(c=>[7,9,11].includes(+c.status)).map(c=>c.advertId);
   const idsForStats = statsIds.length ? statsIds : campIds;
 
   if (idsForStats.length) {
@@ -644,7 +644,7 @@ function renderOverview(artDrr) {
   const target = S.plan?.drr_plan||10;
   const drrSt = drr===0?'':drr<=target?'green':drr<=target+5?'yellow':'red';
 
-  setK('kpi-camps', S.camps.filter(c=>c.status===9).length, `всего ${S.camps.length}`);
+  setK('kpi-camps', S.camps.filter(c=>+c.status===9).length, `всего ${S.camps.length}`);
   setK('kpi-spend', fmtM(spend), `${ago(S.days)} → ${today()}`);
   setK('kpi-views', fmtM(views));
   setK('kpi-clicks', fmtM(clicks), `CTR ${ctr.toFixed(1)}%`);
@@ -771,7 +771,7 @@ function renderCampaigns() {
   // Статус 7 = завершена, -1 = удалена
   const camps = showCompleted
     ? S.camps
-    : S.camps.filter(c => c.status !== 7 && c.status !== -1);
+    : S.camps.filter(c => +c.status !== 7 && +c.status !== -1);
   const hiddenCount = S.camps.length - camps.length;
   document.getElementById('campCount').textContent =
     camps.length + ' кампаний' + (hiddenCount > 0 ? ` (+ ${hiddenCount} завершённых скрыто)` : '');
@@ -1093,7 +1093,7 @@ async function runAI() {
 Расход ${fmt(spend)}₽ | Показы ${fmtM(views)} | Клики ${fmtM(clicks)} | CTR ${ctr}%
 Корзины ${carts} | Заказы рекл ${oAds} | Заказы все ${fmt(oAll)}₽ | ДРР ${drr}%
 
-КАМПАНИЙ: ${S.camps.filter(c=>c.status===9).length} активных из ${S.camps.length}
+КАМПАНИЙ: ${S.camps.filter(c=>+c.status===9).length} активных из ${S.camps.length}
 
 ТОП-20 ФРАЗ (по расходу):
 ${topKw||'нет данных'}
