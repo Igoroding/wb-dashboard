@@ -490,10 +490,22 @@ async function loadWB() {
     }
   }
 
-  // 4. Fullstats v3 (макс 50 кампаний за раз)
-  if (campIds.length) {
-    const results = await Promise.all(chunk(campIds,50).map(ch => wb('fullstats',{ids:ch,beginDate:from,endDate:to})));
-    S.fstats = results.flat().filter(Boolean);
+  // 4. Fullstats v3 — только статусы 7/9/11 (завершена/активна/пауза)
+  // Статус 4 (ready) не поддерживается fullstats
+  const statsIds = S.camps
+    .filter(c => [7, 9, 11].includes(c.status))
+    .map(c => c.advertId);
+  // Если статусы неизвестны (fallback из upd) — берём все campIds
+  const idsForStats = statsIds.length ? statsIds : campIds;
+  if (idsForStats.length) {
+    // Прокси сам режет на чанки по 50, передаём всё сразу
+    try {
+      const r = await wb('fullstats', {ids: idsForStats, beginDate: from, endDate: to});
+      S.fstats = Array.isArray(r) ? r : [];
+    } catch(e) {
+      console.warn('fullstats:', e.message);
+      S.fstats = [];
+    }
   } else { S.fstats=[]; }
 
   // 5. Фразы/кластеры — новый формат: items:[{advert_id, nm_id}]
