@@ -576,12 +576,22 @@ function renderAll() {
 // ══════════════════════════════════════════════════════════════════════════════
 function buildArtDrr() {
   const byNm={};
+  // Общий расход по upd (по advertId), потом распределим по nm пропорционально показам
+  const spendByAdv={};
+  for (const r of S.upd) { const id=r.advertId||r.advert_id; if(id) spendByAdv[id]=(spendByAdv[id]||0)+(r.updSum||r.sum||0); }
+
   for (const c of S.fstats) {
+    const advSpend = spendByAdv[c.advertId] || c.sum || 0;
+    // Считаем суммарные показы по всем nm для нормировки
+    let totalNmViews=0;
+    for (const day of (c.days||[])) for (const app of (day.apps||[])) for (const nm of (app.nms||[])) totalNmViews+=nm.views||0;
     for (const day of (c.days||[])) {
       for (const app of (day.apps||[])) {
         for (const nm of (app.nms||[])) {
           if (!byNm[nm.nmId]) byNm[nm.nmId]={nmId:nm.nmId,name:nm.name||'',spend:0,views:0,clicks:0,carts:0,ordsCnt:0,sumPrice:0};
-          byNm[nm.nmId].spend    += nm.sum      ||0;
+          // Расход распределяем пропорционально показам
+          const share = totalNmViews>0?(nm.views||0)/totalNmViews:1;
+          byNm[nm.nmId].spend    += advSpend * share;
           byNm[nm.nmId].views    += nm.views    ||0;
           byNm[nm.nmId].clicks   += nm.clicks   ||0;
           byNm[nm.nmId].carts    += nm.atbs     ||0;
@@ -606,8 +616,11 @@ function buildArtDrr() {
 // OVERVIEW
 // ══════════════════════════════════════════════════════════════════════════════
 function renderOverview(artDrr) {
-  let spend=0,views=0,clicks=0,carts=0,oAds=0;
-  for (const c of S.fstats) { spend+=c.sum||0; views+=c.views||0; clicks+=c.clicks||0; carts+=c.atbs||0; oAds+=c.orders||0; }
+  // Расход — из upd (надёжнее, чем fullstats sum)
+  let spend=0;
+  for (const r of S.upd) { spend += r.updSum||r.sum||0; }
+  let views=0,clicks=0,carts=0,oAds=0;
+  for (const c of S.fstats) { views+=c.views||0; clicks+=c.clicks||0; carts+=c.atbs||0; oAds+=c.orders||0; }
   const oAll = S.rnp.reduce((s,r)=>s+(+r.orders_sum||0),0);
   const drr = oAll>0 ? spend/oAll*100 : 0;
   const ctr = views>0 ? clicks/views*100 : 0;
@@ -638,8 +651,9 @@ function setK(id, val, sub, st) {
 function renderDailyTable(target) {
   // Build per-day from upd + rnp + fstats.days
   const D={};
+  // Расход из upd — там поля updTime + updSum
   for (const r of S.upd) {
-    const d=(r.updDate||r.date||'').slice(0,10); if(!d) continue;
+    const d=(r.updTime||r.updDate||r.date||'').slice(0,10); if(!d) continue;
     if (!D[d]) D[d]={spend:0}; D[d].spend+=r.updSum||r.sum||0;
   }
   for (const r of S.rnp) {
@@ -680,10 +694,17 @@ function renderDailyTable(target) {
 
 function renderCharts(target) {
   const DM={};
+  // Расход — берём из upd (там всегда есть, в отличие от fullstats)
+  for (const r of S.upd) {
+    const d=(r.updTime||r.date||'').slice(0,10); if(!d) continue;
+    if(!DM[d]) DM[d]={spend:0,oAds:0};
+    DM[d].spend+= r.updSum||r.sum||0;
+  }
+  // Показы/клики/корзины/заказы_рекл — из fullstats
   for (const c of S.fstats) for (const day of (c.days||[])) {
     const d=(day.date||'').slice(0,10); if(!d) continue;
     if(!DM[d]) DM[d]={spend:0,oAds:0};
-    DM[d].spend+=day.sum||0; DM[d].oAds+=day.orders||0;
+    DM[d].oAds+=day.orders||0;
   }
   for (const r of S.rnp) { if(!DM[r.date]) DM[r.date]={spend:0,oAds:0}; DM[r.date].oAll=+r.orders_sum||0; }
   const dates=Object.keys(DM).sort();
@@ -718,8 +739,18 @@ function renderCampaigns() {
   document.getElementById('campCount').textContent=S.camps.length+' кампаний';
   const tbody=document.getElementById('bCamp');
   if (!S.camps.length) { tbody.innerHTML=`<tr><td colspan="13"><div class="empty"><div class="ei">📁</div><div class="et">Нет данных</div></div></td></tr>`; return; }
+  // Per-campaign spend из upd (суммируем по advertId)
+  const spendById={};
+  for (const r of S.upd) {
+    const id=r.advertId||r.advert_id; if(!id) continue;
+    spendById[id]=(spendById[id]||0)+(r.updSum||r.sum||0);
+  }
   const byId={};
-  for (const c of S.fstats) byId[c.advertId]={spend:c.sum||0,views:c.views||0,clicks:c.clicks||0,carts:c.atbs||0,ords:c.orders||0,cpc:c.cpc||0,ctr:c.ctr||0};
+  for (const c of S.fstats) byId[c.advertId]={spend:spendById[c.advertId]||c.sum||0,views:c.views||0,clicks:c.clicks||0,carts:c.atbs||0,ords:c.orders||0,cpc:c.cpc||0,ctr:c.ctr||0};
+  // Добавляем кампании которые есть в upd но не в fstats
+  for (const [id, sp] of Object.entries(spendById)) {
+    const numId=+id; if(!byId[numId]) byId[numId]={spend:sp,views:0,clicks:0,carts:0,ords:0,cpc:0,ctr:0};
+  }
   const oAll=S.rnp.reduce((s,r)=>s+(+r.orders_sum||0),0);
   const totSpend=Object.values(byId).reduce((s,v)=>s+v.spend,0);
   const target=S.plan?.drr_plan||10;
