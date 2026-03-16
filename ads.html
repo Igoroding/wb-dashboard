@@ -397,13 +397,20 @@ function showTab(n) {
   if (n==='decisions') buildDecisions();
 }
 function setShop(s) {
+  if (S.shop === s) return; // уже выбран
   S.shop = s;
   document.querySelectorAll('.shop-btns .hbtn').forEach(b=>b.classList.toggle('active',b.dataset.shop===s));
+  // Очищаем старые данные
+  S.camps=[]; S.fstats=[]; S.kw=[]; S.upd=[]; S.rnp=[];
+  clearDisplay();
   loadAll();
 }
 function setDays(d) {
+  if (S.days === d) return;
   S.days = d;
   document.querySelectorAll('.date-btns .hbtn').forEach(b=>b.classList.toggle('active',+b.dataset.days===d));
+  S.camps=[]; S.fstats=[]; S.kw=[]; S.upd=[]; S.rnp=[];
+  clearDisplay();
   loadAll();
 }
 
@@ -439,6 +446,22 @@ async function sbGet(path) {
 // ══════════════════════════════════════════════════════════════════════════════
 // LOAD ALL
 // ══════════════════════════════════════════════════════════════════════════════
+function clearDisplay() {
+  // Сбрасываем KPI карточки
+  ['kpi-camps','kpi-spend','kpi-views','kpi-clicks','kpi-carts','kpi-oads','kpi-oall','kpi-drr'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.textContent='…';
+    const se = document.getElementById(id+'-s'); if(se) se.textContent='';
+  });
+  // Сбрасываем таблицы
+  const loading = '<tr><td colspan="20"><div class="loading"><div class="sp"></div> Загрузка…</div></td></tr>';
+  ['bDaily','bCamp','bKw','bArt'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.innerHTML = loading;
+  });
+  // Балансовый чип
+  const chip = document.getElementById('balChip');
+  if(chip) chip.style.display='none';
+}
+
 async function loadAll() {
   const btn = document.getElementById('loadBtn');
   btn.innerHTML='<div class="sp"></div> Загрузка…'; btn.disabled=true;
