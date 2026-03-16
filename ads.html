@@ -452,28 +452,62 @@ async function loadAll() {
 async function loadWB() {
   const from=ago(S.days), to=today();
 
-  // 1. Кампании (все)
-  S.camps = await wb('campaigns',{status:-1});
-  if (!Array.isArray(S.camps)) S.camps=[];
+  // 1. Кампании — новый API: count → adverts v2
+  const campData = await wb('campaigns');
+  // Ответ: { adverts: [{id, settings:{name}, status, bid_type, nm_settings, timestamps}], _count: {...} }
+  S.camps = (campData?.adverts || []).map(c => ({
+    advertId:    c.id,
+    name:        c.settings?.name || `#${c.id}`,
+    status:      c.status,
+    bid_type:    c.bid_type,
+    payment_type:c.settings?.payment_type,
+    dailyBudget: 0,
+    // список nm из nm_settings
+    nms: (c.nm_settings||[]).map(n => n.nm_id),
+  }));
 
-  // 2. Активные IDs для stats
-  const ids = S.camps.filter(c=>[9,11,4,7].includes(c.status)).map(c=>c.advertId);
+  // 2. IDs для stats (active=9, paused=11, ready=4, completed=7)
+  const ids = S.camps.map(c=>c.advertId);
 
   // 3. Дневной расход
   S.upd = await wb('upd',{from,to});
   if (!Array.isArray(S.upd)) S.upd=[];
 
-  // 4. Fullstats v3 (по 100 кампаний)
+  // 4. Fullstats v3 (макс 50 кампаний за раз)
   if (ids.length) {
-    const results = await Promise.all(chunk(ids,100).map(ch => wb('fullstats',{ids:ch,beginDate:from,endDate:to})));
+    const results = await Promise.all(chunk(ids,50).map(ch => wb('fullstats',{ids:ch,beginDate:from,endDate:to})));
     S.fstats = results.flat().filter(Boolean);
   } else { S.fstats=[]; }
 
-  // 5. Фразы/кластеры
-  if (ids.length) {
+  // 5. Фразы/кластеры — новый формат: items:[{advert_id, nm_id}]
+  if (S.fstats.length) {
     try {
-      const kd = await wb('keywords',{ids,from,to});
-      S.kw = Array.isArray(kd) ? kd : (kd?.clusters||[]);
+      // Строим пары advert_id + nm_id из fullstats (макс 100 пар)
+      const kwItems = [];
+      const seen = new Set();
+      for (const c of S.fstats) {
+        for (const day of (c.days||[])) {
+          for (const app of (day.apps||[])) {
+            for (const nm of (app.nms||[])) {
+              const key = `${c.advertId}_${nm.nmId}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                kwItems.push({ advert_id: c.advertId, nm_id: nm.nmId });
+                if (kwItems.length >= 100) break;
+              }
+              if (kwItems.length >= 100) break;
+            }
+            if (kwItems.length >= 100) break;
+          }
+          if (kwItems.length >= 100) break;
+        }
+        if (kwItems.length >= 100) break;
+      }
+      if (kwItems.length) {
+        const kd = await wb('keywords',{items: kwItems, from, to});
+        // Ответ: { stats: [{advert_id, nm_id, stats:[{norm_query, views, clicks, atbs, orders, avg_pos, ctr, cpc, spend}]}] }
+        S.kw = kd?.stats || [];
+      } else { S.kw=[]; }
     } catch(e) { console.warn('kw:',e.message); S.kw=[]; }
   }
 
@@ -684,18 +718,45 @@ function renderCampaigns() {
 // KEYWORDS TABLE
 // ══════════════════════════════════════════════════════════════════════════════
 function renderKeywords(artDrr) {
-  kwAll=(S.kw||[]).map(k=>{
-    const phrase=k.cluster||k.phrase||k.keyword||'—';
-    const views=k.views||k.count||0,clicks=k.clicks||0,carts=k.atbs||0,orders=k.orders||0,spend=k.sum||0;
-    const ctr=views>0?clicks/views*100:0;
-    const pos=k.avgPosition||k.position||0;
-    const nmId=(k.nms&&k.nms[0])||k.nmId||null;
-    const nmName=resolveNmName(nmId);
-    const at=getAT(nmName||String(nmId||''));
-    const cpo=orders>0?Math.round(spend/orders):null;
-    const artEnt=artDrr.find(a=>a.nmId===nmId)||null;
-    const analysis=analyzeKw({phrase,views,clicks,carts,orders,spend,ctr,pos,nmId,at,artEnt});
-    return {phrase,views,clicks,carts,orders,spend,ctr,pos,nmId,nmName,at,cpo,analysis};
+  // Новый формат API: S.kw = [{advert_id, nm_id, stats:[{norm_query, views, clicks, atbs, orders, avg_pos, spend, ctr}]}]
+  const flat = [];
+  for (const entry of (S.kw||[])) {
+    const nmId = entry.nm_id || entry.nmId || null;
+    const nmName = resolveNmName(nmId);
+    for (const s of (entry.stats||[])) {
+      const phrase = s.norm_query || s.normQuery || '—';
+      const views  = s.views  || 0;
+      const clicks = s.clicks || 0;
+      const carts  = s.atbs   || 0;
+      const orders = s.orders || 0;
+      const spend  = s.spend  || s.sum || 0;
+      const ctr    = s.ctr    || (views>0?clicks/views*100:0);
+      const pos    = s.avg_pos || s.avgPos || 0;
+      const at     = getAT(nmName||String(nmId||''));
+      const cpo    = orders>0?Math.round(spend/orders):null;
+      const artEnt = artDrr.find(a=>a.nmId===nmId)||null;
+      const analysis = analyzeKw({phrase,views,clicks,carts,orders,spend,ctr,pos,nmId,at,artEnt});
+      flat.push({phrase,views,clicks,carts,orders,spend,ctr,pos,nmId,nmName,at,cpo,analysis});
+    }
+  }
+  // Агрегируем одинаковые фразы разных кампаний/дней
+  const byPhrase = {};
+  for (const r of flat) {
+    if (!byPhrase[r.phrase]) byPhrase[r.phrase] = {...r};
+    else {
+      const e = byPhrase[r.phrase];
+      e.views+=r.views; e.clicks+=r.clicks; e.carts+=r.carts;
+      e.orders+=r.orders; e.spend+=r.spend;
+      e.ctr = e.views>0?e.clicks/e.views*100:0;
+      e.cpo = e.orders>0?Math.round(e.spend/e.orders):null;
+    }
+  }
+  kwAll = Object.values(byPhrase);
+  // Пересчитываем анализ после агрегации
+  kwAll = kwAll.map(r => {
+    const artEnt = artDrr.find(a=>a.nmId===r.nmId)||null;
+    r.analysis = analyzeKw({...r, artEnt});
+    return r;
   });
   document.getElementById('kwCount').textContent=kwAll.length+' фраз';
   filterKw();
