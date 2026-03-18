@@ -487,21 +487,23 @@ async function loadAll() {
 async function loadWB() {
   const from=ago(S.days), to=today();
 
-  // ── Шаг 0: nmId → supplierArticle из stocks endpoint ───────────────────────
-  // /api/v1/supplier/stocks содержит ВСЕ товары включая новые без заказов
-  // Объединяем с тем что уже есть в localStorage
-  try {
-    const stocksData = await wb('stocks_map');
-    if (stocksData?.mapping && Object.keys(stocksData.mapping).length > 0) {
-      // Мержим: новые данные перезаписывают старые
-      Object.assign(S.nmMap, stocksData.mapping);
-      saveNmMap();
-      console.log('[ADS] nmMap from stocks:', Object.keys(S.nmMap).length, 'entries total');
-    } else {
-      console.warn('[ADS] stocks_map returned empty, using localStorage cache:', Object.keys(S.nmMap).length);
+  // ── Шаг 0: nmId → supplierArticle ───────────────────────────────────────
+  // stocks_map запрашивает только сегодняшние остатки (быстро)
+  // Кешируется в localStorage — не повторяем если уже много записей
+  const cachedCount = Object.keys(S.nmMap).length;
+  console.log('[ADS] nmMap cache:', cachedCount, 'entries');
+  if (cachedCount < 10) {
+    // Кеш пустой или маленький — загружаем
+    try {
+      const stocksData = await wb('stocks_map');
+      if (stocksData?.mapping && Object.keys(stocksData.mapping).length > 0) {
+        Object.assign(S.nmMap, stocksData.mapping);
+        saveNmMap();
+        console.log('[ADS] nmMap updated:', Object.keys(S.nmMap).length, 'entries');
+      }
+    } catch(e) {
+      console.warn('[ADS] stocks_map error:', e.message);
     }
-  } catch(e) {
-    console.warn('[ADS] stocks_map error:', e.message, '— using localStorage cache:', Object.keys(S.nmMap).length);
   }
 
   // ── Шаг 1: upd + кампании + баланс параллельно ───────────────────────────
