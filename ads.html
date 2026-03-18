@@ -487,52 +487,22 @@ async function loadAll() {
 async function loadWB() {
   const from=ago(S.days), to=today();
 
-  // ── Шаг 0: nmId → supplierArticle из заказов + продаж ──────────────────────
-  // Запрашиваем короткий период быстро, потом расширяем если мало данных
+  // ── Шаг 0: nmId → supplierArticle из stocks endpoint ───────────────────────
+  // /api/v1/supplier/stocks содержит ВСЕ товары включая новые без заказов
+  // Объединяем с тем что уже есть в localStorage
   try {
-    S.nmMap = {};
-    const buildMap = (arr) => {
-      if (!Array.isArray(arr)) return;
-      for (const o of arr) {
-        if (o.nmId && o.supplierArticle && !S.nmMap[o.nmId])
-          S.nmMap[o.nmId] = o.supplierArticle;
-      }
-    };
-    // Сначала последние 30 дней (быстро)
-    const [o30, s30] = await Promise.allSettled([
-      wb('orders', { dateFrom: ago(30), dateTo: today(), flag: 1 }),
-      wb('sales',  { dateFrom: ago(30), dateTo: today(), flag: 1 }),
-    ]);
-    buildMap(o30.status==='fulfilled' ? o30.value : []);
-    buildMap(s30.status==='fulfilled' ? s30.value : []);
-    console.log('[ADS] nmMap after 30d:', Object.keys(S.nmMap).length, 'entries');
-    // Если мало — добавляем ещё 60 дней назад
-    if (Object.keys(S.nmMap).length < 30) {
-      const [o60, s60] = await Promise.allSettled([
-        wb('orders', { dateFrom: ago(90), dateTo: ago(31), flag: 1 }),
-        wb('sales',  { dateFrom: ago(90), dateTo: ago(31), flag: 1 }),
-      ]);
-      buildMap(o60.status==='fulfilled' ? o60.value : []);
-      buildMap(s60.status==='fulfilled' ? s60.value : []);
-      console.log('[ADS] nmMap after 90d:', Object.keys(S.nmMap).length, 'entries');
+    const stocksData = await wb('stocks_map');
+    if (stocksData?.mapping && Object.keys(stocksData.mapping).length > 0) {
+      // Мержим: новые данные перезаписывают старые
+      Object.assign(S.nmMap, stocksData.mapping);
+      saveNmMap();
+      console.log('[ADS] nmMap from stocks:', Object.keys(S.nmMap).length, 'entries total');
+    } else {
+      console.warn('[ADS] stocks_map returned empty, using localStorage cache:', Object.keys(S.nmMap).length);
     }
-    // Дополняем через Content API для nmIds которых нет в nmMap
-    // Все nmIds из списка кампаний (nm_settings)
-    const allNmIds = [...new Set(S.camps.flatMap(c => c.nms||[]).filter(Boolean))];
-    const missing = allNmIds.filter(id => !S.nmMap[id]);
-    if (missing.length > 0) {
-      console.log('[ADS] fetching', missing.length, 'missing nmIds from Content API');
-      try {
-        const artData = await wb('articles', { nmIds: missing });
-        if (artData?.mapping) {
-          Object.assign(S.nmMap, artData.mapping);
-          console.log('[ADS] nmMap after Content API:', Object.keys(S.nmMap).length, 'entries');
-        }
-      } catch(e) { console.warn('[ADS] articles action:', e.message); }
-    }
-    saveNmMap(); // сохраняем в localStorage для следующих сессий
-    console.log('[ADS] nmMap saved to localStorage:', Object.keys(S.nmMap).length, 'entries');
-  } catch(e) { console.warn('[ADS] nmMap error:', e.message); }
+  } catch(e) {
+    console.warn('[ADS] stocks_map error:', e.message, '— using localStorage cache:', Object.keys(S.nmMap).length);
+  }
 
   // ── Шаг 1: upd + кампании + баланс параллельно ───────────────────────────
   const [updRaw, campRaw, balRaw] = await Promise.allSettled([
