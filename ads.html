@@ -903,14 +903,23 @@ function renderCampaigns() {
     else byId[numId].spend = sp; // upd точнее
   }
 
-  const target=S.plan?.drr_plan||10;
+  const target = S.plan?.drr_plan || 10;
+  const oAll    = S.rnp.reduce((s,r) => s + (+r.orders_sum||0), 0);
+  const totSpend = Object.values(byId).reduce((s,v) => s + (v.spend||0), 0);
   tbody.innerHTML=camps.map(c=>{
     const st=byId[c.advertId]||{};
     const spend = st.spend||0;
 
-    // ДРР кампании = расход / выручка_с_заказов_кампании × 100%
-    // sum_price — это сумма заказов, атрибутированных этой кампании (из fullstats)
-    const drr = st.sumPrice>0 ? spend/st.sumPrice*100 : null;
+    // ДРР кампании = расход / выручка_кампании × 100%
+    // Приоритет 1: sum_price из fullstats (прямая атрибуция)
+    // Приоритет 2: пропорциональная доля от общих заказов по расходу
+    let drr = null;
+    if (st.sumPrice > 0) {
+      drr = spend / st.sumPrice * 100;
+    } else if (spend > 0 && oAll > 0 && totSpend > 0) {
+      const campShare = spend / totSpend;
+      drr = spend / (oAll * campShare) * 100;
+    }
     const drrSt = drr===null?'x': drr<=target?'ok': drr<=target+5?'warn':'bad';
     const cpo = st.ords>0 ? Math.round(spend/st.ords) : null;
     const sSt = c.status===9?'bg': c.status===11?'by':'bx';
