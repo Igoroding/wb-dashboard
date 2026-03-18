@@ -474,7 +474,7 @@ function clearDisplay() {
 
 async function loadAll() {
   const btn = document.getElementById('loadBtn');
-  btn.innerHTML='<div class="sp"></div> Загрузка…'; btn.disabled=true;
+  btn.innerHTML='<div class="sp"></div> Загрузка… (до 2 мин)'; btn.disabled=true;
   try {
     await Promise.all([loadWB(), loadSB()]);
     renderAll();
@@ -571,15 +571,16 @@ async function loadWB() {
 
   S.fstats = [];
   if (idsForStats.length) {
-    const batches = [];
-    for (let i = 0; i < idsForStats.length; i += 50) batches.push(idsForStats.slice(i, i+50));
-    const results = await Promise.allSettled(
-      batches.map(batch => wb('fullstats', {ids: batch, beginDate: from, endDate: to}))
-    );
-    for (const res of results) {
-      if (res.status === 'fulfilled' && Array.isArray(res.value)) {
-        S.fstats.push(...res.value.filter(x => x && x.advertId));
-      }
+    // Прокси сам делает батчинг с задержками (rate limit 3/min, burst=1)
+    // Передаём все IDs одним запросом — прокси обработает последовательно
+    // Может занять до 1-2 минут если кампаний много
+    console.log('[ADS] requesting fullstats for', idsForStats.length, 'campaigns (may take ~1 min)...');
+    try {
+      const data = await wb('fullstats', {ids: idsForStats, beginDate: from, endDate: to});
+      S.fstats = Array.isArray(data) ? data.filter(x => x && x.advertId) : [];
+    } catch(e) {
+      console.warn('[ADS] fullstats error:', e.message);
+      S.fstats = [];
     }
     const totViews = S.fstats.reduce((s,c)=>s+(c.views||0),0);
     console.log('[ADS] fullstats:', S.fstats.length, 'entries | views:', totViews);
