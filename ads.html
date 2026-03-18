@@ -382,7 +382,16 @@ const SB_URL  = 'https://rkxezsfrmjvriokhzaxk.supabase.co';
 const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGV6c2ZybWp2cmlva2h6YXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTM5MTIsImV4cCI6MjA4ODEyOTkxMn0.IOMsGZh7ZGn1LTs2UCxdBWoIWH1LGiprkgR6pwpfabw';
 
 // ── State ──
-const S = { shop:'oding', days:7, camps:[], fstats:[], kw:[], upd:[], rnp:[], plan:null, nmMap:{} };
+// Load persisted nmMap from localStorage (survives page reload)
+function loadSavedNmMap() {
+  try { return JSON.parse(localStorage.getItem('wb_nmMap') || '{}'); }
+  catch(e) { return {}; }
+}
+function saveNmMap() {
+  try { localStorage.setItem('wb_nmMap', JSON.stringify(S.nmMap)); } catch(e) {}
+}
+const S = { shop:'oding', days:7, camps:[], fstats:[], kw:[], upd:[], rnp:[], plan:null, nmMap: loadSavedNmMap() };
+console.log('[ADS] Loaded', Object.keys(S.nmMap).length, 'articles from localStorage');
 const CH = {};
 let kwAll = [];
 
@@ -521,7 +530,9 @@ async function loadWB() {
         }
       } catch(e) { console.warn('[ADS] articles action:', e.message); }
     }
-  } catch(e) { console.warn('[ADS] nmMap error:', e.message); S.nmMap = {}; }
+    saveNmMap(); // сохраняем в localStorage для следующих сессий
+    console.log('[ADS] nmMap saved to localStorage:', Object.keys(S.nmMap).length, 'entries');
+  } catch(e) { console.warn('[ADS] nmMap error:', e.message); }
 
   // ── Шаг 1: upd + кампании + баланс параллельно ───────────────────────────
   const [updRaw, campRaw, balRaw] = await Promise.allSettled([
