@@ -872,23 +872,27 @@ function renderCampaigns() {
     const sSt = c.status===9?'bg': c.status===11?'by':'bx';
     const dc  = {ok:'green',warn:'yellow',bad:'red',x:'muted'}[drrSt];
 
-    // Собираем уникальные nmId этой кампании из fullstats
-    const campNms = [...new Set(
-      (S.fstats.find(f=>f.advertId===c.advertId)?.days||[])
-        .flatMap(d=>d.apps||[])
-        .flatMap(a=>a.nms||[])
-        .map(n=>n.nmId)
-        .filter(Boolean)
-    )];
-    // Переводим nmId → внутренний артикул через nmMap
-    const articles = campNms
-      .map(id => S.nmMap[id] || null)
+    // Собираем nmId с суммарными показами, берём топ по показам
+    const nmViews = {};
+    for (const day of (S.fstats.find(f=>f.advertId===c.advertId)?.days||[])) {
+      for (const app of (day.apps||[])) {
+        for (const nm of (app.nms||[])) {
+          if (nm.nmId) nmViews[nm.nmId] = (nmViews[nm.nmId]||0) + (nm.views||0);
+        }
+      }
+    }
+    // Сортируем по показам — главный артикул первый
+    const topNmIds = Object.entries(nmViews)
+      .sort((a,b) => b[1]-a[1])
+      .map(([id]) => +id);
+    // Переводим топ-nm в внутренние артикулы
+    const topArticles = topNmIds
+      .map(id => S.nmMap[id])
       .filter(Boolean);
-    // Убираем дубли, сортируем
-    const uniqArticles = [...new Set(articles)].sort();
-    // Отображаем: внутренние артикулы (крупно), nm-названия (мелко)
+    const uniqArticles = [...new Set(topArticles)];
+    // Показываем только 1 главный (с наибольшими показами)
     const artLabel = uniqArticles.length
-      ? uniqArticles.slice(0,3).join(', ') + (uniqArticles.length>3 ? ` +${uniqArticles.length-3}` : '')
+      ? uniqArticles[0] + (uniqArticles.length>1 ? ` +${uniqArticles.length-1}` : '')
       : c.name || ('#'+c.advertId);
     const nmNamesLabel = (st.nmNames||[]).slice(0,2).join(', ')
       + ((st.nmNames||[]).length>2 ? ` +${(st.nmNames||[]).length-2}` : '');
