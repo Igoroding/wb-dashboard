@@ -525,16 +525,32 @@ async function loadWB() {
     chip.style.display='inline';
   }
 
-  // ── Шаг 2: fullstats (нужны IDs кампаний) ────────────────────────────────
+  // ── Шаг 2: fullstats ─────────────────────────────────────────────────────
   const statsIds = S.camps.filter(c=>[7,9,11].includes(+c.status)).map(c=>c.advertId);
-  const idsForStats = statsIds.length ? statsIds : campIds;
+  // fallback: если фильтр по статусу ничего не дал — берём все IDs из upd
+  // (upd = только кампании с расходом — они точно работают)
+  let idsForStats = statsIds.length ? statsIds : campIds;
+
+  console.log('[ADS] camps:', S.camps.length,
+    '| statuses:', [...new Set(S.camps.map(c=>+c.status))].sort().join(','),
+    '| statsIds:', statsIds.length,
+    '| campIds:', campIds.length,
+    '| idsForStats:', idsForStats.length);
 
   if (idsForStats.length) {
     try {
       const r = await wb('fullstats', {ids: idsForStats, beginDate: from, endDate: to});
-      S.fstats = Array.isArray(r) ? r : [];
-    } catch(e) { console.warn('fullstats:', e.message); S.fstats=[]; }
-  } else { S.fstats=[]; }
+      S.fstats = Array.isArray(r) ? r.filter(x=>x&&x.advertId) : [];
+      const totViews = S.fstats.reduce((s,c)=>s+(c.views||0),0);
+      console.log('[ADS] fullstats:', S.fstats.length, 'entries | views:', totViews);
+    } catch(e) {
+      console.warn('[ADS] fullstats error:', e.message);
+      S.fstats = [];
+    }
+  } else {
+    console.warn('[ADS] no ids for fullstats — skipping');
+    S.fstats = [];
+  }
 
   // ── Шаг 3: фразы (нужны пары advert_id+nm_id из fullstats) ───────────────
   if (S.fstats.length) {
