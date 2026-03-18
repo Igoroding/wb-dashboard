@@ -571,7 +571,6 @@ async function loadWB() {
 
   S.fstats = [];
   if (idsForStats.length) {
-    // Запрашиваем батчами по 50 параллельно
     const batches = [];
     for (let i = 0; i < idsForStats.length; i += 50) batches.push(idsForStats.slice(i, i+50));
     const results = await Promise.allSettled(
@@ -580,13 +579,43 @@ async function loadWB() {
     for (const res of results) {
       if (res.status === 'fulfilled' && Array.isArray(res.value)) {
         S.fstats.push(...res.value.filter(x => x && x.advertId));
-      } else if (res.status === 'rejected') {
-        console.warn('[ADS] fullstats batch failed:', res.reason?.message);
       }
     }
     const totViews = S.fstats.reduce((s,c)=>s+(c.views||0),0);
-    const totClicks = S.fstats.reduce((s,c)=>s+(c.clicks||0),0);
-    console.log('[ADS] fullstats done:', S.fstats.length, 'entries | views:', totViews, '| clicks:', totClicks);
+    console.log('[ADS] fullstats:', S.fstats.length, 'entries | views:', totViews);
+
+    // Для кампаний с нулями (unified-bid) — пробуем normquery/stats
+    const zeroCamps = S.camps
+      .filter(c => {
+        const fs = S.fstats.find(f => f.advertId === c.advertId);
+        return !fs || (!fs.views && !fs.clicks);
+      })
+      .filter(c => c.nms && c.nms.length > 0) // только с известными nm
+      .slice(0, 20); // не больше 20 за раз
+
+    if (zeroCamps.length > 0) {
+      try {
+        const nqData = await wb('normquery_by_camps', {
+          camps: zeroCamps.map(c => ({ advertId: c.advertId, nmIds: c.nms.slice(0,5) })),
+          from, to
+        });
+        if (nqData?.stats?.length) {
+          for (const nq of nqData.stats) {
+            const existing = S.fstats.find(f => f.advertId === nq.advertId);
+            if (existing) {
+              // Дополняем если нули
+              if (!existing.views) existing.views = nq.views;
+              if (!existing.clicks) existing.clicks = nq.clicks;
+              if (!existing.atbs) existing.atbs = nq.atbs;
+              if (!existing.orders) existing.orders = nq.orders;
+            } else {
+              S.fstats.push({ ...nq, days:[], sum:0, sum_price:0, ctr: nq.views>0?nq.clicks/nq.views*100:0 });
+            }
+          }
+          console.log('[ADS] normquery补充:', nqData.stats.length, 'campaigns');
+        }
+      } catch(e) { console.warn('[ADS] normquery_by_camps:', e.message); }
+    }
   }
 
   // ── Шаг 3: фразы (нужны пары advert_id+nm_id из fullstats) ───────────────
