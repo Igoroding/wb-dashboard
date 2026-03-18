@@ -478,17 +478,28 @@ async function loadAll() {
 async function loadWB() {
   const from=ago(S.days), to=today();
 
-  // ── Шаг 0: загружаем маппинг nmId → supplierArticle из заказов ─────────────
-  // orders содержит nmId + supplierArticle — строим словарь один раз
+  // ── Шаг 0: nmId → supplierArticle из заказов + продаж ──────────────────────
   try {
-    const ordersRaw = await wb('orders', { dateFrom: ago(30), dateTo: today(), flag: 1 });
+    // Берём заказы и продажи за последние 60 дней — максимальное покрытие артикулов
+    const [ordersRaw, salesRaw] = await Promise.allSettled([
+      wb('orders', { dateFrom: ago(60), dateTo: today(), flag: 1 }),
+      wb('sales',  { dateFrom: ago(60), dateTo: today(), flag: 1 }),
+    ]);
     S.nmMap = {};
-    if (Array.isArray(ordersRaw)) {
-      for (const o of ordersRaw) {
-        if (o.nmId && o.supplierArticle) S.nmMap[o.nmId] = o.supplierArticle;
+    const sources = [
+      ordersRaw.status === 'fulfilled' ? ordersRaw.value : [],
+      salesRaw.status  === 'fulfilled' ? salesRaw.value  : [],
+    ];
+    for (const arr of sources) {
+      if (Array.isArray(arr)) {
+        for (const o of arr) {
+          if (o.nmId && o.supplierArticle && !S.nmMap[o.nmId]) {
+            S.nmMap[o.nmId] = o.supplierArticle;
+          }
+        }
       }
     }
-    console.log('[ADS] nmMap built:', Object.keys(S.nmMap).length, 'entries');
+    console.log('[ADS] nmMap built:', Object.keys(S.nmMap).length, 'unique nmId→article');
   } catch(e) { console.warn('[ADS] nmMap error:', e.message); S.nmMap = {}; }
 
   // ── Шаг 1: upd + кампании + баланс параллельно ───────────────────────────
@@ -872,28 +883,30 @@ function renderCampaigns() {
     const sSt = c.status===9?'bg': c.status===11?'by':'bx';
     const dc  = {ok:'green',warn:'yellow',bad:'red',x:'muted'}[drrSt];
 
-    // Собираем nmId с суммарными показами, берём топ по показам
+    // Источник 1: nmId из fullstats (с показами — самый точный)
     const nmViews = {};
     for (const day of (S.fstats.find(f=>f.advertId===c.advertId)?.days||[])) {
       for (const app of (day.apps||[])) {
         for (const nm of (app.nms||[])) {
-          if (nm.nmId) nmViews[nm.nmId] = (nmViews[nm.nmId]||0) + (nm.views||0);
+          if (nm.nmId) nmViews[nm.nmId] = (nmViews[nm.nmId]||0) + (nm.views||1);
         }
       }
     }
-    // Сортируем по показам — главный артикул первый
+    // Источник 2: nm_settings из campaigns API (всегда есть, не зависит от fullstats)
+    for (const ns of (c.nms||[])) {
+      if (ns && !nmViews[ns]) nmViews[ns] = 0;
+    }
+    // Сортируем: сначала те у которых есть показы
     const topNmIds = Object.entries(nmViews)
       .sort((a,b) => b[1]-a[1])
       .map(([id]) => +id);
-    // Переводим топ-nm в внутренние артикулы
-    const topArticles = topNmIds
-      .map(id => S.nmMap[id])
-      .filter(Boolean);
+    // Переводим в наши артикулы через nmMap
+    const topArticles = topNmIds.map(id => S.nmMap[id]).filter(Boolean);
     const uniqArticles = [...new Set(topArticles)];
-    // Показываем только 1 главный (с наибольшими показами)
+    // Показываем главный артикул (1 штука + счётчик остальных)
     const artLabel = uniqArticles.length
       ? uniqArticles[0] + (uniqArticles.length>1 ? ` +${uniqArticles.length-1}` : '')
-      : c.name || ('#'+c.advertId);
+      : '#'+c.advertId;  // fallback: только ID без имени кампании
     const nmNamesLabel = (st.nmNames||[]).slice(0,2).join(', ')
       + ((st.nmNames||[]).length>2 ? ` +${(st.nmNames||[]).length-2}` : '');
     const bidType = c.bid_type==='manual'?'Ручная':'Единая';
