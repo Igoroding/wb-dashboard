@@ -479,27 +479,48 @@ async function loadWB() {
   const from=ago(S.days), to=today();
 
   // ── Шаг 0: nmId → supplierArticle из заказов + продаж ──────────────────────
+  // Запрашиваем короткий период быстро, потом расширяем если мало данных
   try {
-    // Берём заказы и продажи за последние 60 дней — максимальное покрытие артикулов
-    const [ordersRaw, salesRaw] = await Promise.allSettled([
-      wb('orders', { dateFrom: ago(60), dateTo: today(), flag: 1 }),
-      wb('sales',  { dateFrom: ago(60), dateTo: today(), flag: 1 }),
-    ]);
     S.nmMap = {};
-    const sources = [
-      ordersRaw.status === 'fulfilled' ? ordersRaw.value : [],
-      salesRaw.status  === 'fulfilled' ? salesRaw.value  : [],
-    ];
-    for (const arr of sources) {
-      if (Array.isArray(arr)) {
-        for (const o of arr) {
-          if (o.nmId && o.supplierArticle && !S.nmMap[o.nmId]) {
-            S.nmMap[o.nmId] = o.supplierArticle;
-          }
-        }
+    const buildMap = (arr) => {
+      if (!Array.isArray(arr)) return;
+      for (const o of arr) {
+        if (o.nmId && o.supplierArticle && !S.nmMap[o.nmId])
+          S.nmMap[o.nmId] = o.supplierArticle;
       }
+    };
+    // Сначала последние 30 дней (быстро)
+    const [o30, s30] = await Promise.allSettled([
+      wb('orders', { dateFrom: ago(30), dateTo: today(), flag: 1 }),
+      wb('sales',  { dateFrom: ago(30), dateTo: today(), flag: 1 }),
+    ]);
+    buildMap(o30.status==='fulfilled' ? o30.value : []);
+    buildMap(s30.status==='fulfilled' ? s30.value : []);
+    console.log('[ADS] nmMap after 30d:', Object.keys(S.nmMap).length, 'entries');
+    // Если мало — добавляем ещё 60 дней назад
+    if (Object.keys(S.nmMap).length < 30) {
+      const [o60, s60] = await Promise.allSettled([
+        wb('orders', { dateFrom: ago(90), dateTo: ago(31), flag: 1 }),
+        wb('sales',  { dateFrom: ago(90), dateTo: ago(31), flag: 1 }),
+      ]);
+      buildMap(o60.status==='fulfilled' ? o60.value : []);
+      buildMap(s60.status==='fulfilled' ? s60.value : []);
+      console.log('[ADS] nmMap after 90d:', Object.keys(S.nmMap).length, 'entries');
     }
-    console.log('[ADS] nmMap built:', Object.keys(S.nmMap).length, 'unique nmId→article');
+    // Дополняем через Content API для nmIds которых нет в nmMap
+    // Все nmIds из списка кампаний (nm_settings)
+    const allNmIds = [...new Set(S.camps.flatMap(c => c.nms||[]).filter(Boolean))];
+    const missing = allNmIds.filter(id => !S.nmMap[id]);
+    if (missing.length > 0) {
+      console.log('[ADS] fetching', missing.length, 'missing nmIds from Content API');
+      try {
+        const artData = await wb('articles', { nmIds: missing });
+        if (artData?.mapping) {
+          Object.assign(S.nmMap, artData.mapping);
+          console.log('[ADS] nmMap after Content API:', Object.keys(S.nmMap).length, 'entries');
+        }
+      } catch(e) { console.warn('[ADS] articles action:', e.message); }
+    }
   } catch(e) { console.warn('[ADS] nmMap error:', e.message); S.nmMap = {}; }
 
   // ── Шаг 1: upd + кампании + баланс параллельно ───────────────────────────
@@ -904,9 +925,11 @@ function renderCampaigns() {
     const topArticles = topNmIds.map(id => S.nmMap[id]).filter(Boolean);
     const uniqArticles = [...new Set(topArticles)];
     // Показываем главный артикул (1 штука + счётчик остальных)
+    // Fallback цепочка: наш артикул → nmId WB → ID кампании
+    const fallbackLabel = topNmIds.length ? String(topNmIds[0]) : ('#'+c.advertId);
     const artLabel = uniqArticles.length
       ? uniqArticles[0] + (uniqArticles.length>1 ? ` +${uniqArticles.length-1}` : '')
-      : '#'+c.advertId;  // fallback: только ID без имени кампании
+      : fallbackLabel;
     const nmNamesLabel = (st.nmNames||[]).slice(0,2).join(', ')
       + ((st.nmNames||[]).length>2 ? ` +${(st.nmNames||[]).length-2}` : '');
     const bidType = c.bid_type==='manual'?'Ручная':'Единая';
