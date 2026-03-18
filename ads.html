@@ -526,30 +526,39 @@ async function loadWB() {
   }
 
   // ── Шаг 2: fullstats ─────────────────────────────────────────────────────
-  const statsIds = S.camps.filter(c=>[7,9,11].includes(+c.status)).map(c=>c.advertId);
-  // fallback: если фильтр по статусу ничего не дал — берём все IDs из upd
-  // (upd = только кампании с расходом — они точно работают)
-  let idsForStats = statsIds.length ? statsIds : campIds;
+  // Источник IDs: upd содержит только кампании с реальным расходом в периоде
+  // Это надёжнее фильтрации по статусу (который может прийти как строка/неверным)
+  const idsFromUpd = [...new Set(
+    S.upd.map(r => r.advertId || r.advert_id).filter(Boolean)
+  )];
+  // Дополняем кампаниями со статусом 9/11 на случай если в upd их нет
+  const idsFromCamps = S.camps.filter(c=>[7,9,11].includes(+c.status)).map(c=>c.advertId);
+  // Объединяем, убираем дубли
+  const idsForStats = [...new Set([...idsFromUpd, ...idsFromCamps])];
 
-  console.log('[ADS] camps:', S.camps.length,
-    '| statuses:', [...new Set(S.camps.map(c=>+c.status))].sort().join(','),
-    '| statsIds:', statsIds.length,
-    '| campIds:', campIds.length,
-    '| idsForStats:', idsForStats.length);
+  console.log('[ADS] idsFromUpd:', idsFromUpd.length,
+    '| idsFromCamps:', idsFromCamps.length,
+    '| idsForStats:', idsForStats.length,
+    '| period:', from, '→', to);
 
+  S.fstats = [];
   if (idsForStats.length) {
-    try {
-      const r = await wb('fullstats', {ids: idsForStats, beginDate: from, endDate: to});
-      S.fstats = Array.isArray(r) ? r.filter(x=>x&&x.advertId) : [];
-      const totViews = S.fstats.reduce((s,c)=>s+(c.views||0),0);
-      console.log('[ADS] fullstats:', S.fstats.length, 'entries | views:', totViews);
-    } catch(e) {
-      console.warn('[ADS] fullstats error:', e.message);
-      S.fstats = [];
+    // Запрашиваем батчами по 50 параллельно
+    const batches = [];
+    for (let i = 0; i < idsForStats.length; i += 50) batches.push(idsForStats.slice(i, i+50));
+    const results = await Promise.allSettled(
+      batches.map(batch => wb('fullstats', {ids: batch, beginDate: from, endDate: to}))
+    );
+    for (const res of results) {
+      if (res.status === 'fulfilled' && Array.isArray(res.value)) {
+        S.fstats.push(...res.value.filter(x => x && x.advertId));
+      } else if (res.status === 'rejected') {
+        console.warn('[ADS] fullstats batch failed:', res.reason?.message);
+      }
     }
-  } else {
-    console.warn('[ADS] no ids for fullstats — skipping');
-    S.fstats = [];
+    const totViews = S.fstats.reduce((s,c)=>s+(c.views||0),0);
+    const totClicks = S.fstats.reduce((s,c)=>s+(c.clicks||0),0);
+    console.log('[ADS] fullstats done:', S.fstats.length, 'entries | views:', totViews, '| clicks:', totClicks);
   }
 
   // ── Шаг 3: фразы (нужны пары advert_id+nm_id из fullstats) ───────────────
