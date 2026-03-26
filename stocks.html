@@ -91,6 +91,31 @@
   .period-btn.active { background: #cb11ab22; border-color: #cb11ab88; color: #cb11ab; }
   .period-info { margin-left: auto; font-size: 11px; color: #444; font-style: italic; }
 
+  /* Date range picker */
+  .period-divider { width: 1px; height: 20px; background: #2a2a2a; margin: 0 4px; }
+  .daterange-wrap { display: flex; align-items: center; gap: 6px; }
+  .daterange-wrap label { font-size: 11px; color: #555; }
+  .date-input {
+    background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
+    padding: 4px 10px; color: #aaa; font-size: 12px; font-family: 'Geologica', sans-serif;
+    cursor: pointer; outline: none; transition: border-color .2s;
+    color-scheme: dark;
+  }
+  .date-input:hover { border-color: #3a3a3a; }
+  .date-input:focus { border-color: #cb11ab66; color: #dde4ee; }
+  .daterange-sep { font-size: 12px; color: #444; }
+  .apply-btn {
+    background: #cb11ab22; border: 1px solid #cb11ab66; border-radius: 8px;
+    padding: 4px 14px; color: #cb11ab; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: 'Geologica', sans-serif; transition: all .2s;
+  }
+  .apply-btn:hover { background: #cb11ab44; border-color: #cb11ab; }
+  .clear-range-btn {
+    background: none; border: none; color: #444; font-size: 13px; cursor: pointer;
+    padding: 2px 4px; line-height: 1; transition: color .2s;
+  }
+  .clear-range-btn:hover { color: #888; }
+
   /* AI Analysis block */
   .ai-section { margin: 0 24px 20px; }
   .ai-btn {
@@ -182,6 +207,16 @@
   <button class="period-btn active" id="period-14" onclick="setPeriod(14,this)">14 дней</button>
   <button class="period-btn" onclick="setPeriod(30,this)">30 дней</button>
   <button class="period-btn" onclick="setPeriod(999,this)">Всё время</button>
+  <div class="period-divider"></div>
+  <div class="daterange-wrap">
+    <label>с</label>
+    <input type="date" class="date-input" id="date-from" onchange="onDateInputChange()">
+    <span class="daterange-sep">—</span>
+    <label>по</label>
+    <input type="date" class="date-input" id="date-to" onchange="onDateInputChange()">
+    <button class="apply-btn" id="apply-range-btn" onclick="applyDateRange()" style="display:none">Применить</button>
+    <button class="clear-range-btn" id="clear-range-btn" onclick="clearDateRange()" style="display:none" title="Сбросить диапазон">✕</button>
+  </div>
   <span class="period-info" id="period-info"></span>
 </div>
 
@@ -209,6 +244,8 @@ const RISK_DAYS = 10;
 let currentShop = 'oding';
 let currentView = 'table';
 let currentPeriod = 14;
+let customDateFrom = null;
+let customDateTo = null;
 let watchList = [];
 let lastPivot = {};
 let lastDates = [];
@@ -216,8 +253,49 @@ let lastRiskItems = [];
 
 function setPeriod(days, el) {
   currentPeriod = days;
+  customDateFrom = null;
+  customDateTo = null;
   document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
+  document.getElementById('apply-range-btn').style.display = 'none';
+  document.getElementById('clear-range-btn').style.display = 'none';
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value = '';
+  renderTable();
+}
+
+function onDateInputChange() {
+  const from = document.getElementById('date-from').value;
+  const to = document.getElementById('date-to').value;
+  const hasAny = from || to;
+  document.getElementById('apply-range-btn').style.display = hasAny ? 'inline-block' : 'none';
+  document.getElementById('clear-range-btn').style.display = (customDateFrom || customDateTo) ? 'inline-block' : 'none';
+}
+
+function applyDateRange() {
+  const from = document.getElementById('date-from').value;
+  const to = document.getElementById('date-to').value;
+  if (!from && !to) return;
+  customDateFrom = from || null;
+  customDateTo = to || null;
+  // Deactivate quick-select buttons
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('apply-range-btn').style.display = 'none';
+  document.getElementById('clear-range-btn').style.display = 'inline-block';
+  renderTable();
+}
+
+function clearDateRange() {
+  customDateFrom = null;
+  customDateTo = null;
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value = '';
+  document.getElementById('apply-range-btn').style.display = 'none';
+  document.getElementById('clear-range-btn').style.display = 'none';
+  // Re-activate 14-day button
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('period-14').classList.add('active');
+  currentPeriod = 14;
   renderTable();
 }
 
@@ -376,18 +454,39 @@ function renderTable() {
     }
   }
 
-  // Apply period filter
-  const visibleDates = currentPeriod >= 999 ? dates : dates.slice(-currentPeriod);
+  // Apply period / date range filter
+  let visibleDates;
+  if (customDateFrom || customDateTo) {
+    visibleDates = dates.filter(d => {
+      if (customDateFrom && d < customDateFrom) return false;
+      if (customDateTo && d > customDateTo) return false;
+      return true;
+    });
+  } else {
+    visibleDates = currentPeriod >= 999 ? dates : dates.slice(-currentPeriod);
+  }
+
+  // Set min/max on date inputs based on available data
+  if (dates.length > 0) {
+    const minD = dates[0], maxD = dates[dates.length - 1];
+    document.getElementById('date-from').min = minD;
+    document.getElementById('date-from').max = maxD;
+    document.getElementById('date-to').min = minD;
+    document.getElementById('date-to').max = maxD;
+  }
   const totalDays = dates.length;
   const showingDays = visibleDates.length;
 
   // Update period info
   const periodInfo = document.getElementById('period-info');
-  if (currentPeriod < 999 && totalDays > showingDays) {
-    const hiddenStart = dates[0];
+  const fmtShort = d => { const [,m,day] = d.split('-'); return `${parseInt(day)}/${parseInt(m)}`; };
+  if (customDateFrom || customDateTo) {
+    const rangeFrom = visibleDates.length > 0 ? fmtShort(visibleDates[0]) : '?';
+    const rangeTo   = visibleDates.length > 0 ? fmtShort(visibleDates[visibleDates.length-1]) : '?';
+    periodInfo.textContent = `Выбранный диапазон: ${rangeFrom} — ${rangeTo} · ${visibleDates.length} дн.`;
+  } else if (currentPeriod < 999 && totalDays > showingDays) {
     const hiddenEnd = dates[dates.length - showingDays - 1];
-    const fmtShort = d => { const [,m,day] = d.split('-'); return `${parseInt(day)}/${parseInt(m)}`; };
-    periodInfo.textContent = `Показаны ${showingDays} из ${totalDays} дней · скрыто ${totalDays - showingDays} дней (до ${fmtShort(hiddenEnd)})`;
+    periodInfo.textContent = `Показаны ${showingDays} из ${totalDays} дней · скрыто до ${fmtShort(hiddenEnd)}`;
   } else {
     periodInfo.textContent = `Показаны все ${totalDays} дней`;
   }
