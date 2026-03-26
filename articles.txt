@@ -41,7 +41,6 @@ tomat-bolshayamamochka-3
 ogurec-zelenue-gnomiki-3
 morkov-samson-3
 perec-ramiro-3
-perec-fonbaron-smes-3
 fasol-vigna-grafinya-3
 lavanda-voznesenskaya-3
 lavanda-yjanka-3
@@ -120,7 +119,6 @@ tykva-konfetka-10
 ogurec-zelenue-gnomiki-10
 morkov-samson-10
 perec-fonbaron-smes-10
-fasol-vigna-grafinya-10
 cinniya-karusel-10
 pepino-ramzes-10
 bigpack-100-lavandayjanka
