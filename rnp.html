@@ -219,6 +219,7 @@
             <th>Заказы шт</th><th>Заказы ₽</th>
             <th>Продажи шт</th><th>Продажи ₽</th>
             <th>Реклама ₽</th><th>ДРР</th>
+            <th>Ср. логистика ₽</th>
           </tr>
         </thead>
         <tbody id="tbl-body"></tbody>
@@ -326,12 +327,14 @@ async function loadData(month) {
   // Merge oding + stolnikov by date
   const byDate = {};
   for (const r of (rows || [])) {
-    if (!byDate[r.date]) byDate[r.date] = { date: r.date, orders_count:0, orders_sum:0, sales_count:0, sales_sum:0, ads_spend:0 };
-    byDate[r.date].orders_count += r.orders_count || 0;
-    byDate[r.date].orders_sum   += r.orders_sum   || 0;
-    byDate[r.date].sales_count  += r.sales_count  || 0;
-    byDate[r.date].sales_sum    += r.sales_sum    || 0;
-    byDate[r.date].ads_spend    += r.ads_spend    || 0;
+    if (!byDate[r.date]) byDate[r.date] = { date: r.date, orders_count:0, orders_sum:0, sales_count:0, sales_sum:0, ads_spend:0, logistics_sum:0, logistics_count:0 };
+    byDate[r.date].orders_count    += r.orders_count    || 0;
+    byDate[r.date].orders_sum      += r.orders_sum      || 0;
+    byDate[r.date].sales_count     += r.sales_count     || 0;
+    byDate[r.date].sales_sum       += r.sales_sum       || 0;
+    byDate[r.date].ads_spend       += r.ads_spend       || 0;
+    byDate[r.date].logistics_sum   += r.logistics_sum   || 0;
+    byDate[r.date].logistics_count += r.logistics_count || 0;
   }
   return Object.values(byDate).sort((a,b) => a.date.localeCompare(b.date));
 }
@@ -552,6 +555,17 @@ function renderTable(rows) {
     const isToday = r.date === today;
     const d = new Date(r.date + 'T12:00:00');
     const label = d.toLocaleDateString('ru-RU', {day:'2-digit', month:'short'});
+
+    // Средняя логистика: если есть logistics_count — делим на него,
+    // иначе делим на sales_count (количество выкупленных отправлений)
+    const logCount = r.logistics_count > 0 ? r.logistics_count : r.sales_count;
+    const avgLogistics = (r.logistics_sum > 0 && logCount > 0)
+      ? r.logistics_sum / logCount
+      : null;
+    const logCell = avgLogistics !== null
+      ? `<td style="color:var(--muted2)">${fmtRub(avgLogistics)}</td>`
+      : `<td style="color:var(--muted)">—</td>`;
+
     return `<tr class="${isToday ? 'today-row' : ''}">
       <td class="td-date">${label}${isToday ? '<span class="td-today-badge">сегодня</span>' : ''}</td>
       <td>${fmtN(r.orders_count)}</td>
@@ -560,6 +574,7 @@ function renderTable(rows) {
       <td>${fmtRub(r.sales_sum)}</td>
       <td>${fmtRub(r.ads_spend)}</td>
       <td style="color:${drr > (plan.drr_plan||10) ? 'var(--red)' : 'var(--green)'}">${fmtPct(drr)}</td>
+      ${logCell}
     </tr>`;
   }).join('');
 }
