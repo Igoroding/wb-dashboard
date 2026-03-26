@@ -83,6 +83,14 @@
   .loading { text-align: center; padding: 80px; color: #555; font-size: 15px; }
   .error-msg { text-align: center; padding: 40px; color: #ff6b6b; }
 
+  /* Period selector */
+  .period-bar { display: flex; align-items: center; gap: 8px; padding: 10px 24px; border-bottom: 1px solid #1a1a1a; flex-wrap: wrap; }
+  .period-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-right: 4px; }
+  .period-btn { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 20px; padding: 5px 16px; cursor: pointer; font-size: 12px; font-weight: 600; color: #666; transition: all .2s; font-family: 'Geologica', sans-serif; }
+  .period-btn:hover { color: #aaa; background: #222; }
+  .period-btn.active { background: #cb11ab22; border-color: #cb11ab88; color: #cb11ab; }
+  .period-info { margin-left: auto; font-size: 11px; color: #444; font-style: italic; }
+
   /* AI Analysis block */
   .ai-section { margin: 0 24px 20px; }
   .ai-btn {
@@ -167,6 +175,16 @@
   <div class="legend-item"><span style="color:#ff8080">⚠ артикул</span> — риск обнуления &lt;10 дней</div>
 </div>
 
+<!-- Period selector -->
+<div class="period-bar" id="period-bar" style="display:none">
+  <span class="period-label">📅 Период:</span>
+  <button class="period-btn" onclick="setPeriod(7,this)">7 дней</button>
+  <button class="period-btn active" id="period-14" onclick="setPeriod(14,this)">14 дней</button>
+  <button class="period-btn" onclick="setPeriod(30,this)">30 дней</button>
+  <button class="period-btn" onclick="setPeriod(999,this)">Всё время</button>
+  <span class="period-info" id="period-info"></span>
+</div>
+
 <div id="loading" class="loading">Загружаем данные...</div>
 <div id="error-msg" class="error-msg" style="display:none"></div>
 
@@ -190,10 +208,18 @@ const RISK_DAYS = 10;
 
 let currentShop = 'oding';
 let currentView = 'table';
+let currentPeriod = 14;
 let watchList = [];
 let lastPivot = {};
 let lastDates = [];
 let lastRiskItems = [];
+
+function setPeriod(days, el) {
+  currentPeriod = days;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderTable();
+}
 
 async function loadArticles() {
   try {
@@ -310,6 +336,62 @@ async function loadStocks(shop) {
   }
 
   // --- Render table ---
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('period-bar').style.display = 'flex';
+  renderTable();
+}
+
+function renderTable() {
+  const dates = lastDates;
+  const pivot = lastPivot;
+  const articles = watchList.length > 0 ? watchList : Object.keys(pivot).sort();
+  const today = dates[dates.length - 1] || '';
+
+  // Recalculate riskMap so it's accessible here
+  const riskMap = {};
+  for (const art of articles) {
+    const currStock = (pivot[art] && pivot[art][today]) || 0;
+    const recent = dates.slice(-8);
+    let totalDrop = 0, countDays = 0;
+    for (let i = 1; i < recent.length; i++) {
+      const prev = (pivot[art] && pivot[art][recent[i-1]]) || 0;
+      const curr = (pivot[art] && pivot[art][recent[i]]) || 0;
+      const drop = prev - curr;
+      if (drop > 0) { totalDrop += drop; countDays++; }
+    }
+    const avgSales = countDays > 0 ? totalDrop / countDays : 0;
+    const daysLeft = avgSales > 0 ? Math.floor(currStock / avgSales) : (currStock > 0 ? 999 : 0);
+    if (daysLeft < RISK_DAYS || currStock === 0) {
+      riskMap[art] = { daysLeft, avgSales: Math.round(avgSales * 10) / 10, currStock };
+    }
+  }
+
+  // New arrival detection
+  const newArrival = new Set();
+  for (const art of articles) {
+    for (let i = 1; i < dates.length; i++) {
+      const prev = (pivot[art] && pivot[art][dates[i-1]]) || 0;
+      const curr = (pivot[art] && pivot[art][dates[i]]) || 0;
+      if (prev === 0 && curr > 0) newArrival.add(art + '|' + dates[i]);
+    }
+  }
+
+  // Apply period filter
+  const visibleDates = currentPeriod >= 999 ? dates : dates.slice(-currentPeriod);
+  const totalDays = dates.length;
+  const showingDays = visibleDates.length;
+
+  // Update period info
+  const periodInfo = document.getElementById('period-info');
+  if (currentPeriod < 999 && totalDays > showingDays) {
+    const hiddenStart = dates[0];
+    const hiddenEnd = dates[dates.length - showingDays - 1];
+    const fmtShort = d => { const [,m,day] = d.split('-'); return `${parseInt(day)}/${parseInt(m)}`; };
+    periodInfo.textContent = `Показаны ${showingDays} из ${totalDays} дней · скрыто ${totalDays - showingDays} дней (до ${fmtShort(hiddenEnd)})`;
+  } else {
+    periodInfo.textContent = `Показаны все ${totalDays} дней`;
+  }
+
   const fmtDate = d => { const [y,m,day] = d.split('-'); return `${parseInt(day)}/${parseInt(m)}`; };
 
   const filteredArticles = currentView === 'risk'
@@ -318,16 +400,16 @@ async function loadStocks(shop) {
 
   document.getElementById('thead').innerHTML = `<tr>
     <th class="art-col">Артикул товара</th>
-    ${dates.map(d => `<th${d === today ? ' class="today-col"' : ''}>${fmtDate(d)}</th>`).join('')}
+    ${visibleDates.map(d => `<th${d === today ? ' class="today-col"' : ''}>${fmtDate(d)}</th>`).join('')}
   </tr>`;
 
   document.getElementById('tbody').innerHTML = filteredArticles.map(art => {
     const isRisk = !!riskMap[art];
-    const cells = dates.map(d => {
+    const cells = visibleDates.map(d => {
       const qty = (pivot[art] && pivot[art][d]) || 0;
       const key = art + '|' + d;
       const isToday = d === today;
-      let cls = qty === 0 ? 'qty-zero' : '';
+      let cls = '';
       if (newArrival.has(key)) cls = 'qty-new';
       else if (qty > 50) cls = 'qty-high';
       else if (qty >= 10) cls = 'qty-mid';
@@ -341,9 +423,7 @@ async function loadStocks(shop) {
     </tr>`;
   }).join('');
 
-  document.getElementById('loading').style.display = 'none';
   document.getElementById('table-wrap').style.display = 'block';
-}
 
 function setShop(shop, el) {
   currentShop = shop;
@@ -356,7 +436,8 @@ function setView(view, el) {
   currentView = view;
   document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  loadStocks(currentShop);
+  if (lastDates.length > 0) renderTable();
+  else loadStocks(currentShop);
 }
 
 let riskOpen = true;
