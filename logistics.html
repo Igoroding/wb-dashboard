@@ -16,32 +16,18 @@
   body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(203,17,171,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(203,17,171,0.03) 1px,transparent 1px); background-size:48px 48px; pointer-events:none; z-index:0; }
   .wrap { position:relative; z-index:1; max-width:1360px; margin:0 auto; padding:24px; }
 
+  /* Month tabs */
   .month-tabs { display:flex; gap:6px; margin-bottom:24px; flex-wrap:wrap; }
   .month-tab { padding:7px 18px; background:var(--s1); border:1px solid var(--border); border-radius:8px; font-size:13px; font-weight:600; color:var(--muted2); cursor:pointer; transition:all .2s; }
   .month-tab.active { background:var(--wb); border-color:var(--wb); color:#fff; }
   .month-tab:hover:not(.active) { color:var(--text); border-color:var(--muted); }
 
-  /* Index cards */
-  .index-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
-  .index-card { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:22px 26px; }
-  .ic-label { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted2); margin-bottom:6px; }
-  .ic-val { font-family:'Bebas Neue'; font-size:52px; letter-spacing:1px; line-height:1; }
-  .ic-date { font-size:12px; color:var(--muted2); margin-top:6px; }
-  .ic-desc { font-size:12px; color:var(--muted2); margin-top:8px; line-height:1.5; }
+  /* View toggle */
+  .view-toggle { display:flex; gap:6px; margin-bottom:24px; }
+  .vt { padding:8px 20px; background:var(--s1); border:1px solid var(--border); border-radius:8px; font-size:13px; font-weight:600; color:var(--muted2); cursor:pointer; transition:all .2s; }
+  .vt.active { background:var(--s2); border-color:var(--muted); color:var(--text); }
 
-  /* Input form */
-  .input-wrap { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:20px 24px; margin-bottom:24px; }
-  .input-title { font-size:13px; font-weight:700; color:var(--muted2); text-transform:uppercase; letter-spacing:1px; margin-bottom:16px; }
-  .input-grid { display:grid; grid-template-columns:repeat(5, auto); gap:12px; align-items:end; flex-wrap:wrap; }
-  .input-field { display:flex; flex-direction:column; gap:4px; }
-  .input-field label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
-  .input-field input, .input-field select { background:var(--s2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-size:14px; font-weight:600; font-family:'Geologica',sans-serif; width:160px; }
-  .input-field input:focus, .input-field select:focus { outline:none; border-color:var(--wb); }
-  .input-save { background:var(--wb); border:none; border-radius:8px; padding:9px 20px; color:#fff; font-size:13px; font-weight:700; cursor:pointer; font-family:'Geologica',sans-serif; transition:opacity .2s; white-space:nowrap; height:38px; }
-  .input-save:hover { opacity:0.85; }
-  .input-saved { font-size:12px; color:var(--green); margin-left:8px; opacity:0; transition:opacity .3s; }
-
-  /* Summary logistics */
+  /* Summary */
   .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
   .summary-card { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:22px 26px; }
   .sc-label { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted2); margin-bottom:6px; }
@@ -51,6 +37,31 @@
   .sc-stats { display:flex; gap:32px; margin-top:16px; padding-top:16px; border-top:1px solid var(--border); }
   .sc-stat-val { font-size:18px; font-weight:800; color:var(--text); }
   .sc-stat-label { font-size:11px; color:var(--muted2); margin-top:2px; }
+
+  /* Index cards */
+  .index-cards { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+  .index-card { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:22px 26px; }
+  .ic-label { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted2); margin-bottom:6px; }
+  .ic-shop { font-size:14px; font-weight:700; color:var(--text); margin-bottom:12px; }
+  .ic-row { display:flex; gap:32px; }
+  .ic-item { }
+  .ic-val { font-family:'Bebas Neue'; font-size:42px; letter-spacing:1px; line-height:1; }
+  .ic-sub { font-size:11px; color:var(--muted2); margin-top:4px; }
+  .ic-date { font-size:11px; color:var(--muted); margin-top:10px; }
+
+  /* Input form */
+  .input-wrap { background:var(--s1); border:1px solid var(--border); border-radius:14px; padding:20px 24px; margin-bottom:24px; }
+  .input-title { font-size:13px; font-weight:700; color:var(--muted2); text-transform:uppercase; letter-spacing:1px; margin-bottom:16px; }
+  .input-row { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; }
+  .input-field { display:flex; flex-direction:column; gap:4px; }
+  .input-field label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+  .input-field input, .input-field select { background:var(--s2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-size:14px; font-weight:600; font-family:'Geologica',sans-serif; }
+  .input-field input { width:140px; }
+  .input-field select { width:160px; }
+  .input-field input:focus, .input-field select:focus { outline:none; border-color:var(--wb); }
+  .input-save { background:var(--wb); border:none; border-radius:8px; padding:9px 20px; color:#fff; font-size:13px; font-weight:700; cursor:pointer; font-family:'Geologica',sans-serif; transition:opacity .2s; height:38px; }
+  .input-save:hover { opacity:0.85; }
+  .input-saved { font-size:12px; color:var(--green); margin-left:8px; opacity:0; transition:opacity .3s; align-self:center; }
 
   /* Table */
   .tbl-wrap { background:var(--s1); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:24px; }
@@ -63,6 +74,9 @@
   tr:last-child td { border-bottom:none; }
   tr:hover td { background:var(--s2); }
   .td-date { color:var(--muted2); font-weight:500; }
+  .trend-up { color:var(--red); }
+  .trend-down { color:var(--green); }
+  .trend-flat { color:var(--muted2); }
 
   .loading { text-align:center; padding:60px; color:var(--muted2); }
   .spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--wb); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px; }
@@ -79,83 +93,82 @@
 
     <div class="month-tabs" id="month-tabs"></div>
 
-    <!-- Индексы -->
-    <div class="index-grid" id="index-grid">
-      <div class="index-card">
-        <div class="ic-label">Индекс локализации</div>
-        <div class="ic-val" id="il-oding" style="color:var(--yellow)">—</div>
-        <div class="ic-date" id="il-oding-date"></div>
-        <div class="ic-desc">Одинг · чем выше — тем дешевле логистика</div>
-      </div>
-      <div class="index-card">
-        <div class="ic-label">Индекс локализации</div>
-        <div class="ic-val" id="il-stolnikov" style="color:var(--yellow)">—</div>
-        <div class="ic-date" id="il-stolnikov-date"></div>
-        <div class="ic-desc">Стольников · чем выше — тем дешевле логистика</div>
-      </div>
-      <div class="index-card">
-        <div class="ic-label">Индекс распределения продаж</div>
-        <div class="ic-val" id="irp-oding" style="color:var(--blue)">—</div>
-        <div class="ic-date" id="irp-oding-date"></div>
-        <div class="ic-desc">Одинг · % от цены товара, добавляется к логистике</div>
-      </div>
-      <div class="index-card">
-        <div class="ic-label">Индекс распределения продаж</div>
-        <div class="ic-val" id="irp-stolnikov" style="color:var(--blue)">—</div>
-        <div class="ic-date" id="irp-stolnikov-date"></div>
-        <div class="ic-desc">Стольников · % от цены товара, добавляется к логистике</div>
+    <!-- Вкладки -->
+    <div class="view-toggle">
+      <div class="vt active" onclick="setView('logistics', this)">📦 Логистика</div>
+      <div class="vt" onclick="setView('indexes', this)">📊 Индексы</div>
+    </div>
+
+    <!-- ===== ВКЛАДКА ЛОГИСТИКА ===== -->
+    <div id="view-logistics">
+      <div class="summary-grid" id="summary-grid"></div>
+      <div class="tbl-wrap">
+        <div class="tbl-header">📅 По дням</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Ср. лог. Одинг ₽</th>
+              <th>Доставок Одинг</th>
+              <th>Ср. лог. Стольников ₽</th>
+              <th>Доставок Стольников</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-body"></tbody>
+        </table>
       </div>
     </div>
 
-    <!-- Форма ввода -->
-    <div class="input-wrap">
-      <div class="input-title">✏️ Обновить индексы (берём из ЛК WB → Тарифы складов)</div>
-      <div class="input-grid">
-        <div class="input-field">
-          <label>Магазин</label>
-          <select id="inp-shop">
-            <option value="oding">Одинг</option>
-            <option value="stolnikov">Стольников</option>
-          </select>
-        </div>
-        <div class="input-field">
-          <label>Дата</label>
-          <input type="date" id="inp-date">
-        </div>
-        <div class="input-field">
-          <label>Индекс локализации</label>
-          <input type="number" id="inp-il" placeholder="1.43" step="0.01">
-        </div>
-        <div class="input-field">
-          <label>Индекс распределения %</label>
-          <input type="number" id="inp-irp" placeholder="2.12" step="0.01">
-        </div>
-        <div class="input-field">
-          <label>&nbsp;</label>
+    <!-- ===== ВКЛАДКА ИНДЕКСЫ ===== -->
+    <div id="view-indexes" style="display:none">
+
+      <!-- Текущие значения -->
+      <div class="index-cards" id="index-cards"></div>
+
+      <!-- Форма ввода -->
+      <div class="input-wrap">
+        <div class="input-title">✏️ Добавить запись (каждый понедельник из ЛК WB → Тарифы складов)</div>
+        <div class="input-row">
+          <div class="input-field">
+            <label>Магазин</label>
+            <select id="inp-shop">
+              <option value="oding">Одинг</option>
+              <option value="stolnikov">Стольников</option>
+            </select>
+          </div>
+          <div class="input-field">
+            <label>Дата (понедельник)</label>
+            <input type="date" id="inp-date">
+          </div>
+          <div class="input-field">
+            <label>Индекс локализации</label>
+            <input type="number" id="inp-il" placeholder="1.43" step="0.01">
+          </div>
+          <div class="input-field">
+            <label>Индекс распределения %</label>
+            <input type="number" id="inp-irp" placeholder="2.12" step="0.01">
+          </div>
           <button class="input-save" onclick="saveIndex()">Сохранить</button>
+          <span class="input-saved" id="inp-saved">✓ Сохранено</span>
         </div>
       </div>
-      <span class="input-saved" id="inp-saved">✓ Сохранено</span>
-    </div>
 
-    <!-- Средняя логистика -->
-    <div class="summary-grid" id="summary-grid"></div>
-
-    <!-- Таблица по дням -->
-    <div class="tbl-wrap">
-      <div class="tbl-header">📅 По дням</div>
-      <table>
-        <thead>
-          <tr>
-            <th>Дата</th>
-            <th>Ср. лог. Одинг ₽</th>
-            <th>Доставок Одинг</th>
-            <th>Ср. лог. Стольников ₽</th>
-            <th>Доставок Стольников</th>
-          </tr>
-        </thead>
-        <tbody id="tbl-body"></tbody>
-      </table>
+      <!-- История по неделям -->
+      <div class="tbl-wrap">
+        <div class="tbl-header">📅 История по неделям</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Неделя</th>
+              <th>ИЛ Одинг</th>
+              <th>ИРП Одинг %</th>
+              <th>ИЛ Стольников</th>
+              <th>ИРП Стольников %</th>
+            </tr>
+          </thead>
+          <tbody id="idx-body"></tbody>
+        </table>
+      </div>
     </div>
 
   </div>
@@ -193,21 +206,93 @@ function fmtMonthLabel(m) {
   const names = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
   return names[parseInt(m.split('-')[1])-1] + ' ' + m.split('-')[0];
 }
+function fmtDate(d) {
+  return new Date(d + 'T12:00:00').toLocaleDateString('ru-RU', {day:'2-digit', month:'short'});
+}
 
+// ===== ВКЛАДКИ =====
+let currentView = 'logistics';
+function setView(v, el) {
+  currentView = v;
+  document.querySelectorAll('.vt').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('view-logistics').style.display = v === 'logistics' ? 'block' : 'none';
+  document.getElementById('view-indexes').style.display   = v === 'indexes'   ? 'block' : 'none';
+  if (v === 'indexes') loadIndexes();
+}
+
+// ===== ИНДЕКСЫ =====
 async function loadIndexes() {
-  const rows = await sbGet('/rest/v1/wb_logistics_index?order=date.desc&limit=20');
+  const rows = await sbGet('/rest/v1/wb_logistics_index?order=date.desc&limit=100');
+  renderIndexCards(rows || []);
+  renderIndexTable(rows || []);
+}
+
+function renderIndexCards(rows) {
   const latest = { oding: null, stolnikov: null };
-  for (const r of (rows || [])) {
+  for (const r of rows) {
     if (!latest[r.shop]) latest[r.shop] = r;
   }
-  for (const shop of ['oding', 'stolnikov']) {
-    const r = latest[shop];
-    const d = r ? new Date(r.date + 'T12:00:00').toLocaleDateString('ru-RU', {day:'2-digit', month:'short'}) : null;
-    document.getElementById('il-' + shop).textContent  = r ? r.localization_index  : '—';
-    document.getElementById('irp-' + shop).textContent = r ? r.distribution_index + '%' : '—';
-    document.getElementById('il-' + shop + '-date').textContent  = d ? 'обновлено ' + d : '';
-    document.getElementById('irp-' + shop + '-date').textContent = d ? 'обновлено ' + d : '';
+  const shops = [
+    { key: 'oding',     label: 'Одинг' },
+    { key: 'stolnikov', label: 'Стольников' },
+  ];
+  document.getElementById('index-cards').innerHTML = shops.map(sh => {
+    const r = latest[sh.key];
+    const il  = r ? r.localization_index  : null;
+    const irp = r ? r.distribution_index  : null;
+    const ilColor  = !il  ? 'var(--muted2)' : il  < 1 ? 'var(--green)' : il  > 1 ? 'var(--red)' : 'var(--yellow)';
+    const irpColor = !irp ? 'var(--muted2)' : irp === 0 ? 'var(--green)' : 'var(--yellow)';
+    return '<div class="index-card">' +
+      '<div class="ic-label">Текущие индексы</div>' +
+      '<div class="ic-shop">' + sh.label + '</div>' +
+      '<div class="ic-row">' +
+        '<div class="ic-item">' +
+          '<div class="ic-val" style="color:' + ilColor + '">' + (il !== null ? il : '—') + '</div>' +
+          '<div class="ic-sub">Индекс локализации · чем ниже тем дешевле</div>' +
+        '</div>' +
+        '<div class="ic-item">' +
+          '<div class="ic-val" style="color:' + irpColor + '">' + (irp !== null ? irp + '%' : '—') + '</div>' +
+          '<div class="ic-sub">Индекс распределения продаж</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ic-date">' + (r ? 'обновлено ' + fmtDate(r.date) : 'нет данных') + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function renderIndexTable(rows) {
+  // Группируем по дате
+  const byDate = {};
+  for (const r of rows) {
+    if (!byDate[r.date]) byDate[r.date] = { date: r.date };
+    if (r.shop === 'oding') {
+      byDate[r.date].o_il  = r.localization_index;
+      byDate[r.date].o_irp = r.distribution_index;
+    } else {
+      byDate[r.date].s_il  = r.localization_index;
+      byDate[r.date].s_irp = r.distribution_index;
+    }
   }
+  const sorted = Object.values(byDate).sort((a,b) => b.date.localeCompare(a.date));
+
+  function trendIcon(curr, prev) {
+    if (curr == null || prev == null) return '';
+    if (curr < prev) return ' <span class="trend-down">↓</span>';
+    if (curr > prev) return ' <span class="trend-up">↑</span>';
+    return ' <span class="trend-flat">→</span>';
+  }
+
+  document.getElementById('idx-body').innerHTML = sorted.map((r, i) => {
+    const prev = sorted[i+1] || {};
+    return '<tr>' +
+      '<td class="td-date">' + fmtDate(r.date) + '</td>' +
+      '<td>' + (r.o_il  != null ? r.o_il  + trendIcon(r.o_il,  prev.o_il)  : '—') + '</td>' +
+      '<td>' + (r.o_irp != null ? r.o_irp + '%' + trendIcon(r.o_irp, prev.o_irp) : '—') + '</td>' +
+      '<td>' + (r.s_il  != null ? r.s_il  + trendIcon(r.s_il,  prev.s_il)  : '—') + '</td>' +
+      '<td>' + (r.s_irp != null ? r.s_irp + '%' + trendIcon(r.s_irp, prev.s_irp) : '—') + '</td>' +
+      '</tr>';
+  }).join('') || '<tr><td colspan="5" style="color:var(--muted2);text-align:center;padding:24px">Нет записей</td></tr>';
 }
 
 async function saveIndex() {
@@ -217,16 +302,17 @@ async function saveIndex() {
   const irp  = parseFloat(document.getElementById('inp-irp').value);
   if (!date || isNaN(il) || isNaN(irp)) { alert('Заполните все поля'); return; }
   await sbPost('/rest/v1/wb_logistics_index?on_conflict=shop,date', {
-    shop, date,
-    localization_index: il,
-    distribution_index: irp
+    shop, date, localization_index: il, distribution_index: irp
   });
   const s = document.getElementById('inp-saved');
   s.style.opacity = 1;
   setTimeout(() => s.style.opacity = 0, 2000);
+  document.getElementById('inp-il').value  = '';
+  document.getElementById('inp-irp').value = '';
   loadIndexes();
 }
 
+// ===== ЛОГИСТИКА =====
 async function loadData(month) {
   const [y, m] = month.split('-');
   const from = month + '-01';
@@ -269,8 +355,7 @@ function renderTable(rows) {
   document.getElementById('tbl-body').innerHTML = [...rows].reverse().map(r => {
     const ao  = r.oc > 0 ? r.os / r.oc : null;
     const as_ = r.sc > 0 ? r.ss / r.sc : null;
-    const d = new Date(r.date + 'T12:00:00');
-    const label = d.toLocaleDateString('ru-RU', {day:'2-digit', month:'short'});
+    const label = fmtDate(r.date);
     return '<tr>' +
       '<td class="td-date">' + label + '</td>' +
       '<td style="color:' + (ao  !== null ? 'var(--muted2)' : 'var(--muted)') + '">' + (ao  !== null ? fmtRub(ao)  : '—') + '</td>' +
@@ -297,9 +382,14 @@ const months = getMonths();
 document.getElementById('month-tabs').innerHTML = months.map(m =>
   '<div class="month-tab" data-month="' + m + '" onclick="switchMonth(\'' + m + '\')">' + fmtMonthLabel(m) + '</div>'
 ).join('');
-document.getElementById('inp-date').value = new Date().toLocaleDateString('sv-SE');
+// Ставим ближайший понедельник как дату по умолчанию
+const today = new Date();
+const day = today.getDay();
+const diff = day === 0 ? -6 : 1 - day;
+const monday = new Date(today);
+monday.setDate(today.getDate() + diff);
+document.getElementById('inp-date').value = monday.toLocaleDateString('sv-SE');
 
-loadIndexes();
 switchMonth(months[0]);
 </script>
 </body>
