@@ -39,12 +39,12 @@
       ${metaHTML}
     </div>
     <nav class="site-nav">
-      <a href="/wb-dashboard/rnp.html"         ${isRnP        ? 'class="active"' : ''}>📈 РнП</a>
-      <a href="/wb-dashboard/stocks.html"      ${isStocks     ? 'class="active"' : ''}>📦 Остатки</a>
-      <a href="/wb-dashboard/warehouses.html"  ${isWarehouses ? 'class="active"' : ''}>🏭 Склады</a>
-      <a href="/wb-dashboard/ads.html"         ${isAds        ? 'class="active"' : ''}>📣 Реклама</a>
-      <a href="/wb-dashboard/logistics.html"   ${isLogistics  ? 'class="active"' : ''}>🚚 Логистика</a>
-      <a href="/wb-dashboard/"                 ${isIndex      ? 'class="active"' : ''}>📊 Сводка</a>
+      <a href="/wb-dashboard/rnp.html"          ${isRnP        ? 'class="active"' : ''}>📈 РнП</a>
+      <a href="/wb-dashboard/stocks.html"       ${isStocks     ? 'class="active"' : ''}>📦 Остатки</a>
+      <a href="/wb-dashboard/warehouses.html"   ${isWarehouses ? 'class="active"' : ''}>🏭 Склады</a>
+      <a href="/wb-dashboard/ads.html"          ${isAds        ? 'class="active"' : ''}>📣 Реклама</a>
+      <a href="/wb-dashboard/logistics.html"    ${isLogistics  ? 'class="active"' : ''}>🚚 Логистика</a>
+      <a href="/wb-dashboard/"                  ${isIndex      ? 'class="active"' : ''}>📊 Сводка</a>
     </nav>`;
   function doInsert() {
     if (document.body) {
