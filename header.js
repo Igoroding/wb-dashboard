@@ -5,7 +5,8 @@
   const isWarehouses = path.includes('warehouses');
   const isAds        = path.includes('ads');
   const isLogistics  = path.includes('logistics');
-  const isIndex      = !isStocks && !isRnP && !isWarehouses && !isAds && !isLogistics;
+  const isRegions    = path.includes('regions');
+  const isIndex      = !isStocks && !isRnP && !isWarehouses && !isAds && !isLogistics && !isRegions;
   const css = `
     .site-header { background: #0d1117; border-bottom: 1px solid #1a2333; padding: 14px 28px 0; font-family: 'Geologica', system-ui, sans-serif; }
     .site-header-top { display: flex; align-items: center; gap: 14px; padding-bottom: 12px; }
@@ -39,12 +40,13 @@
       ${metaHTML}
     </div>
     <nav class="site-nav">
-      <a href="/wb-dashboard/rnp.html"          ${isRnP        ? 'class="active"' : ''}>📈 РнП</a>
-      <a href="/wb-dashboard/stocks.html"       ${isStocks     ? 'class="active"' : ''}>📦 Остатки</a>
-      <a href="/wb-dashboard/warehouses.html"   ${isWarehouses ? 'class="active"' : ''}>🏭 Склады</a>
-      <a href="/wb-dashboard/ads.html"          ${isAds        ? 'class="active"' : ''}>📣 Реклама</a>
-      <a href="/wb-dashboard/logistics.html"    ${isLogistics  ? 'class="active"' : ''}>🚚 Логистика</a>
-      <a href="/wb-dashboard/"                  ${isIndex      ? 'class="active"' : ''}>📊 Сводка</a>
+      <a href="/wb-dashboard/rnp.html"        ${isRnP        ? 'class="active"' : ''}>📈 РнП</a>
+      <a href="/wb-dashboard/stocks.html"     ${isStocks     ? 'class="active"' : ''}>📦 Остатки</a>
+      <a href="/wb-dashboard/warehouses.html" ${isWarehouses ? 'class="active"' : ''}>🏭 Склады</a>
+      <a href="/wb-dashboard/ads.html"        ${isAds        ? 'class="active"' : ''}>📣 Реклама</a>
+      <a href="/wb-dashboard/logistics.html"  ${isLogistics  ? 'class="active"' : ''}>🚚 Логистика</a>
+      <a href="/wb-dashboard/regions.html"    ${isRegions    ? 'class="active"' : ''}>🗺️ Регионы</a>
+      <a href="/wb-dashboard/"               ${isIndex      ? 'class="active"' : ''}>📊 Сводка</a>
     </nav>`;
   function doInsert() {
     if (document.body) {
