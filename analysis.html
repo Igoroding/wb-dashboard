@@ -6,46 +6,31 @@
 <title>Анализ товаров — Рука на Пульсе</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Geologica:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#080c10;--s1:#0d1117;--s2:#111820;--border:#1a2333;
-    --wb:#cb11ab;--green:#05d69e;--yellow:#ffc442;--red:#ff4f6e;--blue:#3b9eff;
-    --text:#dde4ee;--muted:#4a5568;--muted2:#718096;
-  }
+  :root{--bg:#080c10;--s1:#0d1117;--s2:#111820;--border:#1a2333;--wb:#cb11ab;--green:#05d69e;--yellow:#ffc442;--red:#ff4f6e;--blue:#3b9eff;--text:#dde4ee;--muted:#4a5568;--muted2:#718096;}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{font-family:'Geologica',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
   body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(203,17,171,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(203,17,171,0.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
   .wrap{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:24px;}
-
   .controls{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
   .shop-btn,.period-btn,.vt{padding:7px 18px;border:1px solid var(--border);border-radius:8px;background:var(--s1);color:var(--muted2);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Geologica',sans-serif;}
   .shop-btn.active,.vt.active{background:var(--wb);border-color:var(--wb);color:#fff;}
   .period-btn.active{background:var(--s2);border-color:var(--muted);color:var(--text);}
-
-  /* Summary */
   .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
   .sc{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:18px 22px;}
   .sc-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);margin-bottom:6px;}
   .sc-val{font-family:'Bebas Neue';font-size:38px;letter-spacing:1px;line-height:1;}
   .sc-sub{font-size:11px;color:var(--muted2);margin-top:4px;}
-
-  /* View tabs */
   .view-toggle{display:flex;gap:6px;margin-bottom:20px;}
-
-  /* ABC legend */
   .legend{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;}
   .leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2);}
   .leg-dot{width:10px;height:10px;border-radius:50%;}
-
-  /* Search & actions */
-  .tbl-controls{display:flex;gap:10px;align-items:center;padding:14px 16px;background:var(--s1);border:1px solid var(--border);border-radius:14px 14px 0 0;border-bottom:none;}
-  .tbl-search{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:13px;font-family:'Geologica',sans-serif;width:240px;}
+  .tbl-controls{display:flex;gap:10px;align-items:center;padding:14px 16px;background:var(--s1);border:1px solid var(--border);border-radius:14px 14px 0 0;border-bottom:none;flex-wrap:wrap;}
+  .tbl-search{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:13px;font-family:'Geologica',sans-serif;width:220px;}
   .tbl-search:focus{outline:none;border-color:var(--wb);}
   .sel-count{font-size:12px;color:var(--muted2);margin-left:auto;}
   .btn-exclude{background:var(--red);border:none;border-radius:8px;padding:7px 16px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Geologica',sans-serif;transition:opacity .2s;display:none;}
   .btn-exclude:hover{opacity:.85;}
   .btn-exclude.show{display:block;}
-
-  /* Table */
   .tbl-wrap{background:var(--s1);border:1px solid var(--border);border-radius:0 0 14px 14px;overflow:hidden;margin-bottom:24px;}
   table{width:100%;border-collapse:collapse;font-size:13px;}
   th{background:var(--s2);padding:11px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;}
@@ -57,17 +42,14 @@
   tr:hover td{background:rgba(255,255,255,0.02);}
   tr.excluded-row td{opacity:.4;}
   tr.selected-row td{background:rgba(203,17,171,0.05);}
-
   .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.5px;}
   .badge-a{background:rgba(5,214,158,0.15);color:var(--green);}
   .badge-b{background:rgba(255,196,66,0.15);color:var(--yellow);}
   .badge-c{background:rgba(113,128,150,0.15);color:var(--muted2);}
   .badge-x{background:rgba(255,79,110,0.15);color:var(--red);}
   .badge-excl{background:rgba(203,17,171,0.15);color:var(--wb);}
-
   input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--wb);}
-
-  /* Exclusions list */
+  .mini-bar{display:inline-block;height:6px;border-radius:3px;vertical-align:middle;margin-left:6px;}
   .excl-wrap{background:var(--s1);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:24px;}
   .excl-header{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
   .excl-title{font-size:13px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;}
@@ -79,24 +61,18 @@
   .excl-date{font-size:11px;color:var(--muted);}
   .btn-remove{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--muted2);font-size:11px;cursor:pointer;font-family:'Geologica',sans-serif;transition:all .2s;}
   .btn-remove:hover{border-color:var(--red);color:var(--red);}
-
   .loading{text-align:center;padding:60px;color:var(--muted2);}
   .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--wb);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
   @keyframes spin{to{transform:rotate(360deg)}}
   .empty{text-align:center;padding:40px;color:var(--muted2);font-size:13px;}
-
-  .mini-bar{display:inline-block;height:6px;border-radius:3px;vertical-align:middle;margin-left:6px;}
 </style>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body>
 <script src="/wb-dashboard/header.js"></script>
-
 <div class="wrap">
   <div id="loading" class="loading"><div class="spinner"></div>Загружаем данные...</div>
   <div id="app" style="display:none">
-
-    <!-- Управление -->
     <div class="controls">
       <div style="display:flex;gap:6px">
         <button class="shop-btn active" onclick="setShop('all',this)">Все</button>
@@ -109,24 +85,18 @@
         <button class="period-btn" onclick="setPeriod(30,this)">30 дней</button>
       </div>
     </div>
-
-    <!-- Вкладки -->
     <div class="view-toggle">
       <div class="vt active" onclick="setView('abc',this)">📊 ABC Анализ</div>
       <div class="vt" onclick="setView('excl',this)">🚫 Исключения <span id="excl-count-badge"></span></div>
     </div>
-
-    <!-- ===== ABC АНАЛИЗ ===== -->
     <div id="view-abc">
       <div class="summary-grid" id="summary-grid"></div>
-
       <div class="legend">
-        <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div> A — топ товары (80% выручки)</div>
-        <div class="leg-item"><div class="leg-dot" style="background:var(--yellow)"></div> B — средние (15% выручки)</div>
-        <div class="leg-item"><div class="leg-dot" style="background:var(--muted2)"></div> C — слабые (5% выручки)</div>
-        <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div> ❌ Неликвид — 0 продаж</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>A — топ товары (80% выручки)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--yellow)"></div>B — средние (15%)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--muted2)"></div>C — слабые (5%)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div>❌ Неликвид — 0 заказов</div>
       </div>
-
       <div class="tbl-controls">
         <input class="tbl-search" placeholder="🔍 Поиск артикула..." oninput="filterABC(this.value)">
         <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2);cursor:pointer">
@@ -141,125 +111,82 @@
             <th style="width:32px"><input type="checkbox" id="chk-all" onchange="toggleAll(this)"></th>
             <th onclick="sortABC(1,this)">Артикул ↕</th>
             <th onclick="sortABC(2,this)">Заказов ↕</th>
-            <th onclick="sortABC(3,this)">Выручка ↕</th>
-            <th onclick="sortABC(4,this)">Доля ↕</th>
-            <th onclick="sortABC(5,this)">Категория ↕</th>
+            <th onclick="sortABC(3,this)">Доля ↕</th>
+            <th onclick="sortABC(4,this)">Категория ↕</th>
             <th>Визуализация</th>
           </tr></thead>
           <tbody id="abc-body"></tbody>
         </table>
       </div>
     </div>
-
-    <!-- ===== ИСКЛЮЧЕНИЯ ===== -->
     <div id="view-excl" style="display:none">
       <div class="excl-wrap">
         <div class="excl-header">
-          <div class="excl-title">🚫 Список исключённых артикулов</div>
-          <div style="font-size:12px;color:var(--muted2)">Эти товары не учитываются в топах продаж</div>
+          <div class="excl-title">🚫 Исключённые артикулы</div>
+          <div style="font-size:12px;color:var(--muted2)">Не учитываются в топах продаж</div>
         </div>
         <div id="excl-list"></div>
       </div>
     </div>
-
   </div>
 </div>
-
 <script>
-const SUPABASE_URL = 'https://rkxezsfrmjvriokhzaxk.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGV6c2ZybWp2cmlva2h6YXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTM5MTIsImV4cCI6MjA4ODEyOTkxMn0.IOMsGZh7ZGn1LTs2UCxdBWoIWH1LGiprkgR6pwpfabw';
-const H = {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY};
+const SB='https://rkxezsfrmjvriokhzaxk.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGV6c2ZybWp2cmlva2h6YXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTM5MTIsImV4cCI6MjA4ODEyOTkxMn0.IOMsGZh7ZGn1LTs2UCxdBWoIWH1LGiprkgR6pwpfabw';
+const H={'apikey':KEY,'Authorization':'Bearer '+KEY};
 
-let currentShop='all', currentPeriod=7, currentView='abc';
-let allOrders=[], allStocks=[], excluded=[], abcData=[], filtered=[], selected=new Set();
-let sortCol=2, sortAsc=false;
+let currentShop='all',currentPeriod=7;
+let articles=[],orders=[],excluded=[],abcData=[],filtered=[],selected=new Set();
+let sortDirs={};
 
-const fmtN = n => new Intl.NumberFormat('ru-RU').format(Math.round(n));
-const fmtRub = n => fmtN(n) + ' ₽';
+const fmtN=n=>new Intl.NumberFormat('ru-RU').format(Math.round(n));
 
-async function sbGet(path){
-  const r = await fetch(SUPABASE_URL+path,{headers:H});
-  return r.json();
-}
-async function sbPost(path,body,method='POST'){
-  return fetch(SUPABASE_URL+path,{method,headers:{...H,'Content-Type':'application/json'},body:JSON.stringify(body)});
-}
+async function get(path){const r=await fetch(SB+path,{headers:H});return r.json();}
+async function post(path,body){return fetch(SB+path,{method:'POST',headers:{...H,'Content-Type':'application/json'},body:JSON.stringify(body)});}
+async function del(path){return fetch(SB+path,{method:'DELETE',headers:H});}
 
-function setShop(s,el){
-  currentShop=s;
-  document.querySelectorAll('.shop-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  render();
-}
-function setPeriod(d,el){
-  currentPeriod=d;
-  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  render();
-}
+function setShop(s,el){currentShop=s;document.querySelectorAll('.shop-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');render();}
+function setPeriod(d,el){currentPeriod=d;document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');render();}
 function setView(v,el){
-  currentView=v;
-  document.querySelectorAll('.vt').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
+  document.querySelectorAll('.vt').forEach(t=>t.classList.remove('active'));el.classList.add('active');
   document.getElementById('view-abc').style.display=v==='abc'?'block':'none';
   document.getElementById('view-excl').style.display=v==='excl'?'block':'none';
-  if(v==='excl') renderExcl();
+  if(v==='excl')renderExcl();
 }
 
-function getFilteredOrders(){
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate()-currentPeriod);
-  const cutoffStr = cutoff.toLocaleDateString('sv-SE');
-  return allOrders.filter(r=>{
-    if(currentShop!=='all' && r.shop!==currentShop) return false;
-    return r.date>=cutoffStr;
-  });
+function getOrders(){
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-currentPeriod);
+  const from=cutoff.toLocaleDateString('sv-SE');
+  return orders.filter(r=>(currentShop==='all'||r.shop===currentShop)&&r.date>=from);
 }
 
-function buildABC(orders){
-  // Группируем по артикулу
+function buildABC(){
+  const ord=getOrders();
+  // Суммируем заказы по артикулу
   const byArt={};
-  for(const r of orders){
-    if(!byArt[r.article]) byArt[r.article]={article:r.article,orders:0,revenue:0,shops:new Set()};
-    byArt[r.article].orders+=r.orders_count||0;
-    byArt[r.article].revenue+=(r.orders_count||0)*(r.avg_price||0);
-    byArt[r.article].shops.add(r.shop);
+  for(const a of articles) byArt[a]={article:a,orders:0};
+  for(const r of ord){
+    if(byArt[r.article]) byArt[r.article].orders+=r.orders_count||0;
   }
-
-  // Добавляем артикулы из остатков у которых 0 заказов
-  const stockArts = new Set(allStocks.filter(s=>currentShop==='all'||s.shop===currentShop).map(s=>s.article));
-  for(const art of stockArts){
-    if(!byArt[art]) byArt[art]={article:art,orders:0,revenue:0,shops:new Set()};
-  }
-
-  const items=Object.values(byArt).sort((a,b)=>b.revenue-a.revenue||b.orders-a.orders);
-  const totalRev=items.reduce((s,i)=>s+i.revenue,0);
-
-  // ABC классификация по выручке
+  const items=Object.values(byArt).sort((a,b)=>b.orders-a.orders);
+  const total=items.reduce((s,i)=>s+i.orders,0);
   let cum=0;
   for(const item of items){
-    const pct=totalRev>0?item.revenue/totalRev*100:0;
-    item.pct=pct;
-    cum+=pct;
-    item.cum=cum;
+    const pct=total>0?item.orders/total*100:0;
+    item.pct=pct; cum+=pct; item.cum=cum;
     item.excluded=excluded.some(e=>e.article===item.article);
     if(item.orders===0) item.cat='X';
     else if(cum<=80) item.cat='A';
     else if(cum<=95) item.cat='B';
     else item.cat='C';
-    item.shops=[...item.shops].join(', ');
   }
   return items;
 }
 
 function render(){
-  selected.clear();
-  updateSelCount();
-  const orders=getFilteredOrders();
-  abcData=buildABC(orders);
-  filtered=[...abcData];
-  renderSummary();
-  renderABC();
+  selected.clear();updateSelCount();
+  abcData=buildABC();filtered=[...abcData];
+  renderSummary();renderABC();
 }
 
 function renderSummary(){
@@ -268,64 +195,53 @@ function renderSummary(){
   const c=abcData.filter(i=>i.cat==='C').length;
   const x=abcData.filter(i=>i.cat==='X').length;
   document.getElementById('summary-grid').innerHTML=[
-    {label:'Всего артикулов',val:fmtN(abcData.length),sub:'в ассортименте',col:'var(--blue)'},
-    {label:'A — топ товары',val:fmtN(a),sub:'дают 80% выручки',col:'var(--green)'},
-    {label:'B+C — средние',val:fmtN(b+c),sub:'остальная выручка',col:'var(--yellow)'},
+    {label:'Всего артикулов',val:fmtN(abcData.length),sub:'в анализируемом списке',col:'var(--blue)'},
+    {label:'A — топ товары',val:fmtN(a),sub:'дают 80% заказов',col:'var(--green)'},
+    {label:'B+C — средние',val:fmtN(b+c),sub:'остальные заказы',col:'var(--yellow)'},
     {label:'❌ Неликвид',val:fmtN(x),sub:'0 заказов за период',col:'var(--red)'},
   ].map(s=>`<div class="sc"><div class="sc-label">${s.label}</div><div class="sc-val" style="color:${s.col}">${s.val}</div><div class="sc-sub">${s.sub}</div></div>`).join('');
 }
 
 function renderABC(){
   const showExcl=document.getElementById('show-excl').checked;
-  const maxRev=filtered.length>0?Math.max(...filtered.map(i=>i.revenue)):1;
-
+  const maxOrd=filtered.length>0?Math.max(...filtered.map(i=>i.orders),1):1;
   let rows=filtered;
   if(!showExcl) rows=rows.filter(i=>!i.excluded);
-
+  const badgeCls={A:'badge-a',B:'badge-b',C:'badge-c',X:'badge-x'};
+  const badgeLbl={A:'A',B:'B',C:'C',X:'❌'};
+  const barCol={A:'var(--green)',B:'var(--yellow)',C:'var(--muted)',X:'var(--red)'};
   document.getElementById('abc-body').innerHTML=rows.map(item=>{
-    const badgeClass={'A':'badge-a','B':'badge-b','C':'badge-c','X':'badge-x'}[item.cat];
-    const badgeLabel={'A':'A','B':'B','C':'C','X':'❌'}[item.cat];
-    const isExcl=item.excluded;
+    const id='row-'+item.article.replace(/[^a-zA-Z0-9]/g,'_');
     const isSel=selected.has(item.article);
-    const barW=maxRev>0?Math.round(item.revenue/maxRev*120):0;
-    const barCol={'A':'var(--green)','B':'var(--yellow)','C':'var(--muted)','X':'var(--red)'}[item.cat];
-    return `<tr class="${isExcl?'excluded-row':''} ${isSel?'selected-row':''}" id="row-${item.article.replace(/[^a-zA-Z0-9]/g,'_')}">
-      <td><input type="checkbox" ${isSel?'checked':''} ${isExcl?'disabled':''} onchange="toggleSel('${item.article}',this)"></td>
-      <td style="font-weight:700">${item.article}${isExcl?' <span class="badge badge-excl">исключён</span>':''}</td>
+    const barW=Math.round(item.orders/maxOrd*120);
+    return `<tr class="${item.excluded?'excluded-row':''} ${isSel?'selected-row':''}" id="${id}">
+      <td><input type="checkbox" ${isSel?'checked':''} ${item.excluded?'disabled':''} onchange="toggleSel('${item.article}',this)"></td>
+      <td style="font-weight:700">${item.article}${item.excluded?' <span class="badge badge-excl">исключён</span>':''}</td>
       <td>${fmtN(item.orders)}</td>
-      <td>${fmtRub(item.revenue)}</td>
       <td style="color:var(--muted2)">${item.pct.toFixed(1)}%</td>
-      <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
-      <td><div class="mini-bar" style="width:${barW}px;background:${barCol}"></div></td>
+      <td><span class="badge ${badgeCls[item.cat]}">${badgeLbl[item.cat]}</span></td>
+      <td><div class="mini-bar" style="width:${barW}px;background:${barCol[item.cat]}"></div></td>
     </tr>`;
-  }).join('')||`<tr><td colspan="7" class="empty">Нет данных</td></tr>`;
+  }).join('')||'<tr><td colspan="6" class="empty">Нет данных</td></tr>';
 }
 
-function filterABC(q){
-  filtered=abcData.filter(i=>i.article.toLowerCase().includes(q.toLowerCase()));
-  renderABC();
-}
+function filterABC(q){filtered=abcData.filter(i=>i.article.toLowerCase().includes(q.toLowerCase()));renderABC();}
 
-function toggleSel(article,cb){
-  if(cb.checked) selected.add(article);
-  else selected.delete(article);
-  const row=document.getElementById('row-'+article.replace(/[^a-zA-Z0-9]/g,'_'));
-  if(row) row.classList.toggle('selected-row',cb.checked);
+function toggleSel(art,cb){
+  if(cb.checked)selected.add(art);else selected.delete(art);
+  const row=document.getElementById('row-'+art.replace(/[^a-zA-Z0-9]/g,'_'));
+  if(row)row.classList.toggle('selected-row',cb.checked);
   updateSelCount();
 }
-
 function toggleAll(cb){
-  const rows=document.getElementById('abc-body').querySelectorAll('input[type=checkbox]:not(:disabled)');
-  rows.forEach(r=>{
+  document.getElementById('abc-body').querySelectorAll('input[type=checkbox]:not(:disabled)').forEach(r=>{
     r.checked=cb.checked;
-    const art=r.closest('tr').querySelector('td:nth-child(2)').textContent.replace('исключён','').trim();
-    if(cb.checked) selected.add(art);
-    else selected.delete(art);
+    const art=r.closest('tr').querySelectorAll('td')[1].childNodes[0].textContent.trim();
+    if(cb.checked)selected.add(art);else selected.delete(art);
     r.closest('tr').classList.toggle('selected-row',cb.checked);
   });
   updateSelCount();
 }
-
 function updateSelCount(){
   const n=selected.size;
   document.getElementById('sel-count').textContent=`Выбрано: ${n}`;
@@ -333,30 +249,22 @@ function updateSelCount(){
 }
 
 async function excludeSelected(){
-  if(selected.size===0) return;
-  const shop=currentShop==='all'?'all':currentShop;
-  for(const article of selected){
-    await sbPost('/rest/v1/wb_excluded_articles?on_conflict=article',{article,shop,reason:'manual'});
+  for(const art of selected){
+    await post('/rest/v1/wb_excluded_articles?on_conflict=article',{article:art,shop:currentShop==='all'?'all':currentShop,reason:'manual'});
   }
   selected.clear();
-  await loadExcluded();
-  render();
-  updateExclBadge();
+  excluded=await get('/rest/v1/wb_excluded_articles?order=created_at.desc&limit=500')||[];
+  updateExclBadge();render();
 }
 
-async function removeExcluded(article){
-  await fetch(SUPABASE_URL+`/rest/v1/wb_excluded_articles?article=eq.${encodeURIComponent(article)}`,{method:'DELETE',headers:H});
-  await loadExcluded();
-  render();
-  renderExcl();
-  updateExclBadge();
+async function removeExcluded(art){
+  await del(`/rest/v1/wb_excluded_articles?article=eq.${encodeURIComponent(art)}`);
+  excluded=await get('/rest/v1/wb_excluded_articles?order=created_at.desc&limit=500')||[];
+  updateExclBadge();render();renderExcl();
 }
 
 function renderExcl(){
-  if(excluded.length===0){
-    document.getElementById('excl-list').innerHTML='<div class="excl-empty">Список пуст — отметьте артикулы в ABC анализе и нажмите «Исключить»</div>';
-    return;
-  }
+  if(!excluded.length){document.getElementById('excl-list').innerHTML='<div class="excl-empty">Список пуст — отметьте артикулы в ABC анализе и нажмите «Исключить»</div>';return;}
   document.getElementById('excl-list').innerHTML=excluded.map(e=>{
     const d=new Date(e.created_at).toLocaleDateString('ru-RU',{day:'2-digit',month:'short',year:'numeric'});
     return `<div class="excl-item">
@@ -369,67 +277,26 @@ function renderExcl(){
 }
 
 function updateExclBadge(){
-  const badge=document.getElementById('excl-count-badge');
-  badge.textContent=excluded.length>0?` (${excluded.length})`:'';
-}
-
-async function loadExcluded(){
-  excluded=await sbGet('/rest/v1/wb_excluded_articles?order=created_at.desc&limit=500')||[];
-  updateExclBadge();
-}
-
-let sortDirs={};
-function sortABC(col,th){
-  const key='abc'+col;
-  const asc=!sortDirs[key];
-  sortDirs[key]=asc;
-  filtered.sort((a,b)=>{
-    const vals=[null,'article','orders','revenue','pct','cat'];
-    const k=vals[col];
-    const av=a[k],bv=b[k];
-    const cmp=typeof av==='number'?av-bv:String(av).localeCompare(String(bv),'ru');
-    return asc?cmp:-cmp;
-  });
-  renderABC();
+  const b=document.getElementById('excl-count-badge');
+  b.textContent=excluded.length>0?` (${excluded.length})`:'';
 }
 
 async function init(){
-  // Загружаем заказы из wb_warehouse_stats (там есть article + orders_count)
   const cutoff=new Date();cutoff.setDate(cutoff.getDate()-30);
   const from=cutoff.toLocaleDateString('sv-SE');
-
-  const [warehouseData, stockData, exclData] = await Promise.all([
-    sbGet(`/rest/v1/wb_warehouse_stats?date=gte.${from}&limit=100000`),
-    sbGet(`/rest/v1/wb_stocks?date=gte.${from}&limit=10000`),
-    sbGet('/rest/v1/wb_excluded_articles?order=created_at.desc&limit=500')
+  const [arts,ords,excl]=await Promise.all([
+    get('/rest/v1/wb_articles?active=eq.true&limit=500'),
+    get(`/rest/v1/wb_warehouse_stats?date=gte.${from}&limit=100000`),
+    get('/rest/v1/wb_excluded_articles?order=created_at.desc&limit=500')
   ]);
-
-  // Группируем warehouse stats по article+shop
-  const artMap={};
-  for(const r of (warehouseData||[])){
-    const key=r.article+'|'+r.shop;
-    if(!artMap[key]) artMap[key]={article:r.article,shop:r.shop,date:r.date,orders_count:0,avg_price:0};
-    artMap[key].orders_count+=r.orders_count||0;
-  }
-  allOrders=Object.values(artMap);
-
-  // Остатки для определения ассортимента
-  const stockMap={};
-  for(const r of (stockData||[])){
-    const key=r.article+'|'+r.shop;
-    if(!stockMap[key]) stockMap[key]={article:r.article,shop:r.shop,quantity:0};
-    stockMap[key].quantity+=r.quantity||0;
-  }
-  allStocks=Object.values(stockMap);
-
-  excluded=exclData||[];
+  articles=(arts||[]).map(a=>a.article);
+  orders=ords||[];
+  excluded=excl||[];
   updateExclBadge();
-
   document.getElementById('loading').style.display='none';
   document.getElementById('app').style.display='block';
   render();
 }
-
 init();
 </script>
 </body>
