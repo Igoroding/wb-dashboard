@@ -285,11 +285,11 @@ function updateExclBadge(){
 }
 
 async function init(){
-  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-30);
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-90);
   const from=cutoff.toLocaleDateString('sv-SE');
   const [arts,ords,excl]=await Promise.all([
     get('/rest/v1/wb_articles?active=eq.true&limit=500'),
-    get(`/rest/v1/wb_warehouse_stats?date=gte.${from}&limit=100000`),
+    get(`/rest/v1/wb_warehouse_stats?date=gte.${from}&limit=200000`),
     get('/rest/v1/wb_excluded_articles?order=created_at.desc&limit=500')
   ]);
   articles=(arts||[]).map(a=>a.article);
