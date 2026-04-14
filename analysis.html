@@ -75,8 +75,7 @@
   <div id="app" style="display:none">
     <div class="controls">
       <div style="display:flex;gap:6px">
-        <button class="shop-btn active" onclick="setShop('all',this)">Все</button>
-        <button class="shop-btn" onclick="setShop('stolnikov',this)">Стольников</button>
+        <button class="shop-btn active" onclick="setShop('stolnikov',this)">Стольников</button>
         <button class="shop-btn" onclick="setShop('oding',this)">Одинг</button>
       </div>
       <div style="display:flex;gap:6px">
@@ -135,7 +134,7 @@ const SB='https://rkxezsfrmjvriokhzaxk.supabase.co';
 const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJreGV6c2ZybWp2cmlva2h6YXhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTM5MTIsImV4cCI6MjA4ODEyOTkxMn0.IOMsGZh7ZGn1LTs2UCxdBWoIWH1LGiprkgR6pwpfabw';
 const H={'apikey':KEY,'Authorization':'Bearer '+KEY};
 
-let currentShop='all',currentPeriod=7;
+let currentShop='stolnikov',currentPeriod=7;
 let articles=[],orders=[],excluded=[],abcData=[],filtered=[],selected=new Set();
 let sortDirs={};
 
@@ -257,21 +256,25 @@ async function excludeSelected(){
   updateExclBadge();render();
 }
 
-async function removeExcluded(art){
-  await del(`/rest/v1/wb_excluded_articles?article=eq.${encodeURIComponent(art)}`);
+async function removeExcluded(art,shop){
+  await del(`/rest/v1/wb_excluded_articles?article=eq.${encodeURIComponent(art)}&shop=eq.${shop}`);
   excluded=await get('/rest/v1/wb_excluded_articles?order=created_at.desc&limit=500')||[];
   updateExclBadge();render();renderExcl();
 }
 
 function renderExcl(){
-  if(!excluded.length){document.getElementById('excl-list').innerHTML='<div class="excl-empty">Список пуст — отметьте артикулы в ABC анализе и нажмите «Исключить»</div>';return;}
-  document.getElementById('excl-list').innerHTML=excluded.map(e=>{
+  const list = excluded.filter(e => e.shop === currentShop);
+  const shopLabel = currentShop==='stolnikov'?'Стольников':'Одинг';
+  if(!list.length){
+    document.getElementById('excl-list').innerHTML=`<div class="excl-empty">Нет исключений для магазина «${shopLabel}»</div>`;
+    return;
+  }
+  document.getElementById('excl-list').innerHTML=list.map(e=>{
     const d=new Date(e.created_at).toLocaleDateString('ru-RU',{day:'2-digit',month:'short',year:'numeric'});
     return `<div class="excl-item">
       <div class="excl-article">${e.article}</div>
-      <div class="excl-shop">${e.shop||'—'}</div>
       <div class="excl-date">добавлен ${d}</div>
-      <button class="btn-remove" onclick="removeExcluded('${e.article}')">✕ Убрать</button>
+      <button class="btn-remove" onclick="removeExcluded('${e.article}','${currentShop}')">✕ Убрать</button>
     </div>`;
   }).join('');
 }
