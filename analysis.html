@@ -156,12 +156,11 @@ function setView(v,el){
 function getOrders(){
   const cutoff=new Date();cutoff.setDate(cutoff.getDate()-currentPeriod);
   const from=cutoff.toLocaleDateString('sv-SE');
-  return orders.filter(r=>(currentShop==='all'||r.shop===currentShop)&&r.date>=from);
+  return orders.filter(r=>r.shop===currentShop&&r.date>=from);
 }
 
 function buildABC(){
   const ord=getOrders();
-  // Суммируем заказы по артикулу
   const byArt={};
   for(const a of articles) byArt[a]={article:a,orders:0};
   for(const r of ord){
@@ -173,7 +172,7 @@ function buildABC(){
   for(const item of items){
     const pct=total>0?item.orders/total*100:0;
     item.pct=pct; cum+=pct; item.cum=cum;
-    item.excluded=excluded.some(e=>e.article===item.article);
+    item.excluded=excluded.some(e=>e.article===item.article&&e.shop===currentShop);
     if(item.orders===0) item.cat='X';
     else if(cum<=80) item.cat='A';
     else if(cum<=95) item.cat='B';
