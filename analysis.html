@@ -140,7 +140,21 @@ let sortDirs={};
 
 const fmtN=n=>new Intl.NumberFormat('ru-RU').format(Math.round(n));
 
-async function get(path){const r=await fetch(SB+path,{headers:H});return r.json();}
+async function get(path,extra={}){const r=await fetch(SB+path,{headers:{...H,...extra}});return r.json();}
+async function getAll(path){
+  // Загружаем все данные постранично по 1000
+  let all=[],from=0,step=1000;
+  while(true){
+    const r=await fetch(SB+path+(path.includes('?')?'&':'?')+`offset=${from}&limit=${step}`,
+      {headers:{...H,'Range-Unit':'items','Range':`${from}-${from+step-1}`,'Prefer':'count=none'}});
+    const data=await r.json();
+    if(!Array.isArray(data)||data.length===0) break;
+    all=all.concat(data);
+    if(data.length<step) break;
+    from+=step;
+  }
+  return all;
+}
 async function post(path,body){return fetch(SB+path,{method:'POST',headers:{...H,'Content-Type':'application/json'},body:JSON.stringify(body)});}
 async function del(path){return fetch(SB+path,{method:'DELETE',headers:H});}
 
@@ -288,7 +302,7 @@ async function init(){
   const from=cutoff.toLocaleDateString('sv-SE');
   const [arts,ords,excl]=await Promise.all([
     get('/rest/v1/wb_articles?active=eq.true&limit=500'),
-    get(`/rest/v1/wb_warehouse_stats?date=gte.${from}&limit=200000`),
+    getAll(`/rest/v1/wb_warehouse_stats?date=gte.${from}&order=date.desc`),
     get('/rest/v1/wb_excluded_articles?order=created_at.desc&limit=500')
   ]);
   articles=(arts||[]).map(a=>a.article);
