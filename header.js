@@ -2,12 +2,11 @@
   const path = window.location.pathname;
   const isStocks     = path.includes('stocks');
   const isRnP        = path.includes('rnp');
-  const isWarehouses = path.includes('warehouses');
   const isAds        = path.includes('ads');
   const isLogistics  = path.includes('logistics');
   const isRegions    = path.includes('regions');
   const isAnalysis   = path.includes('analysis');
-  const isIndex      = !isStocks && !isRnP && !isWarehouses && !isAds && !isLogistics && !isRegions && !isAnalysis;
+  const isIndex      = !isStocks && !isRnP && !isAds && !isLogistics && !isRegions && !isAnalysis;
 
   const css = `
     .site-header { background: #0d1117; border-bottom: 1px solid #1a2333; padding: 14px 28px 0; font-family: 'Geologica', system-ui, sans-serif; }
@@ -39,7 +38,6 @@
     <nav class="site-nav">
       <a href="/wb-dashboard/rnp.html"        ${isRnP        ? 'class="active"' : ''}>📈 РнП</a>
       <a href="/wb-dashboard/stocks.html"     ${isStocks     ? 'class="active"' : ''}>📦 Остатки</a>
-      <a href="/wb-dashboard/warehouses.html" ${isWarehouses ? 'class="active"' : ''}>🏭 Склады</a>
       <a href="/wb-dashboard/ads.html"        ${isAds        ? 'class="active"' : ''}>📣 Реклама</a>
       <a href="/wb-dashboard/logistics.html"  ${isLogistics  ? 'class="active"' : ''}>🚚 Логистика</a>
       <a href="/wb-dashboard/regions.html"    ${isRegions    ? 'class="active"' : ''}>🗺️ Регионы</a>
