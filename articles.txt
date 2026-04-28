@@ -33,7 +33,8 @@ myata-kubanskaya
 perec-fonbaron-smes
 diascia-uspeh
 dihondra-serebristaya
-pepino-ramzes
+kukuruza-ledenec
+redis-cherriet
 petrushka-italiyanskiigigant-3
 tykva-konfetka-3
 3kurazh
@@ -64,7 +65,8 @@ ukrop-zelyoniipuchok-3
 melissa-limonniiaromat-3
 cinniya-karusel-3
 dihondra-serebristaya-3
-pepino-ramzes-3
+kukuruza-ledenec-3
+kukuruza-ledenec-3
 lavanda-voznesenskaya-5
 lavanda-yjanka-5
 primula-erfurtskievelikany-5
@@ -92,6 +94,8 @@ perec-ramiro-5
 tomat-bolshayamamochka-5
 cinniya-karusel-5
 dihondra-serebristaya-5
+kukuruza-ledenec-5
+redis-cherriet-5
 salat-kucheryavec-10
 ukrop-alligator-10
 ukrop-kibrai-10
@@ -120,7 +124,6 @@ ogurec-zelenue-gnomiki-10
 morkov-samson-10
 perec-fonbaron-smes-10
 cinniya-karusel-10
-pepino-ramzes-10
 bigpack-100-lavandayjanka
 bigpack-50g-schavelchempion
 bigpack-50g-salatazart
